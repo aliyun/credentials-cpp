@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 message("C++ compiler flags: ${CMAKE_CXX_FLAGS}")
 
+option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 message(STATUS "Enable testing: ${ENABLE_UNIT_TESTS}")
 
 if (CMAKE_CXX_COMPILER_LOADED)
@@ -57,7 +58,7 @@ set_target_properties(${PROJECT_NAME}
 
 add_subdirectory(external/libraries)
 
-SET(BOOST_MIN_VERSION "1.62.0")
+SET(BOOST_MIN_VERSION "1.58.0")
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_library(CPPREST_LIB cpprest)
 
@@ -80,8 +81,8 @@ if (ENABLE_UNIT_TESTS)
             gtest_main
             gmock_main
             crypto
-            ssl
             jsoncpp
+            ssl
             ${Boost_LIBRARIES}
             ${CPPREST_LIB})
     add_test(NAME google_test
