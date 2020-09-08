@@ -58,7 +58,7 @@ set_target_properties(${PROJECT_NAME}
 
 add_subdirectory(external/libraries)
 
-SET(BOOST_MIN_VERSION "1.58.0")
+SET(BOOST_MIN_VERSION "1.60.0")
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_library(CPPREST_LIB cpprest)
 

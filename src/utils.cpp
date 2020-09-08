@@ -257,11 +257,12 @@ string gmt_datetime() {
 }
 
 long long strtotime(const string &gmt_datetime) {
-  struct tm tm{};
-  setenv("TZ", "UTC", 1);
-  strptime(gmt_datetime.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm);
-  time_t t = mktime(&tm);
-  return boost::lexical_cast<long long>(t);
+  string datetime = gmt_datetime.substr(0, gmt_datetime.size() - 1);
+  boost::posix_time::ptime pt4(
+      boost::posix_time::from_iso_extended_string(datetime));
+  const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
+  boost::posix_time::time_duration duration = pt4 - epoch;
+  return duration.total_seconds();
 }
 
 #endif
