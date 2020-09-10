@@ -47,7 +47,7 @@ string Alibabacloud_Credential::Client::getPrivateKey() {
   return _credential->getConfig().privateKeySecret;
 }
 
-Alibabacloud_Credential::credential
+Alibabacloud_Credential::Credential
 Alibabacloud_Credential::Client::getCredential() {
   return *_credential;
 }

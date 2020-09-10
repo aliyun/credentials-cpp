@@ -13,21 +13,21 @@ using namespace web::http;
 using namespace web::http::client;
 using namespace concurrency::streams;
 
-credential::credential() {}
+Credential::Credential() {}
 
-credential::credential(const Config &config) {
+Credential::Credential(const Config &config) {
   _config = config;
   _credentialType = config.type;
 }
 
-bool credential::hasExpired() const {
+bool Credential::hasExpired() const {
   long now = static_cast<long int>(time(nullptr));
   return _expiration - now <= 180;
 }
 
 /*** <<<<<<<<<  AccessKeyCredential  >>>>>>>> ***/
 AccessKeyCredential::AccessKeyCredential(const Config &config)
-    : credential(config){};
+    : Credential(config){};
 
 string AccessKeyCredential::getAccessKeyId() { return _config.accessKeyId; }
 
@@ -37,12 +37,12 @@ string AccessKeyCredential::getAccessKeySecret() {
 
 /*** <<<<<<<<<  BearerTokenCredential  >>>>>>>> ***/
 BearerTokenCredential::BearerTokenCredential(const Config &config)
-    : credential(config){};
+    : Credential(config){};
 
 string BearerTokenCredential::getBearerToken() { return _config.bearerToken; }
 
 /*** <<<<<<<<<  StsCredential  >>>>>>>> ***/
-StsCredential::StsCredential(const Config &config) : credential(config) {}
+StsCredential::StsCredential(const Config &config) : Credential(config) {}
 
 string StsCredential::getAccessKeyId() { return _config.accessKeyId; }
 
@@ -52,7 +52,7 @@ string StsCredential::getSecurityToken() { return _config.securityToken; }
 
 /*** <<<<<<<<<  EcsRamRoleCredential  >>>>>>>> ***/
 EcsRamRoleCredential::EcsRamRoleCredential(const Config &config)
-    : credential(config) {}
+    : Credential(config) {}
 
 string EcsRamRoleCredential::getAccessKeyId() {
   refresh();
@@ -137,7 +137,7 @@ void EcsRamRoleCredential::refreshCredential() {
 
 /*** <<<<<<<<<  RamRoleArnCredential  >>>>>>>> ***/
 RamRoleArnCredential::RamRoleArnCredential(const Config &config)
-    : credential(config) {
+    : Credential(config) {
   if (_config.roleSessionName.empty()) {
     _config.roleSessionName = "defaultSessionName";
   }
@@ -211,7 +211,7 @@ void RamRoleArnCredential::refreshCredential() {
 
 /*** <<<<<<<<<  RsaKeyPairCredential  >>>>>>>> ***/
 RsaKeyPairCredential::RsaKeyPairCredential(const Config &config)
-    : credential(config) {}
+    : Credential(config) {}
 
 string RsaKeyPairCredential::getPublicKeyId() {
   refresh();

@@ -59,10 +59,10 @@ public:
   string type;
 };
 
-class credential {
+class Credential {
 public:
-  explicit credential(const Alibabacloud_Credential::Config &config);
-  credential();
+  explicit Credential(const Alibabacloud_Credential::Config &config);
+  Credential();
 
   long getExpiration() const { return _expiration; }
 
@@ -86,7 +86,7 @@ protected:
   bool hasExpired() const;
 };
 
-class AccessKeyCredential : public credential {
+class AccessKeyCredential : public Credential {
 public:
   explicit AccessKeyCredential(const Config &config);
 
@@ -95,14 +95,14 @@ public:
   string getAccessKeySecret() override;
 };
 
-class BearerTokenCredential : public credential {
+class BearerTokenCredential : public Credential {
 public:
   explicit BearerTokenCredential(const Alibabacloud_Credential::Config &config);
 
   string getBearerToken() override;
 };
 
-class StsCredential : public credential {
+class StsCredential : public Credential {
 public:
   explicit StsCredential(const Alibabacloud_Credential::Config &config);
 
@@ -113,7 +113,7 @@ public:
   string getSecurityToken() override;
 };
 
-class EcsRamRoleCredential : public credential {
+class EcsRamRoleCredential : public Credential {
 public:
   explicit EcsRamRoleCredential(const Alibabacloud_Credential::Config &config);
 
@@ -137,7 +137,7 @@ private:
   const string META_DATA_SERVICE_HOST = "100.100.100.200";
 };
 
-class RamRoleArnCredential : public credential {
+class RamRoleArnCredential : public Credential {
 public:
   explicit RamRoleArnCredential(const Alibabacloud_Credential::Config &config);
 
@@ -159,7 +159,7 @@ private:
   string _regionId = "cn-hangzhou";
 };
 
-class RsaKeyPairCredential : public credential {
+class RsaKeyPairCredential : public Credential {
 public:
   explicit RsaKeyPairCredential(const Alibabacloud_Credential::Config &config);
   string getPublicKeyId();
@@ -203,10 +203,10 @@ public:
 
   string getPrivateKey();
 
-  credential getCredential();
+  Credential getCredential();
 
 private:
-  credential *_credential;
+  Credential *_credential;
 };
 } // namespace Alibabacloud_Credential
 
