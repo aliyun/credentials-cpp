@@ -257,7 +257,7 @@ string gmt_datetime() {
 }
 
 long long strtotime(const string &gmt_datetime) {
-  struct tm tm{};
+  struct tm tm {};
   strptime(gmt_datetime.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm);
   time_t t = timegm(&tm);
   return boost::lexical_cast<long long>(t);
