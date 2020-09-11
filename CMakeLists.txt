@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
-project(alibabacloud_credentials VERSION "0.1.0")
+project(alibabacloud_credential VERSION "0.1.0")
 
 # <<< General set up >>>
 set(CMAKE_CXX_STANDARD 11)
@@ -62,7 +62,7 @@ SET(BOOST_MIN_VERSION "1.58.0")
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_library(CPPREST_LIB cpprest)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE crypto ssl jsoncpp ${Boost_LIBRARIES} ${CPPREST_LIB})
+target_link_libraries(${PROJECT_NAME} PRIVATE crypto jsoncpp ${Boost_LIBRARIES} ${CPPREST_LIB})
 
 if (ENABLE_UNIT_TESTS)
     include(CTest)
@@ -82,7 +82,6 @@ if (ENABLE_UNIT_TESTS)
             gmock_main
             crypto
             jsoncpp
-            ssl
             ${Boost_LIBRARIES}
             ${CPPREST_LIB})
     add_test(NAME google_test
@@ -134,7 +133,7 @@ install(
         TARGETS
         ${PROJECT_NAME}
         EXPORT
-        alibabacloud_credentialsTargets
+        alibabacloud_credentialTargets
         ARCHIVE
         DESTINATION ${INSTALL_LIBDIR}
         COMPONENT lib
@@ -152,9 +151,9 @@ install(
 # install cmake config
 install(
         EXPORT
-        alibabacloud_credentialsTargets
+        alibabacloud_credentialTargets
         NAMESPACE
-        "alibabacloud_credentials::"
+        "alibabacloud_credential::"
         DESTINATION
         ${INSTALL_CMAKEDIR}
         COMPONENT
