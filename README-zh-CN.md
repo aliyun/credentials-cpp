@@ -53,16 +53,16 @@ sh scripts/install.sh
 通过[用户信息管理][ak]设置 access_key，它们具有该账户完全的权限，请妥善保管。有时出于安全考虑，您不能把具有完全访问权限的主账户 AccessKey 交于一个项目的开发者使用，您可以[创建RAM子账户][ram]并为子账户[授权][permissions]，使用RAM子用户的 AccessKey 来进行API调用。
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "access_key"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getAccessKeyId().c_str());
-printf("%s", client.getAccessKeySecret().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getAccessKeyId().c_str());
+printf("%s", *client.getAccessKeySecret().c_str());
 ```
 
 #### STS
@@ -70,18 +70,18 @@ printf("%s", client.getAccessKeySecret().c_str());
 通过安全令牌服务（Security Token Service，简称 STS），申请临时安全凭证（Temporary Security Credentials，简称 TSC），创建临时安全凭证。
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "sts"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("securityToken", "<SecurityToken>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getAccessKeyId().c_str());
-printf("%s", client.getAccessKeySecret().c_str());
-printf("%s", client.getSecurityToken().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getAccessKeyId().c_str());
+printf("%s", *client.getAccessKeySecret().c_str());
+printf("%s", *client.getSecurityToken().c_str());
 ```
 
 #### RamRoleArn
@@ -91,7 +91,7 @@ printf("%s", client.getSecurityToken().c_str());
 如果定义了环境变量 `ALIBABA_CLOUD_ECS_METADATA` 且不为空，程序会将该环境变量的值作为角色名称，请求 `http://100.100.100.200/latest/meta-data/ram/security-credentials/` 获取临时安全凭证作为默认凭证。
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "ram_role_arn"));
@@ -100,13 +100,13 @@ m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleArn", "<RoleArn>"));
 m.insert(pair<string, string>("roleSessionName", "<RoleSessionName>"));
 m.insert(pair<string, string>("policy", "<Policy>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getAccessKeyId().c_str());
-printf("%s", client.getAccessKeySecret().c_str());
-printf("%s", client.getRoleArn().c_str());
-printf("%s", client.getRoleSessionName().c_str());
-printf("%s", client.getPolicy().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getAccessKeyId().c_str());
+printf("%s", *client.getAccessKeySecret().c_str());
+printf("%s", *client.getRoleArn().c_str());
+printf("%s", *client.getRoleSessionName().c_str());
+printf("%s", *client.getPolicy().c_str());
 ```
 
 #### EcsRamRole
@@ -114,18 +114,18 @@ printf("%s", client.getPolicy().c_str());
 通过指定角色名称，让凭证自动申请维护 STS Token
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "ecs_ram_role"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleName", "<roleName>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getAccessKeyId().c_str());
-printf("%s", client.getAccessKeySecret().c_str());
-printf("%s", client.getRoleName().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getAccessKeyId().c_str());
+printf("%s", *client.getAccessKeySecret().c_str());
+printf("%s", *client.getRoleName().c_str());
 ```
 
 #### RsaKeyPair
@@ -133,16 +133,16 @@ printf("%s", client.getRoleName().c_str());
 通过指定公钥Id和私钥文件，让凭证自动申请维护 AccessKey。仅支持日本站。
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "rsa_key_pair"));
 m.insert(pair<string, string>("publicKeyId", "<PublicKeyId>"));
 m.insert(pair<string, string>("privateKeyFile", "<PrivateKeyFile>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getPublicKeyId().c_str());
-printf("%s", client.getPrivateKey().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getPublicKeyId().c_str());
+printf("%s", *client.getPrivateKey().c_str());
 ```
 
 #### Bearer Token
@@ -150,14 +150,14 @@ printf("%s", client.getPrivateKey().c_str());
 如呼叫中心(CCC)需用此凭证，请自行申请维护 Bearer Token。
 
 ```c++
-#include <Alibabacloud/Credential.hpp>
+#include <alibabacloud/credential.hpp>
 
 map<string, string> m;
 m.insert(pair<string, string>("type", "bearer_token"));
 m.insert(pair<string, string>("bearerToken", "<BearerToken>"));
-Alibabacloud_Credential::Config config(m);
-Alibabacloud_Credential::Client client(&config);
-printf("%s", client.getBearerToken().c_str());
+auto *config = new Alibabacloud_Credential::Config(m);
+auto *client = new Alibabacloud_Credential::Client(config);
+printf("%s", *client.getBearerToken().c_str());
 ```
 
 
