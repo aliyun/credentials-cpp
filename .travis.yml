@@ -14,8 +14,7 @@ env:
   - CPLUS_INCLUDE_PATH="/usr/local/include/:/usr/include/jsoncpp/:/usr/lib/"
 
 script:
-  - sh scripts/run_ut.sh
-  # - sh scripts/codecov.sh
+  - sh scripts/codecov.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - cd cmake_build && bash <(curl -s https://codecov.io/bash)

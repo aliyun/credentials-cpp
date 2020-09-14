@@ -9,7 +9,6 @@ TEST(tests_credential, access_key) {
   m.insert(pair<string, string>("accessKeyId", "fakeAccessKeyId"));
   m.insert(pair<string, string>("accessKeySecret", "fakeAccessKeySecret"));
   auto *config = new Alibabacloud_Credential::Config(m);
-  printf("%s\n", config->accessKeyId->c_str());
   auto *client = new Alibabacloud_Credential::Client(config);
   ASSERT_EQ(string("fakeAccessKeyId"), *client->getAccessKeyId());
   delete client;
