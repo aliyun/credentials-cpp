@@ -7,7 +7,7 @@ cd "$basepath/" || exit
 
 mkdir -p cmake_build/
 cd "cmake_build/" || exit
-cmake -DENABLE_UNIT_TESTS=ON -DENABLE_COVERAGE=ON ..
+cmake -DENABLE_UNIT_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build .
 ./tests
 
@@ -18,20 +18,20 @@ cd "$utdir/" || exit
 echo '--------- generate initial info ---------------- '
 mkdir -p coverage
 lcov -z
-lcov --no-external --initial --capture --output-file ./coverage/init.info || exit
+lcov --directory . --capture --output-file coverage.info
 
 echo '--------- run test ---------------- '
 ctest --verbose --coverage
 
 echo '--------- generate post info ---------------- '
-lcov -c -o ./coverage/coverage.info || exit
-lcov --list ./coverage/coverage.info
+lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+lcov --list coverage.info
 
 echo '--------- generate html report ---------------- '
-genhtml -o coverage --prefix="$utdir" init.info coverage.info  || exit
+genhtml -o coverage --prefix="$PWD/coverage/" coverage.info
 
-echo 'check report: ' "$basepath/coverage/index.html"
+echo "check report: $PWD/coverage/index.html"
 
 echo ' ------remove tmp file ------'
 
-rm cmake_build/coverage
+# rm cmake_build/coverage
