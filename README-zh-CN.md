@@ -1,16 +1,12 @@
 [English](/README.md) | 简体中文
 
-
 # Alibaba Cloud Credentials for C++
 [![codecov](https://codecov.io/gh/aliyun/credentials-cpp/branch/master/graph/badge.svg)](https://codecov.io/gh/aliyun/credentials-cpp)
 [![Travis Build Status](https://travis-ci.org/aliyun/credentials-cpp.svg?branch=master)](https://travis-ci.org/aliyun/credentials-cpp)
 
-
 ![](https://aliyunsdk-pages.alicdn.com/icons/AlibabaCloud.svg)
 
-
 Alibaba Cloud Credentials for C++ 是帮助 C++ 开发者管理凭据的工具。
-
 
 ## 安装
 
@@ -29,6 +25,7 @@ sh scripts/install.sh
   ```bash
   git clone https://github.com/aliyun/credentials-cpp.git
   ```
+
 2. 使用 Visual Studio 进行编译:
   * 在根目录下创建 `cmake_build` 目录
   * 打开 cmake-gui , 然后进行以下操作
@@ -44,6 +41,7 @@ sh scripts/install.sh
   * 构建 -> 生成解决方案
 
 ## 快速使用
+
 在您开始之前，您需要注册阿里云帐户并获取您的[凭证](https://usercenter.console.aliyun.com/#/manage/ak)。
 
 ### 凭证类型
@@ -59,8 +57,10 @@ map<string, string> m;
 m.insert(pair<string, string>("type", "access_key"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 ```
@@ -77,8 +77,10 @@ m.insert(pair<string, string>("type", "sts"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("securityToken", "<SecurityToken>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getSecurityToken().c_str());
@@ -100,8 +102,10 @@ m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleArn", "<RoleArn>"));
 m.insert(pair<string, string>("roleSessionName", "<RoleSessionName>"));
 m.insert(pair<string, string>("policy", "<Policy>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getRoleArn().c_str());
@@ -121,8 +125,10 @@ m.insert(pair<string, string>("type", "ecs_ram_role"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleName", "<roleName>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getRoleName().c_str());
@@ -139,8 +145,10 @@ map<string, string> m;
 m.insert(pair<string, string>("type", "rsa_key_pair"));
 m.insert(pair<string, string>("publicKeyId", "<PublicKeyId>"));
 m.insert(pair<string, string>("privateKeyFile", "<PrivateKeyFile>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getPublicKeyId().c_str());
 printf("%s", *client.getPrivateKey().c_str());
 ```
@@ -155,32 +163,33 @@ printf("%s", *client.getPrivateKey().c_str());
 map<string, string> m;
 m.insert(pair<string, string>("type", "bearer_token"));
 m.insert(pair<string, string>("bearerToken", "<BearerToken>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getBearerToken().c_str());
 ```
 
-
 ## 问题
+
 [提交 Issue](https://github.com/aliyun/credentials-cpp/issues/new/choose)，不符合指南的问题可能会立即关闭。
 
-
 ## 发行说明
+
 每个版本的详细更改记录在[发行说明](/CHANGELOG.md)中。
 
-
 ## 相关
-* [OpenAPI Explorer][open-api]
-* [Latest Release][latest-release]
-* [Alibabacloud Console System][console]
-* [Alibaba Cloud Home Page][aliyun]
 
+- [OpenAPI Explorer][open-api]
+- [Latest Release][latest-release]
+- [Alibabacloud Console System][console]
+- [Alibaba Cloud Home Page][aliyun]
 
 ## 许可证
+
 [Apache-2.0](/LICENSE.md)
 
 Copyright (c) 2009-present, Alibaba Cloud All rights reserved.
-
 
 [open-api]: https://api.aliyun.com
 [latest-release]: https://github.com/aliyun/credentials-cpp/releases

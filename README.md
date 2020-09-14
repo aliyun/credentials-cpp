@@ -1,16 +1,12 @@
 English | [简体中文](/README-zh-CN.md)
 
-
 # Alibaba Cloud Credentials for C++
 [![codecov](https://codecov.io/gh/aliyun/credentials-cpp/branch/master/graph/badge.svg)](https://codecov.io/gh/aliyun/credentials-cpp)
 [![Travis Build Status](https://travis-ci.org/aliyun/credentials-cpp.svg?branch=master)](https://travis-ci.org/aliyun/credentials-cpp)
 
-
 ![](https://aliyunsdk-pages.alicdn.com/icons/AlibabaCloud.svg)
 
-
 Alibaba Cloud Credentials for C++ is a tool that helps C++ developers manage their credentials.
-
 
 ## Installation
 
@@ -29,6 +25,7 @@ sh scripts/install.sh
   ```bash
   git clone https://github.com/aliyun/credentials-cpp.git
   ```
+
 2. Build Visual Studio solution
   * Change directory to source code and make directory `cmake_build`
   * Open CMake UI and
@@ -44,6 +41,7 @@ sh scripts/install.sh
   * Build->Build Solutions to build.
 
 ## Quick Examples
+
 Before you begin, you need to sign up for an Alibaba Cloud account and retrieve your [Credentials](https://usercenter.console.aliyun.com/#/manage/ak).
 
 ### Credential Type
@@ -59,8 +57,10 @@ map<string, string> m;
 m.insert(pair<string, string>("type", "access_key"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 ```
@@ -77,8 +77,10 @@ m.insert(pair<string, string>("type", "sts"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("securityToken", "<SecurityToken>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getSecurityToken().c_str());
@@ -100,8 +102,10 @@ m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleArn", "<RoleArn>"));
 m.insert(pair<string, string>("roleSessionName", "<RoleSessionName>"));
 m.insert(pair<string, string>("policy", "<Policy>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getRoleArn().c_str());
@@ -121,8 +125,10 @@ m.insert(pair<string, string>("type", "ecs_ram_role"));
 m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
 m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
 m.insert(pair<string, string>("roleName", "<RoleName>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getAccessKeyId().c_str());
 printf("%s", *client.getAccessKeySecret().c_str());
 printf("%s", *client.getRoleName().c_str());
@@ -130,8 +136,7 @@ printf("%s", *client.getRoleName().c_str());
 
 #### RsaKeyPair
 
-By specifying the public key Id and the private key file, the credential will be able to automatically request maintenance of the AccessKey before sending the request. Only Japan station is supported. 
-
+By specifying the public key Id and the private key file, the credential will be able to automatically request maintenance of the AccessKey before sending the request. Only Japan station is supported.
 
 ```c++
 #include <alibabacloud/credential.hpp>
@@ -140,8 +145,10 @@ map<string, string> m;
 m.insert(pair<string, string>("type", "rsa_key_pair"));
 m.insert(pair<string, string>("publicKeyId", "<PublicKeyId>"));
 m.insert(pair<string, string>("privateKeyFile", "<PrivateKeyFile>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getPublicKeyId().c_str());
 printf("%s", *client.getPrivateKey().c_str());
 ```
@@ -156,36 +163,33 @@ If credential is required by the Cloud Call Centre (CCC), please apply for Beare
 map<string, string> m;
 m.insert(pair<string, string>("type", "bearer_token"));
 m.insert(pair<string, string>("bearerToken", "<BearerToken>"));
+
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
+
 printf("%s", *client.getBearerToken().c_str());
 ```
 
-## Documentation
-* [Prerequisites](/docs/zh-CN/0-Prerequisites.md)
-* [Installation](/docs/zh-CN/1-Installation.md)
-
-
 ## Issue
+
 [Submit Issue](https://github.com/aliyun/credentials-cpp/issues/new/choose), Problems that do not meet the guidelines may close immediately.
 
-
 ## Release notes
+
 Detailed changes for each version are recorded in the [Release Notes](/CHANGELOG.md).
 
-
 ## Related
+
 * [OpenAPI Explorer][open-api]
 * [Latest Release][latest-release]
 * [Alibabacloud Console System][console]
 * [Alibaba Cloud Home Page][aliyun]
 
-
 ## License
+
 [Apache-2.0](/LICENSE.md)
 
 Copyright (c) 2009-present, Alibaba Cloud All rights reserved.
-
 
 [open-api]: https://api.aliyun.com
 [latest-release]: https://github.com/aliyun/credentials-cpp/releases
