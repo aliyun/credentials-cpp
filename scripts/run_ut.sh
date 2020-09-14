@@ -10,12 +10,10 @@ main() {
     cmake .. -DENABLE_UNIT_TESTS=ON || {
         error_exit "Failed to cmake."
     }
-
     cmake --build . || {
         error_exit "Failed to make."
     }
-
-    ./tests || {
+    ./tests_alibabacloud_credential || {
         error_exit "Failed to test."
     }
 }

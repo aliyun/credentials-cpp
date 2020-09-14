@@ -7,15 +7,16 @@ cd "$basepath/" || exit
 
 mkdir -p cmake_build/
 cd "cmake_build/" || exit
-cmake -DENABLE_UNIT_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DENABLE_UNIT_TESTS=ON -DENABLE_COVERAGE=ON ..
 cmake --build .
-./tests
+./tests_alibabacloud_credential
 
 utdir="$basepath/cmake_build"
 
 cd "$utdir/" || exit
 
 echo '--------- generate initial info ---------------- '
+rm -rf ./coverage
 mkdir -p coverage
 lcov -z
 lcov --directory . --capture --output-file coverage.info

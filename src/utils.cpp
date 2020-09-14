@@ -1,9 +1,14 @@
 #ifndef ALIBABACLOUD_CREDENTIAL_UTILS_H_
 #define ALIBABACLOUD_CREDENTIAL_UTILS_H_
 
+#include "crypt/hmac.h"
+#include "crypt/sha1.h"
 #include <alibabacloud/credential.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/date_time.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <cpprest/filestream.h>
 #include <cpprest/http_client.h>
 #include <cstdlib>
@@ -13,11 +18,6 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include "crypt/hmac.h"
-#include "crypt/sha1.h"
 
 using namespace std;
 using namespace utility;
@@ -138,8 +138,7 @@ string stringToSign(const method &mtd, map<string, string> query) {
   return join(params, "&");
 }
 
-std::string hmacsha1(const std::string &src,
-                             const std::string &key) {
+std::string hmacsha1(const std::string &src, const std::string &key) {
   boost::uint8_t hash_val[sha1::HASH_SIZE];
   hmac<sha1>::calc(src, key, hash_val);
   return base64::encode_from_array(hash_val, sha1::HASH_SIZE);
