@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 sudo: required
 language: cpp
 compiler: gcc
@@ -11,10 +11,11 @@ install:
   - sudo apt-get install lcov libcpprest-dev libcurl4-openssl-dev libssl-dev uuid-dev libjson-c-dev libjsoncpp-dev
 
 env:
-  - CPLUS_INCLUDE_PATH="/usr/local/include/:/usr/include/jsoncpp/:/usr/local/opt/openssl/include/:/usr/lib/"
+  - CPLUS_INCLUDE_PATH="/usr/local/include/:/usr/include/jsoncpp/:/usr/lib/"
 
 script:
-  - sh ./scripts/run_ut.sh
+  - sh scripts/run_ut.sh
+  # - sh scripts/codecov.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

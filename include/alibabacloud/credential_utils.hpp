@@ -14,17 +14,9 @@
 #include <utility>
 #include <vector>
 
-#ifdef _WIN32
-#include <wincrypt.h>
-#include <windows.h>
-#else
-
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <openssl/hmac.h>
-
-#endif
 
 using namespace std;
 using namespace utility;
@@ -44,7 +36,7 @@ string lowercase(string data);
 
 Json::Value json_decode(const string &rawJson);
 
-string hmacSha1(const std::string &src, const std::string &secret);
+string hmacsha1(const std::string &src, const std::string &secret);
 
 string url_encode(const string &value);
 

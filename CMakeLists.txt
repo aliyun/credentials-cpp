@@ -12,6 +12,13 @@ message("C++ compiler flags: ${CMAKE_CXX_FLAGS}")
 
 option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
 message(STATUS "Enable testing: ${ENABLE_UNIT_TESTS}")
+OPTION (ENABLE_COVERAGE "Use gcov" OFF)
+message(STATUS "Enable coverage: ${ENABLE_COVERAGE}")
+if(ENABLE_COVERAGE)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+#     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
+endif()
 
 if (CMAKE_CXX_COMPILER_LOADED)
     message(STATUS "The C++ compiler ID is: ${CMAKE_CXX_COMPILER_ID}")
