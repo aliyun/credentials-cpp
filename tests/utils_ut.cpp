@@ -17,8 +17,8 @@ TEST(tests_utils, json_decode) {
   ASSERT_EQ("bar", result["foo"].asString());
 }
 
-TEST(tests_utils, hmacSha1) {
-  string res = hmacSha1("test string", "secret");
+TEST(tests_utils, hmacsha1) {
+  string res = hmacsha1("test string", "secret");
   ASSERT_EQ("3Sa/3fEiwQVdTNWwVCJ3J+Hj7s8=", res);
 }
 
