@@ -73,14 +73,14 @@ if (ENABLE_UNIT_TESTS)
     include(CTest)
     enable_testing()
     add_subdirectory(external/libraries_dev)
-    add_executable(tests
+    add_executable(tests_alibabacloud_credential
             tests/main.cpp
             tests/credentials_ut.cpp
             tests/utils_ut.cpp)
-    target_include_directories(tests
+    target_include_directories(tests_alibabacloud_credential
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(tests
+    target_link_libraries(tests_alibabacloud_credential
             PRIVATE
             ${PROJECT_NAME}
             gtest_main
@@ -90,7 +90,7 @@ if (ENABLE_UNIT_TESTS)
             ${Boost_LIBRARIES}
             ${CPPREST_LIB})
     add_test(NAME google_test
-            COMMAND $<TARGET_FILE:tests>)
+            COMMAND $<TARGET_FILE:tests_alibabacloud_credential>)
 endif ()
 
 message(STATUS "Project will be installed to ${CMAKE_INSTALL_PREFIX}")

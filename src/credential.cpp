@@ -20,9 +20,7 @@ Credential::Credential(Config *config) {
   _credentialType = config->type;
 }
 
-Credential::~Credential() {
-  delete _config;
-}
+Credential::~Credential() { delete _config; }
 
 bool Credential::hasExpired() const {
   long now = static_cast<long int>(time(nullptr));
@@ -32,9 +30,7 @@ bool Credential::hasExpired() const {
 /*** <<<<<<<<<  AccessKeyCredential  >>>>>>>> ***/
 AccessKeyCredential::AccessKeyCredential(Config *config) : Credential(config){};
 
-string *AccessKeyCredential::getAccessKeyId() {
-  return _config->accessKeyId;
-}
+string *AccessKeyCredential::getAccessKeyId() { return _config->accessKeyId; }
 
 string *AccessKeyCredential::getAccessKeySecret() {
   return _config->accessKeySecret;
