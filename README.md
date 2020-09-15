@@ -53,10 +53,10 @@ Setup access_key credential through [User Information Management][ak], it have f
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "access_key"));
-m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
-m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("access_key")));
+m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
@@ -72,11 +72,11 @@ Create a temporary security credential by applying Temporary Security Credential
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "sts"));
-m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
-m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
-m.insert(pair<string, string>("securityToken", "<SecurityToken>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("sts")));
+m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
+m.insert(pair<string, string*>("securityToken", new string("<SecurityToken>")));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
@@ -95,13 +95,13 @@ If the environment variable `ALIBABA_CLOUD_ECS_METADATA` is defined and not empt
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "ram_role_arn"));
-m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
-m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
-m.insert(pair<string, string>("roleArn", "<RoleArn>"));
-m.insert(pair<string, string>("roleSessionName", "<RoleSessionName>"));
-m.insert(pair<string, string>("policy", "<Policy>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("ram_role_arn")));
+m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
+m.insert(pair<string, string*>("roleArn", new string("<RoleArn>")));
+m.insert(pair<string, string*>("roleSessionName", new string("<RoleSessionName>")));
+m.insert(pair<string, string*>("policy", new string("<Policy>")));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
@@ -120,11 +120,11 @@ By specifying the role name, the credential will be able to automatically reques
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "ecs_ram_role"));
-m.insert(pair<string, string>("accessKeyId", "<AccessKeyId>"));
-m.insert(pair<string, string>("accessKeySecret", "<AccessKeySecret>"));
-m.insert(pair<string, string>("roleName", "<RoleName>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("ecs_ram_role")));
+m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
+m.insert(pair<string, string*>("roleName", new string("<RoleName>")));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
@@ -141,10 +141,10 @@ By specifying the public key Id and the private key file, the credential will be
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "rsa_key_pair"));
-m.insert(pair<string, string>("publicKeyId", "<PublicKeyId>"));
-m.insert(pair<string, string>("privateKeyFile", "<PrivateKeyFile>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("rsa_key_pair")));
+m.insert(pair<string, string*>("publicKeyId", new string("<PublicKeyId>")));
+m.insert(pair<string, string*>("privateKeyFile", new string("<PrivateKeyFile>")));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);
@@ -160,9 +160,9 @@ If credential is required by the Cloud Call Centre (CCC), please apply for Beare
 ```c++
 #include <alibabacloud/credential.hpp>
 
-map<string, string> m;
-m.insert(pair<string, string>("type", "bearer_token"));
-m.insert(pair<string, string>("bearerToken", "<BearerToken>"));
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("bearer_token")));
+m.insert(pair<string, string*>("bearerToken", new string(new string("<BearerToken>"))));
 
 auto *config = new Alibabacloud_Credential::Config(m);
 auto *client = new Alibabacloud_Credential::Client(config);

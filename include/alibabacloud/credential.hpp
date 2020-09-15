@@ -37,7 +37,7 @@ private:
 };
 class Config {
 public:
-  explicit Config(map<string, string> config);
+  explicit Config(map<string, string *> config);
 
   Config();
 
