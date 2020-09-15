@@ -10,7 +10,7 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 # Clone and build base directory
-set(GOOGLE_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(GOOGLE_TEST_DIR .)
 find_package(googletest ${googletest_MINIMUM_REQUIRED} QUIET COMPONENTS ${googletest_COMPONENTS_REQUIRED})
 
 if(nlohmann_json_FOUND)
