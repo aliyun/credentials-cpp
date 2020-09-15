@@ -61,7 +61,7 @@ set_target_properties(${PROJECT_NAME}
         MACOSX_RPATH ON
         WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-add_subdirectory(external/libraries)
+add_subdirectory(external)
 
 SET(BOOST_MIN_VERSION "1.58.0")
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
@@ -72,7 +72,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE crypto jsoncpp ${Boost_LIBRARIES} 
 if (ENABLE_UNIT_TESTS)
     include(CTest)
     enable_testing()
-    add_subdirectory(external/libraries_dev)
     add_executable(tests_alibabacloud_credential
             tests/main.cpp
             tests/credentials_ut.cpp
