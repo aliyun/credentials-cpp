@@ -30,44 +30,44 @@ bool Credential::hasExpired() const {
 /*** <<<<<<<<<  AccessKeyCredential  >>>>>>>> ***/
 AccessKeyCredential::AccessKeyCredential(Config *config) : Credential(config){};
 
-string *AccessKeyCredential::getAccessKeyId() { return _config->accessKeyId; }
+string AccessKeyCredential::getAccessKeyId() { return *_config->accessKeyId; }
 
-string *AccessKeyCredential::getAccessKeySecret() {
-  return _config->accessKeySecret;
+string AccessKeyCredential::getAccessKeySecret() {
+  return *_config->accessKeySecret;
 }
 
 /*** <<<<<<<<<  BearerTokenCredential  >>>>>>>> ***/
 BearerTokenCredential::BearerTokenCredential(Config *config)
     : Credential(config){};
 
-string *BearerTokenCredential::getBearerToken() { return _config->bearerToken; }
+string BearerTokenCredential::getBearerToken() { return *_config->bearerToken; }
 
 /*** <<<<<<<<<  StsCredential  >>>>>>>> ***/
 StsCredential::StsCredential(Config *config) : Credential(config) {}
 
-string *StsCredential::getAccessKeyId() { return _config->accessKeyId; }
+string StsCredential::getAccessKeyId() { return *_config->accessKeyId; }
 
-string *StsCredential::getAccessKeySecret() { return _config->accessKeySecret; }
+string StsCredential::getAccessKeySecret() { return *_config->accessKeySecret; }
 
-string *StsCredential::getSecurityToken() { return _config->securityToken; }
+string StsCredential::getSecurityToken() { return *_config->securityToken; }
 
 /*** <<<<<<<<<  EcsRamRoleCredential  >>>>>>>> ***/
 EcsRamRoleCredential::EcsRamRoleCredential(Config *config)
     : Credential(config) {}
 
-string *EcsRamRoleCredential::getAccessKeyId() {
+string EcsRamRoleCredential::getAccessKeyId() {
   refresh();
-  return _config->accessKeyId;
+  return *_config->accessKeyId;
 }
 
-string *EcsRamRoleCredential::getAccessKeySecret() {
+string EcsRamRoleCredential::getAccessKeySecret() {
   refresh();
-  return _config->accessKeySecret;
+  return *_config->accessKeySecret;
 }
 
-string *EcsRamRoleCredential::getSecurityToken() {
+string EcsRamRoleCredential::getSecurityToken() {
   refresh();
-  return _config->securityToken;
+  return *_config->securityToken;
 }
 
 void EcsRamRoleCredential::refresh() {
@@ -147,29 +147,29 @@ RamRoleArnCredential::RamRoleArnCredential(Config *config)
   }
 };
 
-string *RamRoleArnCredential::getAccessKeyId() {
+string RamRoleArnCredential::getAccessKeyId() {
   refresh();
-  return _config->accessKeyId;
+  return *_config->accessKeyId;
 }
 
-string *RamRoleArnCredential::getAccessKeySecret() {
+string RamRoleArnCredential::getAccessKeySecret() {
   refresh();
-  return _config->accessKeySecret;
+  return *_config->accessKeySecret;
 }
 
-string *RamRoleArnCredential::getSecurityToken() {
+string RamRoleArnCredential::getSecurityToken() {
   refresh();
-  return _config->securityToken;
+  return *_config->securityToken;
 }
 
-string *RamRoleArnCredential::getRoleArn() {
+string RamRoleArnCredential::getRoleArn() {
   refresh();
-  return _config->roleArn;
+  return *_config->roleArn;
 }
 
-string *RamRoleArnCredential::getPolicy() {
+string RamRoleArnCredential::getPolicy() {
   refresh();
-  return _config->policy;
+  return *_config->policy;
 }
 
 void RamRoleArnCredential::refresh() {
@@ -182,22 +182,28 @@ void RamRoleArnCredential::refreshCredential() {
   map<string, string> params;
   int duration_seconds =
       nullptr == _config->durationSeconds ? 0 : *_config->durationSeconds;
+  string roleArn = nullptr == _config->roleArn ? "" : *_config->roleArn;
+  string accessKeyId =
+      nullptr == _config->accessKeyId ? "" : *_config->accessKeyId;
+  string roleSessionName =
+      nullptr == _config->roleSessionName ? "" : *_config->roleSessionName;
+  string policy = nullptr == _config->policy ? "" : *_config->policy;
+
   params.insert(pair<string, string>("Action", "AssumeRole"));
   params.insert(pair<string, string>("Format", "JSON"));
   params.insert(pair<string, string>("Version", "2015-04-01"));
   params.insert(
       pair<string, string>("DurationSeconds", to_string(duration_seconds)));
-  params.insert(pair<string, string>("RoleArn", *_config->roleArn));
-  params.insert(pair<string, string>("AccessKeyId", *_config->accessKeyId));
+  params.insert(pair<string, string>("RoleArn", roleArn));
+  params.insert(pair<string, string>("AccessKeyId", accessKeyId));
   params.insert(pair<string, string>("RegionId", _regionId));
-  params.insert(
-      pair<string, string>("RoleSessionName", *_config->roleSessionName));
+  params.insert(pair<string, string>("RoleSessionName", roleSessionName));
   params.insert(pair<string, string>("SignatureVersion", "1.0"));
   params.insert(pair<string, string>("SignatureMethod", "HMAC-SHA1"));
   params.insert(pair<string, string>("Timestamp", gmt_datetime()));
   params.insert(pair<string, string>("SignatureNonce", uuid()));
-  if (nullptr != _config->policy && !_config->policy->empty()) {
-    params.insert(pair<string, string>("Policy", *_config->policy));
+  if (!policy.empty()) {
+    params.insert(pair<string, string>("Policy", policy));
   }
   string json = stsRequest(*_config->accessKeySecret, methods::GET, params);
   Json::Value result = json_decode(json);
@@ -207,7 +213,6 @@ void RamRoleArnCredential::refreshCredential() {
         new string(result["Credentials"]["AccessKeyId"].asString());
     _config->accessKeySecret =
         new string(result["Credentials"]["AccessKeySecret"].asString());
-    string s = result["Credentials"]["Expiration"].asString();
     _expiration = strtotime(result["Credentials"]["Expiration"].asString());
     _config->securityToken =
         new string(result["Credentials"]["SecurityToken"].asString());
@@ -222,29 +227,29 @@ void RamRoleArnCredential::refreshCredential() {
 RsaKeyPairCredential::RsaKeyPairCredential(Config *config)
     : Credential(config) {}
 
-string *RsaKeyPairCredential::getPublicKeyId() {
+string RsaKeyPairCredential::getPublicKeyId() {
   refresh();
-  return _config->publicKeyId;
+  return *_config->publicKeyId;
 }
 
-string *RsaKeyPairCredential::getPrivateKeySecret() {
+string RsaKeyPairCredential::getPrivateKeySecret() {
   refresh();
-  return _config->privateKeyFile;
+  return *_config->privateKeyFile;
 }
 
-string *RsaKeyPairCredential::getAccessKeyId() {
+string RsaKeyPairCredential::getAccessKeyId() {
   refresh();
-  return _config->accessKeyId;
+  return *_config->accessKeyId;
 }
 
-string *RsaKeyPairCredential::getAccessKeySecret() {
+string RsaKeyPairCredential::getAccessKeySecret() {
   refresh();
-  return _config->accessKeySecret;
+  return *_config->accessKeySecret;
 }
 
-string *RsaKeyPairCredential::getSecurityToken() {
+string RsaKeyPairCredential::getSecurityToken() {
   refresh();
-  return _config->securityToken;
+  return *_config->securityToken;
 }
 
 void RsaKeyPairCredential::refresh() {

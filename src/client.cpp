@@ -3,53 +3,53 @@
 
 using namespace std;
 
-string *Alibabacloud_Credential::Client::getAccessKeyId() {
+string Alibabacloud_Credential::Client::getAccessKeyId() {
   return _credential->getAccessKeyId();
 }
 
-string *Alibabacloud_Credential::Client::getAccessKeySecret() {
+string Alibabacloud_Credential::Client::getAccessKeySecret() {
   return _credential->getAccessKeySecret();
 }
 
-string *Alibabacloud_Credential::Client::getSecurityToken() {
+string Alibabacloud_Credential::Client::getSecurityToken() {
   return _credential->getSecurityToken();
 }
 
-string *Alibabacloud_Credential::Client::getBearerToken() {
+string Alibabacloud_Credential::Client::getBearerToken() {
   return _credential->getBearerToken();
 }
 
-string *Alibabacloud_Credential::Client::getType() {
+string Alibabacloud_Credential::Client::getType() {
   return _credential->getType();
 }
 
-string *Alibabacloud_Credential::Client::getRoleArn() {
-  return _credential->getConfig()->roleArn;
+string Alibabacloud_Credential::Client::getRoleArn() {
+  return *_credential->getConfig()->roleArn;
 }
 
-string *Alibabacloud_Credential::Client::getRoleSessionName() {
-  return _credential->getConfig()->roleSessionName;
+string Alibabacloud_Credential::Client::getRoleSessionName() {
+  return *_credential->getConfig()->roleSessionName;
 }
 
-string *Alibabacloud_Credential::Client::getPolicy() {
-  return _credential->getConfig()->policy;
+string Alibabacloud_Credential::Client::getPolicy() {
+  return *_credential->getConfig()->policy;
 }
 
-string *Alibabacloud_Credential::Client::getRoleName() {
-  return _credential->getConfig()->roleName;
+string Alibabacloud_Credential::Client::getRoleName() {
+  return *_credential->getConfig()->roleName;
 }
 
-string *Alibabacloud_Credential::Client::getPublicKeyId() {
-  return _credential->getConfig()->publicKeyId;
+string Alibabacloud_Credential::Client::getPublicKeyId() {
+  return *_credential->getConfig()->publicKeyId;
 }
 
-string *Alibabacloud_Credential::Client::getPrivateKey() {
-  return _credential->getConfig()->privateKeySecret;
+string Alibabacloud_Credential::Client::getPrivateKey() {
+  return *_credential->getConfig()->privateKeySecret;
 }
 
-Alibabacloud_Credential::Credential *
+Alibabacloud_Credential::Credential
 Alibabacloud_Credential::Client::getCredential() {
-  return _credential;
+  return *_credential;
 }
 
 Alibabacloud_Credential::Client::Client(

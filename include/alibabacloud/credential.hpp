@@ -67,17 +67,17 @@ public:
 
   long getExpiration() const { return _expiration; }
 
-  virtual string *getAccessKeyId() { return _config->accessKeyId; }
+  virtual string getAccessKeyId() { return *_config->accessKeyId; }
 
-  virtual string *getAccessKeySecret() { return _config->accessKeySecret; }
+  virtual string getAccessKeySecret() { return *_config->accessKeySecret; }
 
-  virtual string *getSecurityToken() { return _config->securityToken; }
+  virtual string getSecurityToken() { return *_config->securityToken; }
 
-  virtual string *getBearerToken() { return _config->bearerToken; }
+  virtual string getBearerToken() { return *_config->bearerToken; }
 
-  string *getType() const { return _config->type; }
+  string getType() const { return *_config->type; }
 
-  Alibabacloud_Credential::Config *getConfig() const { return _config; }
+  Alibabacloud_Credential::Config *getConfig() { return _config; }
 
 protected:
   Alibabacloud_Credential::Config *_config;
@@ -91,38 +91,38 @@ class AccessKeyCredential : public Credential {
 public:
   explicit AccessKeyCredential(Config *config);
 
-  string *getAccessKeyId() override;
+  string getAccessKeyId() override;
 
-  string *getAccessKeySecret() override;
+  string getAccessKeySecret() override;
 };
 
 class BearerTokenCredential : public Credential {
 public:
   explicit BearerTokenCredential(Config *config);
 
-  string *getBearerToken() override;
+  string getBearerToken() override;
 };
 
 class StsCredential : public Credential {
 public:
   explicit StsCredential(Config *config);
 
-  string *getAccessKeyId() override;
+  string getAccessKeyId() override;
 
-  string *getAccessKeySecret() override;
+  string getAccessKeySecret() override;
 
-  string *getSecurityToken() override;
+  string getSecurityToken() override;
 };
 
 class EcsRamRoleCredential : public Credential {
 public:
   explicit EcsRamRoleCredential(Config *config);
 
-  string *getAccessKeyId() override;
+  string getAccessKeyId() override;
 
-  string *getAccessKeySecret() override;
+  string getAccessKeySecret() override;
 
-  string *getSecurityToken() override;
+  string getSecurityToken() override;
 
 private:
   void refresh();
@@ -142,15 +142,15 @@ class RamRoleArnCredential : public Credential {
 public:
   explicit RamRoleArnCredential(Config *config);
 
-  string *getAccessKeyId() override;
+  string getAccessKeyId() override;
 
-  string *getAccessKeySecret() override;
+  string getAccessKeySecret() override;
 
-  string *getSecurityToken() override;
+  string getSecurityToken() override;
 
-  string *getRoleArn();
+  string getRoleArn();
 
-  string *getPolicy();
+  string getPolicy();
 
 private:
   void refresh();
@@ -163,11 +163,11 @@ private:
 class RsaKeyPairCredential : public Credential {
 public:
   explicit RsaKeyPairCredential(Config *config);
-  string *getPublicKeyId();
-  string *getPrivateKeySecret();
-  string *getAccessKeyId() override;
-  string *getAccessKeySecret() override;
-  string *getSecurityToken() override;
+  string getPublicKeyId();
+  string getPrivateKeySecret();
+  string getAccessKeyId() override;
+  string getAccessKeySecret() override;
+  string getSecurityToken() override;
 
 private:
   void refresh();
@@ -182,29 +182,29 @@ public:
 
   explicit Client(Config *config);
 
-  string *getAccessKeyId();
+  string getAccessKeyId();
 
-  string *getAccessKeySecret();
+  string getAccessKeySecret();
 
-  string *getSecurityToken();
+  string getSecurityToken();
 
-  string *getBearerToken();
+  string getBearerToken();
 
-  string *getType();
+  string getType();
 
-  string *getRoleArn();
+  string getRoleArn();
 
-  string *getRoleSessionName();
+  string getRoleSessionName();
 
-  string *getPolicy();
+  string getPolicy();
 
-  string *getRoleName();
+  string getRoleName();
 
-  string *getPublicKeyId();
+  string getPublicKeyId();
 
-  string *getPrivateKey();
+  string getPrivateKey();
 
-  Credential *getCredential();
+  Credential getCredential();
 
 private:
   Credential *_credential{};
