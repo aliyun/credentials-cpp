@@ -53,16 +53,18 @@ Setup access_key credential through [User Information Management][ak], it have f
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("access_key")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
 m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getAccessKeyId().c_str());
-printf("%s", *client.getAccessKeySecret().c_str());
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
 ```
 
 #### STS
@@ -72,18 +74,20 @@ Create a temporary security credential by applying Temporary Security Credential
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("sts")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
 m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 m.insert(pair<string, string*>("securityToken", new string("<SecurityToken>")));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getAccessKeyId().c_str());
-printf("%s", *client.getAccessKeySecret().c_str());
-printf("%s", *client.getSecurityToken().c_str());
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
+printf("%s", client.getSecurityToken().c_str());
 ```
 
 #### RamRoleArn
@@ -95,6 +99,8 @@ If the environment variable `ALIBABA_CLOUD_ECS_METADATA` is defined and not empt
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("ram_role_arn")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
@@ -103,14 +109,14 @@ m.insert(pair<string, string*>("roleArn", new string("<RoleArn>")));
 m.insert(pair<string, string*>("roleSessionName", new string("<RoleSessionName>")));
 m.insert(pair<string, string*>("policy", new string("<Policy>")));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getAccessKeyId().c_str());
-printf("%s", *client.getAccessKeySecret().c_str());
-printf("%s", *client.getRoleArn().c_str());
-printf("%s", *client.getRoleSessionName().c_str());
-printf("%s", *client.getPolicy().c_str());
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
+printf("%s", client.getRoleArn().c_str());
+printf("%s", client.getRoleSessionName().c_str());
+printf("%s", client.getPolicy().c_str());
 ```
 
 #### EcsRamRole
@@ -120,18 +126,20 @@ By specifying the role name, the credential will be able to automatically reques
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("ecs_ram_role")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
 m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 m.insert(pair<string, string*>("roleName", new string("<RoleName>")));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getAccessKeyId().c_str());
-printf("%s", *client.getAccessKeySecret().c_str());
-printf("%s", *client.getRoleName().c_str());
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
+printf("%s", client.getRoleName().c_str());
 ```
 
 #### RsaKeyPair
@@ -141,16 +149,18 @@ By specifying the public key Id and the private key file, the credential will be
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("rsa_key_pair")));
 m.insert(pair<string, string*>("publicKeyId", new string("<PublicKeyId>")));
 m.insert(pair<string, string*>("privateKeyFile", new string("<PrivateKeyFile>")));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getPublicKeyId().c_str());
-printf("%s", *client.getPrivateKey().c_str());
+printf("%s", client.getPublicKeyId().c_str());
+printf("%s", client.getPrivateKey().c_str());
 ```
 
 #### Bearer Token
@@ -160,14 +170,16 @@ If credential is required by the Cloud Call Centre (CCC), please apply for Beare
 ```c++
 #include <alibabacloud/credential.hpp>
 
+using namespace Alibabacloud_Credential;
+
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("bearer_token")));
 m.insert(pair<string, string*>("bearerToken", new string(new string("<BearerToken>"))));
 
-auto *config = new Alibabacloud_Credential::Config(m);
-auto *client = new Alibabacloud_Credential::Client(config);
+auto *config = new Config(m);
+Client client = Client(config);
 
-printf("%s", *client.getBearerToken().c_str());
+printf("%s", client.getBearerToken().c_str());
 ```
 
 ## Issue
