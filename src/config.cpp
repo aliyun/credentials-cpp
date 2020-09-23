@@ -4,49 +4,51 @@
 
 using namespace std;
 
-Alibabacloud_Credential::Config::Config(map<string, string> config) {
+Alibabacloud_Credential::Config::Config(map<string, string> *config) {
   typedef map<string, void *>::iterator MapIterator;
-  if (config.find("accessKeyId") != config.end()) {
-    accessKeyId = new string(config["accessKeyId"]);
+  map<string, string> conf =
+      config == nullptr ? map<string, string>() : *config;
+  if (conf.find("accessKeyId") != conf.end()) {
+    accessKeyId = new string(conf["accessKeyId"]);
   }
-  if (config.find("accessKeySecret") != config.end()) {
-    accessKeySecret = new string(config["accessKeySecret"]);
+  if (conf.find("accessKeySecret") != conf.end()) {
+    accessKeySecret = new string(conf["accessKeySecret"]);
   }
-  if (config.find("securityToken") != config.end()) {
-    securityToken = new string(config["securityToken"]);
+  if (conf.find("securityToken") != conf.end()) {
+    securityToken = new string(conf["securityToken"]);
   }
-  if (config.find("bearerToken") != config.end()) {
-    bearerToken = new string(config["bearerToken"]);
+  if (conf.find("bearerToken") != conf.end()) {
+    bearerToken = new string(conf["bearerToken"]);
   }
-  if (config.find("durationSeconds") != config.end()) {
-    durationSeconds = new int(stoi(config["durationSeconds"]));
+  if (conf.find("durationSeconds") != conf.end()) {
+    durationSeconds = new int(stoi(conf["durationSeconds"]));
   }
-  if (config.find("roleArn") != config.end()) {
-    roleArn = new string(config["roleArn"]);
+  if (conf.find("roleArn") != conf.end()) {
+    roleArn = new string(conf["roleArn"]);
   }
-  if (config.find("policy") != config.end()) {
-    policy = new string(config["policy"]);
+  if (conf.find("policy") != conf.end()) {
+    policy = new string(conf["policy"]);
   }
-  if (config.find("roleSessionExpiration") != config.end()) {
-    roleSessionExpiration = new int(stoi(config["roleSessionExpiration"]));
+  if (conf.find("roleSessionExpiration") != conf.end()) {
+    roleSessionExpiration = new int(stoi(conf["roleSessionExpiration"]));
   }
-  if (config.find("roleSessionName") != config.end()) {
-    roleSessionName = new string(config["roleSessionName"]);
+  if (conf.find("roleSessionName") != conf.end()) {
+    roleSessionName = new string(conf["roleSessionName"]);
   }
-  if (config.find("publicKeyId") != config.end()) {
-    publicKeyId = new string(config["publicKeyId"]);
+  if (conf.find("publicKeyId") != conf.end()) {
+    publicKeyId = new string(conf["publicKeyId"]);
   }
-  if (config.find("privateKeyFile") != config.end()) {
-    privateKeyFile = new string(config["privateKeyFile"]);
+  if (conf.find("privateKeyFile") != conf.end()) {
+    privateKeyFile = new string(conf["privateKeyFile"]);
     ifstream ifs(*privateKeyFile);
     string str((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
     privateKeySecret = new string(str);
   }
-  if (config.find("roleName") != config.end()) {
-    roleName = new string(config["roleName"]);
+  if (conf.find("roleName") != conf.end()) {
+    roleName = new string(conf["roleName"]);
   }
-  if (config.find("type") != config.end()) {
-    type = new string(config["type"]);
+  if (conf.find("type") != conf.end()) {
+    type = new string(conf["type"]);
   } else {
     // default
     type = new string("access_key");
