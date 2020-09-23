@@ -1,7 +1,6 @@
 #ifndef ALIBABACLOUD_CREDENTIAL_H_
 #define ALIBABACLOUD_CREDENTIAL_H_
 
-#include <alibabacloud/credential_utils.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <cpprest/http_client.h>
@@ -37,7 +36,7 @@ private:
 };
 class Config {
 public:
-  explicit Config(map<string, string *> config);
+  explicit Config(map<string, string> config);
 
   Config();
 
@@ -79,12 +78,17 @@ public:
 
   Alibabacloud_Credential::Config *getConfig() { return _config; }
 
+  string requestSTS(string accessKeySecret, web::http::method mtd,
+                    map<string, string> query);
+
+  web::http::http_response request(const string &url);
+
 protected:
   Alibabacloud_Credential::Config *_config;
   string *_credentialType{};
   long _expiration = 0;
 
-  bool hasExpired() const;
+  bool has_expired() const;
 };
 
 class AccessKeyCredential : public Credential {
