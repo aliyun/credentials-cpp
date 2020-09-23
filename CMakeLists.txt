@@ -36,15 +36,13 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 add_library(${PROJECT_NAME} SHARED "")
 
 set(headers
-        include/alibabacloud/credential.hpp
-        include/alibabacloud/credential_utils.hpp)
+        include/alibabacloud/credential.hpp)
 
 target_sources(${PROJECT_NAME}
         PRIVATE
         src/client.cpp
         src/config.cpp
         src/credential.cpp
-        src/utils.cpp
         ${headers})
 
 target_include_directories(${PROJECT_NAME}
@@ -74,8 +72,7 @@ if (ENABLE_UNIT_TESTS)
     enable_testing()
     add_executable(tests_alibabacloud_credential
             tests/main.cpp
-            tests/credentials_ut.cpp
-            tests/utils_ut.cpp)
+            tests/credentials.cpp)
     target_include_directories(tests_alibabacloud_credential
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include)
