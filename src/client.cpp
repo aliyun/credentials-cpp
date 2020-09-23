@@ -79,7 +79,7 @@ Alibabacloud_Credential::Client::~Client() { delete _credential; }
 Alibabacloud_Credential::Client::Client() {
   map<string, string> m;
   m.insert(pair<string, string>("type", string("access_key")));
-  auto *config = new Config(m);
+  auto *config = new Config(&m);
   auto *akc = new AccessKeyCredential(config);
   _credential = akc;
 }
