@@ -202,7 +202,7 @@ string Credential::requestSTS(string accessKeySecret, web::http::method mtd,
   return data;
 }
 
-web::http::http_response Credential::request(const string &url) {
+web::http::http_response Credential::request(string url) {
   http_client client(uri(conversions::to_string_t(url)));
   return client.request(methods::GET).get();
 }
