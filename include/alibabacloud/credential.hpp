@@ -81,7 +81,7 @@ public:
   string requestSTS(string accessKeySecret, web::http::method mtd,
                     map<string, string> query);
 
-  web::http::http_response request(const string &url);
+  virtual web::http::http_response request(string url);
 
 protected:
   Alibabacloud_Credential::Config *_config;

@@ -5,15 +5,7 @@
 #include "gmock/gmock.h"
 
 using namespace Alibabacloud_Credential;
-
-class MockClient : public Alibabacloud_Credential::Client {
-public:
-  MockClient(Alibabacloud_Credential::Config *config)
-      : Alibabacloud_Credential::Client(config){};
-  MOCK_METHOD1(request, web::http::http_response(string url));
-  MOCK_METHOD3(requestSTS, string(string accessKeySecret, web::http::method mtd,
-                                  map<string, string> query));
-};
+using namespace testing;
 
 TEST(tests_credential, access_key) {
   map<string, string> m;
@@ -53,32 +45,43 @@ TEST(tests_credential, sts) {
   ASSERT_EQ("<SecurityToken>", client.getSecurityToken());
 }
 
+TEST(tests_credential, config) {
+  map<string, string> m;
+  m.insert(pair<string, string>("durationSeconds", string("10000")));
+  m.insert(pair<string, string>("roleSessionExpiration", string("10000")));
+  m.insert(pair<string, string>("roleName", string("fake-role-name")));
+  auto *config = new Alibabacloud_Credential::Config(&m);
+  ASSERT_EQ(10000, *config->durationSeconds);
+  ASSERT_EQ(10000, *config->roleSessionExpiration);
+  ASSERT_EQ(string("fake-role-name"), *config->roleName);
+  delete config;
+}
+
 // TEST(tests_credential, ram_role_arn) {
 //  map<string, string> m;
 //  m.insert(pair<string, string>("type", string("ram_role_arn")));
 //  m.insert(pair<string, string>("accessKeyId",
-//                                  string("ram_role_arn_access_key_id")));
-//  m.insert(pair<string, string>(
-//      "accessKeySecret", string("ram_role_arn_access_key_secret")));
+//                                string("ram_role_arn_access_key_id")));
+//  m.insert(pair<string, string>("accessKeySecret",
+//                                string("ram_role_arn_access_key_secret")));
 //  m.insert(pair<string, string>("roleArn", string("<RoleArn>")));
-//  m.insert(pair<string, string>("roleSessionName",
-//                                  string("<RoleSessionName>")));
+//  m.insert(
+//      pair<string, string>("roleSessionName", string("<RoleSessionName>")));
 //  m.insert(pair<string, string>("policy", string("<Policy>")));
-//  auto *config = new Config(m);
+//  auto *config = new Config(&m);
 //  //  Client client = Client(config);
 //  MockClient client(config);
 //  map<string, string> query;
-//  EXPECT_CALL(client, requestSTS(string("request sts"), string("GET"), query))
-//      .Times(1)
-//      .WillOnce(testing::Return(
-//          R"({"Code":"Success","Credentials":{"AccessKeyId":"MockAccessKeyId","AccessKeySecret":"MockAccessKeySecret","SecurityToken":"MockSecurityToken","Expiration":"2222-08-08T08:08:08Z"}})"));
-
-//  http_response response(status_codes::OK);
+//  string url = "request sts";
+//  web::http::http_response response(web::http::status_codes::OK);
 //  response.set_body(
 //      R"({"Code":"Success","Credentials":{"AccessKeyId":"MockAccessKeyId","AccessKeySecret":"MockAccessKeySecret","SecurityToken":"MockSecurityToken","Expiration":"2222-08-08T08:08:08Z"}})");
-//  pushMockHttpResponse(response);
 
-//    ASSERT_EQ(string("MockAccessKeyId"), client.getAccessKeyId());
+//  EXPECT_CALL(client, request(_))
+//      .WillOnce(Return(response))
+//      .RetiresOnSaturation();
+
+//  ASSERT_EQ(string("MockAccessKeyId"), client.getAccessKeyId());
 //  ASSERT_EQ("MockAccessKeySecret", client.getAccessKeySecret());
 //  ASSERT_EQ("MockSecurityToken", client.getSecurityToken());
 //  ASSERT_EQ("<RoleArn>", client.getRoleArn());
@@ -131,15 +134,3 @@ TEST(tests_credential, sts) {
 //  ASSERT_EQ("MockAccessKeySecret", client.getAccessKeySecret());
 //  ASSERT_EQ("MockSecurityToken", client.getSecurityToken());
 //}
-
-TEST(tests_credential, config) {
-  map<string, string> m;
-  m.insert(pair<string, string>("durationSeconds", string("10000")));
-  m.insert(pair<string, string>("roleSessionExpiration", string("10000")));
-  m.insert(pair<string, string>("roleName", string("fake-role-name")));
-  auto *config = new Alibabacloud_Credential::Config(&m);
-  ASSERT_EQ(10000, *config->durationSeconds);
-  ASSERT_EQ(10000, *config->roleSessionExpiration);
-  ASSERT_EQ(string("fake-role-name"), *config->roleName);
-  delete config;
-}
