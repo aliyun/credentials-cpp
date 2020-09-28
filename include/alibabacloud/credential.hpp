@@ -37,56 +37,57 @@ private:
 };
 class Config {
 public:
-  explicit Config(map<string, string> *config);
+  explicit Config(const shared_ptr<map<string, string>>& config);
 
   Config();
 
   ~Config();
 
-  string *accessKeyId{};
-  string *accessKeySecret{};
-  string *securityToken{};
-  string *bearerToken{};
-  int *durationSeconds{};
-  string *roleArn{};
-  string *policy{};
-  int *roleSessionExpiration{};
-  string *roleSessionName{};
-  string *publicKeyId{};
-  string *privateKeyFile{};
-  string *privateKeySecret{};
-  string *roleName{};
-  string *type{};
+  shared_ptr<string> accessKeyId;
+  shared_ptr<string> accessKeySecret;
+  shared_ptr<string> securityToken;
+  shared_ptr<string> bearerToken;
+  shared_ptr<int> durationSeconds;
+  shared_ptr<string> roleArn;
+  shared_ptr<string> policy;
+  shared_ptr<int> roleSessionExpiration;
+  shared_ptr<string> roleSessionName;
+  shared_ptr<string> publicKeyId;
+  shared_ptr<string> privateKeyFile;
+  shared_ptr<string> privateKeySecret;
+  shared_ptr<string> roleName;
+  shared_ptr<string> type;
 };
 
 class Credential {
 public:
-  explicit Credential(Alibabacloud_Credential::Config *config);
+  explicit Credential(const Config& config);
   Credential();
   ~Credential();
 
   long getExpiration() const { return _expiration; }
 
-  virtual string getAccessKeyId() { return *_config->accessKeyId; }
+  virtual string getAccessKeyId() { return *_config.accessKeyId; }
 
-  virtual string getAccessKeySecret() { return *_config->accessKeySecret; }
+  virtual string getAccessKeySecret() { return *_config.accessKeySecret; }
 
-  virtual string getSecurityToken() { return *_config->securityToken; }
+  virtual string getSecurityToken() { return *_config.securityToken; }
 
-  virtual string getBearerToken() { return *_config->bearerToken; }
+  virtual string getBearerToken() { return *_config.bearerToken; }
 
-  string getType() const { return *_config->type; }
+  string getType() const { return *_config.type; }
 
-  Alibabacloud_Credential::Config *getConfig() { return _config; }
+  Config getConfig() { return _config; }
 
-  string requestSTS(string accessKeySecret, web::http::method mtd,
+  string requestSTS(string accessKeySecret,
+                    web::http::method mtd,
                     map<string, string> query);
 
   virtual web::http::http_response request(string url);
 
 protected:
-  Alibabacloud_Credential::Config *_config;
-  string *_credentialType{};
+  Config _config;
+  string _credentialType;
   long _expiration = 0;
 
   bool has_expired() const;
@@ -94,7 +95,7 @@ protected:
 
 class AccessKeyCredential : public Credential {
 public:
-  explicit AccessKeyCredential(Config *config);
+  explicit AccessKeyCredential(const Config& config);
 
   string getAccessKeyId() override;
 
@@ -103,14 +104,14 @@ public:
 
 class BearerTokenCredential : public Credential {
 public:
-  explicit BearerTokenCredential(Config *config);
+  explicit BearerTokenCredential(const Config& config);
 
   string getBearerToken() override;
 };
 
 class StsCredential : public Credential {
 public:
-  explicit StsCredential(Config *config);
+  explicit StsCredential(const Config& config);
 
   string getAccessKeyId() override;
 
@@ -121,7 +122,7 @@ public:
 
 class EcsRamRoleCredential : public Credential {
 public:
-  explicit EcsRamRoleCredential(Config *config);
+  explicit EcsRamRoleCredential(const Config& config);
 
   string getAccessKeyId() override;
 
@@ -145,7 +146,7 @@ private:
 
 class RamRoleArnCredential : public Credential {
 public:
-  explicit RamRoleArnCredential(Config *config);
+  explicit RamRoleArnCredential(const Config& config);
 
   string getAccessKeyId() override;
 
@@ -167,7 +168,7 @@ private:
 
 class RsaKeyPairCredential : public Credential {
 public:
-  explicit RsaKeyPairCredential(Config *config);
+  explicit RsaKeyPairCredential(const Config& config);
   string getPublicKeyId();
   string getPrivateKeySecret();
   string getAccessKeyId() override;
@@ -185,7 +186,7 @@ public:
 
   ~Client();
 
-  explicit Client(Config *config);
+  explicit Client(shared_ptr<Config> config);
 
   string getAccessKeyId();
 
