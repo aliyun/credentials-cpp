@@ -23,7 +23,8 @@ public:
     } else {
       error_info = "Refresh Credential Error : " + _msg;
     }
-    return error_info.c_str();
+    const char *c = error_info.c_str();
+    return c;
   }
 
   void setHttpResponse(const web::http::http_response &res) { _res = res; }
