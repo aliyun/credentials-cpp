@@ -14,7 +14,7 @@ TEST(tests_credential, access_key) {
   m.insert(
       pair<string, string>("accessKeySecret", string("fakeAccessKeySecret")));
 
-  Client client = Client(new Config(&m));
+  Client client = Client(make_shared<Config>(make_shared<map<string, string>>(m)));
 
   ASSERT_EQ(string("fakeAccessKeyId"), client.getAccessKeyId());
 }
@@ -25,7 +25,7 @@ TEST(tests_credential, bearer_token) {
   m.insert(pair<string, string>("type", string("bearer_token")));
   m.insert(pair<string, string>("bearerToken", string("<BearerToken>")));
 
-  Client client = Client(new Config(&m));
+  Client client = Client(make_shared<Config>(make_shared<map<string, string>>(m)));
 
   ASSERT_EQ("<BearerToken>", client.getBearerToken());
 }
@@ -38,7 +38,7 @@ TEST(tests_credential, sts) {
       pair<string, string>("accessKeySecret", string("<AccessKeySecret>")));
   m.insert(pair<string, string>("securityToken", string("<SecurityToken>")));
 
-  Client client = Client(new Config(&m));
+  Client client = Client(make_shared<Config>(make_shared<map<string, string>>(m)));
 
   ASSERT_EQ("<AccessKeyId>", client.getAccessKeyId());
   ASSERT_EQ("<AccessKeySecret>", client.getAccessKeySecret());
@@ -50,11 +50,11 @@ TEST(tests_credential, config) {
   m.insert(pair<string, string>("durationSeconds", string("10000")));
   m.insert(pair<string, string>("roleSessionExpiration", string("10000")));
   m.insert(pair<string, string>("roleName", string("fake-role-name")));
-  auto *config = new Alibabacloud_Credential::Config(&m);
-  ASSERT_EQ(10000, *config->durationSeconds);
-  ASSERT_EQ(10000, *config->roleSessionExpiration);
-  ASSERT_EQ(string("fake-role-name"), *config->roleName);
-  delete config;
+  Alibabacloud_Credential::Config config(make_shared<map<string, string>>(m));
+
+  ASSERT_EQ(10000, *config.durationSeconds);
+  ASSERT_EQ(10000, *config.roleSessionExpiration);
+  ASSERT_EQ(string("fake-role-name"), *config.roleName);
 }
 
 // TEST(tests_credential, ram_role_arn) {
