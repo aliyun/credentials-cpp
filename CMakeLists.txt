@@ -53,7 +53,7 @@ set_target_properties(${PROJECT_NAME}
         PROPERTIES
         POSITION_INDEPENDENT_CODE 1
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        OUTPUT_NAME "rpc"
+        OUTPUT_NAME "${PROJECT_NAME}"
         DEBUG_POSTFIX "_d"
         PUBLIC_HEADER "${headers}"
         MACOSX_RPATH ON

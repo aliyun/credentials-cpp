@@ -37,7 +37,7 @@ private:
 };
 class Config {
 public:
-  explicit Config(const shared_ptr<map<string, string>>& config);
+  explicit Config(map<string, string> config);
 
   Config();
 
@@ -186,7 +186,7 @@ public:
 
   ~Client();
 
-  explicit Client(shared_ptr<Config> config);
+  explicit Client(Config config);
 
   string getAccessKeyId();
 
