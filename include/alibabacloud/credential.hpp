@@ -186,7 +186,7 @@ public:
 
   ~Client();
 
-  explicit Client(Config config);
+  explicit Client(shared_ptr<Config> config);
 
   string getAccessKeyId();
 
