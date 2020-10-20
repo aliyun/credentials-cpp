@@ -4,51 +4,48 @@
 
 using namespace std;
 
-Alibabacloud_Credential::Config::Config(const shared_ptr<map<string, string>>& config) {
-  typedef map<string, void *>::iterator MapIterator;
-  map<string, string> conf =
-      !config ? map<string, string>() : *config;
-  if (conf.find("accessKeyId") != conf.end()) {
-    accessKeyId = make_shared<string>(conf["accessKeyId"]);
+Alibabacloud_Credential::Config::Config(map<string, string> config) {
+  if (config.find("accessKeyId") != config.end()) {
+    accessKeyId = make_shared<string>(config.at("accessKeyId"));
   }
-  if (conf.find("accessKeySecret") != conf.end()) {
-    accessKeySecret = make_shared<string>(conf["accessKeySecret"]);
+  if (config.find("accessKeySecret") != config.end()) {
+    accessKeySecret = make_shared<string>(config.at("accessKeySecret"));
   }
-  if (conf.find("securityToken") != conf.end()) {
-    securityToken = make_shared<string>(conf["securityToken"]);
+  if (config.find("securityToken") != config.end()) {
+    securityToken = make_shared<string>(config.at("securityToken"));
   }
-  if (conf.find("bearerToken") != conf.end()) {
-    bearerToken = make_shared<string>(conf["bearerToken"]);
+  if (config.find("bearerToken") != config.end()) {
+    bearerToken = make_shared<string>(config.at("bearerToken"));
   }
-  if (conf.find("durationSeconds") != conf.end()) {
-    durationSeconds = make_shared<int>(stoi(conf["durationSeconds"]));
+  if (config.find("durationSeconds") != config.end()) {
+    durationSeconds = make_shared<int>(stoi(config.at("durationSeconds")));
   }
-  if (conf.find("roleArn") != conf.end()) {
-    roleArn = make_shared<string>(conf["roleArn"]);
+  if (config.find("roleArn") != config.end()) {
+    roleArn = make_shared<string>(config.at("roleArn"));
   }
-  if (conf.find("policy") != conf.end()) {
-    policy = make_shared<string>(conf["policy"]);
+  if (config.find("policy") != config.end()) {
+    policy = make_shared<string>(config.at("policy"));
   }
-  if (conf.find("roleSessionExpiration") != conf.end()) {
-    roleSessionExpiration = make_shared<int>(stoi(conf["roleSessionExpiration"]));
+  if (config.find("roleSessionExpiration") != config.end()) {
+    roleSessionExpiration = make_shared<int>(stoi(config.at("roleSessionExpiration")));
   }
-  if (conf.find("roleSessionName") != conf.end()) {
-    roleSessionName = make_shared<string>(conf["roleSessionName"]);
+  if (config.find("roleSessionName") != config.end()) {
+    roleSessionName = make_shared<string>(config.at("roleSessionName"));
   }
-  if (conf.find("publicKeyId") != conf.end()) {
-    publicKeyId = make_shared<string>(conf["publicKeyId"]);
+  if (config.find("publicKeyId") != config.end()) {
+    publicKeyId = make_shared<string>(config.at("publicKeyId"));
   }
-  if (conf.find("privateKeyFile") != conf.end()) {
-    privateKeyFile = make_shared<string>(conf["privateKeyFile"]);
+  if (config.find("privateKeyFile") != config.end()) {
+    privateKeyFile = make_shared<string>(config.at("privateKeyFile"));
     ifstream ifs(*privateKeyFile);
     string str((istreambuf_iterator<char>(ifs)), istreambuf_iterator<char>());
     privateKeySecret = make_shared<string>(str);
   }
-  if (conf.find("roleName") != conf.end()) {
-    roleName = make_shared<string>(conf["roleName"]);
+  if (config.find("roleName") != config.end()) {
+    roleName = make_shared<string>(config.at("roleName"));
   }
-  if (conf.find("type") != conf.end()) {
-    type = make_shared<string>(conf["type"]);
+  if (config.find("type") != config.end()) {
+    type = make_shared<string>(config.at("type"));
   } else {
     // default
     type = make_shared<string>("access_key");
