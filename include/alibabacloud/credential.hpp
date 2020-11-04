@@ -1,6 +1,7 @@
 #ifndef ALIBABACLOUD_CREDENTIAL_H_
 #define ALIBABACLOUD_CREDENTIAL_H_
 
+#include <boost/any.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <cpprest/http_client.h>
@@ -37,7 +38,7 @@ private:
 };
 class Config {
 public:
-  explicit Config(map<string, string> config);
+  explicit Config(const boost::any &config);
 
   Config();
 
@@ -57,11 +58,14 @@ public:
   shared_ptr<string> privateKeySecret;
   shared_ptr<string> roleName;
   shared_ptr<string> type;
+
+private:
+  void resolve(map<string, string> config);
 };
 
 class Credential {
 public:
-  explicit Credential(const Config& config);
+  explicit Credential(const Config &config);
   Credential();
   ~Credential();
 
@@ -79,8 +83,7 @@ public:
 
   Config getConfig() { return _config; }
 
-  string requestSTS(string accessKeySecret,
-                    web::http::method mtd,
+  string requestSTS(string accessKeySecret, web::http::method mtd,
                     map<string, string> query);
 
   virtual web::http::http_response request(string url);
@@ -95,7 +98,7 @@ protected:
 
 class AccessKeyCredential : public Credential {
 public:
-  explicit AccessKeyCredential(const Config& config);
+  explicit AccessKeyCredential(const Config &config);
 
   string getAccessKeyId() override;
 
@@ -104,14 +107,14 @@ public:
 
 class BearerTokenCredential : public Credential {
 public:
-  explicit BearerTokenCredential(const Config& config);
+  explicit BearerTokenCredential(const Config &config);
 
   string getBearerToken() override;
 };
 
 class StsCredential : public Credential {
 public:
-  explicit StsCredential(const Config& config);
+  explicit StsCredential(const Config &config);
 
   string getAccessKeyId() override;
 
@@ -122,7 +125,7 @@ public:
 
 class EcsRamRoleCredential : public Credential {
 public:
-  explicit EcsRamRoleCredential(const Config& config);
+  explicit EcsRamRoleCredential(const Config &config);
 
   string getAccessKeyId() override;
 
@@ -146,7 +149,7 @@ private:
 
 class RamRoleArnCredential : public Credential {
 public:
-  explicit RamRoleArnCredential(const Config& config);
+  explicit RamRoleArnCredential(const Config &config);
 
   string getAccessKeyId() override;
 
@@ -168,7 +171,7 @@ private:
 
 class RsaKeyPairCredential : public Credential {
 public:
-  explicit RsaKeyPairCredential(const Config& config);
+  explicit RsaKeyPairCredential(const Config &config);
   string getPublicKeyId();
   string getPrivateKeySecret();
   string getAccessKeyId() override;
