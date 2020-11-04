@@ -4,7 +4,17 @@
 
 using namespace std;
 
-Alibabacloud_Credential::Config::Config(map<string, string> config) {
+Alibabacloud_Credential::Config::Config(const boost::any &config) {
+  if (typeid(map<string, string>) == config.type()) {
+    resolve(boost::any_cast<map<string, string>>(config));
+  } else if (typeid(shared_ptr<map<string, string>>) == config.type()) {
+    shared_ptr<map<string, string>> c =
+        boost::any_cast<shared_ptr<map<string, string>>>(config);
+    resolve(*c);
+  }
+}
+
+void Alibabacloud_Credential::Config::resolve(map<string, string> config) {
   if (config.find("accessKeyId") != config.end()) {
     accessKeyId = make_shared<string>(config.at("accessKeyId"));
   }
@@ -27,7 +37,8 @@ Alibabacloud_Credential::Config::Config(map<string, string> config) {
     policy = make_shared<string>(config.at("policy"));
   }
   if (config.find("roleSessionExpiration") != config.end()) {
-    roleSessionExpiration = make_shared<int>(stoi(config.at("roleSessionExpiration")));
+    roleSessionExpiration =
+        make_shared<int>(stoi(config.at("roleSessionExpiration")));
   }
   if (config.find("roleSessionName") != config.end()) {
     roleSessionName = make_shared<string>(config.at("roleSessionName"));
@@ -51,5 +62,6 @@ Alibabacloud_Credential::Config::Config(map<string, string> config) {
     type = make_shared<string>("access_key");
   }
 }
-Alibabacloud_Credential::Config::~Config() = default;;
+Alibabacloud_Credential::Config::~Config() = default;
+;
 Alibabacloud_Credential::Config::Config() = default;

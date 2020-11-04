@@ -169,15 +169,14 @@ string sign_string(const method &mtd, map<string, string> query) {
 /*** <<<<<<<<<  Credential  >>>>>>>> ***/
 Credential::Credential() = default;
 
-Credential::Credential(const Config& config) {
+Credential::Credential(const Config &config) {
   _config = config;
   _credentialType = *config.type;
 }
 
 Credential::~Credential() = default;
 
-string Credential::requestSTS(string accessKeySecret,
-                              web::http::method mtd,
+string Credential::requestSTS(string accessKeySecret, web::http::method mtd,
                               map<string, string> query) {
   string strToSign = sign_string(mtd, query);
 
@@ -209,7 +208,8 @@ web::http::http_response Credential::request(string url) {
 }
 
 /*** <<<<<<<<<  AccessKeyCredential  >>>>>>>> ***/
-AccessKeyCredential::AccessKeyCredential(const Config& config) : Credential(config){};
+AccessKeyCredential::AccessKeyCredential(const Config &config)
+    : Credential(config){};
 
 string AccessKeyCredential::getAccessKeyId() { return *_config.accessKeyId; }
 
@@ -218,13 +218,13 @@ string AccessKeyCredential::getAccessKeySecret() {
 }
 
 /*** <<<<<<<<<  BearerTokenCredential  >>>>>>>> ***/
-BearerTokenCredential::BearerTokenCredential(const Config& config)
+BearerTokenCredential::BearerTokenCredential(const Config &config)
     : Credential(config){};
 
 string BearerTokenCredential::getBearerToken() { return *_config.bearerToken; }
 
 /*** <<<<<<<<<  StsCredential  >>>>>>>> ***/
-StsCredential::StsCredential(const Config& config) : Credential(config) {}
+StsCredential::StsCredential(const Config &config) : Credential(config) {}
 
 string StsCredential::getAccessKeyId() { return *_config.accessKeyId; }
 
@@ -233,7 +233,7 @@ string StsCredential::getAccessKeySecret() { return *_config.accessKeySecret; }
 string StsCredential::getSecurityToken() { return *_config.securityToken; }
 
 /*** <<<<<<<<<  EcsRamRoleCredential  >>>>>>>> ***/
-EcsRamRoleCredential::EcsRamRoleCredential(const Config& config)
+EcsRamRoleCredential::EcsRamRoleCredential(const Config &config)
     : Credential(config) {}
 
 string EcsRamRoleCredential::getAccessKeyId() {
@@ -292,9 +292,12 @@ void EcsRamRoleCredential::refreshCredential() {
     Json::Value result = json_decode(data);
     string code = result["Code"].asString();
     if (code == "Success") {
-      _config.accessKeyId = make_shared<string>(result["AccessKeyId"].asString());
-      _config.accessKeySecret = make_shared<string>(result["AccessKeySecret"].asString());
-      _config.securityToken = make_shared<string>(result["SecurityToken"].asString());
+      _config.accessKeyId =
+          make_shared<string>(result["AccessKeyId"].asString());
+      _config.accessKeySecret =
+          make_shared<string>(result["AccessKeySecret"].asString());
+      _config.securityToken =
+          make_shared<string>(result["SecurityToken"].asString());
       _expiration = strtotime(result["Expiration"].asString());
     } else {
       RefreshCredentialException rce(ECS_META_DATA_FETCH_ERROR_MSG);
@@ -309,10 +312,9 @@ void EcsRamRoleCredential::refreshCredential() {
 }
 
 /*** <<<<<<<<<  RamRoleArnCredential  >>>>>>>> ***/
-RamRoleArnCredential::RamRoleArnCredential(const Config& config)
+RamRoleArnCredential::RamRoleArnCredential(const Config &config)
     : Credential(config) {
-  if (!_config.roleSessionName &&
-      _config.roleSessionName->empty()) {
+  if (!_config.roleSessionName && _config.roleSessionName->empty()) {
     _config.roleSessionName = make_shared<string>("defaultSessionName");
   }
 };
@@ -353,8 +355,7 @@ void RamRoleArnCredential::refreshCredential() {
   int duration_seconds =
       !_config.durationSeconds ? 0 : *_config.durationSeconds;
   string roleArn = !_config.roleArn ? "" : *_config.roleArn;
-  string accessKeyId =
-      !_config.accessKeyId ? "" : *_config.accessKeyId;
+  string accessKeyId = !_config.accessKeyId ? "" : *_config.accessKeyId;
   string roleSessionName =
       !_config.roleSessionName ? "" : *_config.roleSessionName;
   string policy = !_config.policy ? "" : *_config.policy;
@@ -379,10 +380,13 @@ void RamRoleArnCredential::refreshCredential() {
   Json::Value result = json_decode(json);
   string code = result["Code"].asString();
   if (code == "Success") {
-    _config.accessKeyId = make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
-    _config.accessKeySecret = make_shared<string>(result["Credentials"]["AccessKeySecret"].asString());
+    _config.accessKeyId =
+        make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
+    _config.accessKeySecret = make_shared<string>(
+        result["Credentials"]["AccessKeySecret"].asString());
     _expiration = strtotime(result["Credentials"]["Expiration"].asString());
-    _config.securityToken = make_shared<string>(result["Credentials"]["SecurityToken"].asString());
+    _config.securityToken =
+        make_shared<string>(result["Credentials"]["SecurityToken"].asString());
   } else {
     RefreshCredentialException rce(
         "Failed to get Security Token from STS service.");
@@ -391,7 +395,7 @@ void RamRoleArnCredential::refreshCredential() {
 }
 
 /*** <<<<<<<<<  RsaKeyPairCredential  >>>>>>>> ***/
-RsaKeyPairCredential::RsaKeyPairCredential(const Config& config)
+RsaKeyPairCredential::RsaKeyPairCredential(const Config &config)
     : Credential(config) {}
 
 string RsaKeyPairCredential::getPublicKeyId() {
@@ -429,8 +433,7 @@ void RsaKeyPairCredential::refreshCredential() {
   map<string, string> params;
   int duration_seconds =
       !_config.durationSeconds ? 0 : *_config.durationSeconds;
-  string access_key_id =
-      !_config.publicKeyId ? "" : *_config.publicKeyId;
+  string access_key_id = !_config.publicKeyId ? "" : *_config.publicKeyId;
   params.insert(pair<string, string>("Action", "GenerateSessionAccessKey"));
   params.insert(pair<string, string>("Format", "JSON"));
   params.insert(pair<string, string>("Version", "2015-04-01"));
@@ -442,16 +445,18 @@ void RsaKeyPairCredential::refreshCredential() {
   params.insert(pair<string, string>("SignatureMethod", "HMAC-SHA1"));
   params.insert(pair<string, string>("Timestamp", gmt_datetime()));
   params.insert(pair<string, string>("SignatureNonce", uuid()));
-  string secret =
-      !_config.privateKeySecret ? "" : *_config.privateKeySecret;
+  string secret = !_config.privateKeySecret ? "" : *_config.privateKeySecret;
   string json = requestSTS(secret, methods::GET, params);
   Json::Value result = json_decode(json);
   string code = result["Code"].asString();
   if (code == "Success") {
-    _config.accessKeyId = make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
-    _config.accessKeySecret = make_shared<string>(result["Credentials"]["AccessKeySecret"].asString());
+    _config.accessKeyId =
+        make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
+    _config.accessKeySecret = make_shared<string>(
+        result["Credentials"]["AccessKeySecret"].asString());
     _expiration = strtotime(result["Credentials"]["Expiration"].asString());
-    _config.securityToken = make_shared<string>(result["Credentials"]["SecurityToken"].asString());
+    _config.securityToken =
+        make_shared<string>(result["Credentials"]["SecurityToken"].asString());
   } else {
     RefreshCredentialException rce(
         "Failed to get Security Token from STS service.");
