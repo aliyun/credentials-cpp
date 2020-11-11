@@ -1,5 +1,6 @@
 #include "crypt/hmac.h"
 #include "crypt/sha1.h"
+#include <regex>
 #include <alibabacloud/credential.hpp>
 #include <boost/any.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,20 +34,6 @@ string hmacsha1(const std::string &src, const std::string &key) {
   boost::uint8_t hash_val[sha1::HASH_SIZE];
   hmac<sha1>::calc(src, key, hash_val);
   return base64::encode_from_array(hash_val, sha1::HASH_SIZE);
-}
-
-Json::Value json_decode(const string &str) {
-  const auto len = static_cast<int>(str.length());
-  JSONCPP_STRING err;
-  Json::Value root;
-
-  Json::CharReaderBuilder builder;
-  const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-  if (!reader->parse(str.c_str(), str.c_str() + len, &root, &err)) {
-    string error_info = "json_decode error : " + err;
-    throw error_info;
-  }
-  return root;
 }
 
 string url_encode(const string &value) {
@@ -164,6 +151,42 @@ string sign_string(const method &mtd, map<string, string> query) {
   params.push_back(url_encode("/"));
   params.push_back(url_encode(build_http_query_str(std::move(query))));
   return implode(params, "&");
+}
+
+boost::any parse_json(boost::property_tree::ptree pt) {
+  if (pt.empty()) {
+    if (pt.data() == "true" || pt.data() == "false") {
+      return boost::any(pt.get_value<bool>());
+    } else if (regex_search(pt.data(), regex("^-?\\d+$"))) {
+      long ln = atol(pt.data().c_str());
+      if (ln > 2147483647 || ln < -2147483648) {
+        return boost::any(ln);
+      } else {
+        return boost::any(atoi(pt.data().c_str()));
+      }
+    } else if (regex_search(pt.data(), regex(R"(^-?\d+\.{1}\d+$)"))) {
+      return boost::any(atof(pt.data().c_str()));
+    }
+    return boost::any(pt.data());
+  }
+  vector<boost::any> vec;
+  map<string, boost::any> m;
+  for (const auto &it : pt) {
+    if (!it.first.empty()) {
+      m[it.first] = parse_json(it.second);
+    } else {
+      vec.push_back(parse_json(it.second));
+    }
+  }
+  return vec.empty() ? boost::any(m) : boost::any(vec);
+}
+
+boost::any json_decode(const string &str) {
+  std::stringstream ss(str);
+  using namespace boost::property_tree;
+  ptree pt;
+  read_json(ss, pt);
+  return parse_json(pt);
 }
 
 /*** <<<<<<<<<  Credential  >>>>>>>> ***/
@@ -289,16 +312,16 @@ void EcsRamRoleCredential::refreshCredential() {
   if (response.status_code() == status_codes::OK) {
     response.body().read_to_end(buffer).get();
     string data = buffer.collection();
-    Json::Value result = json_decode(data);
-    string code = result["Code"].asString();
+    map<string, boost::any> result = boost::any_cast<map<string, boost::any>>(json_decode(data));
+    string code = boost::any_cast<string>(result["Code"]);
     if (code == "Success") {
       _config.accessKeyId =
-          make_shared<string>(result["AccessKeyId"].asString());
+          make_shared<string>(boost::any_cast<string>(result["AccessKeyId"]));
       _config.accessKeySecret =
-          make_shared<string>(result["AccessKeySecret"].asString());
+          make_shared<string>(boost::any_cast<string>(result["AccessKeySecret"]));
       _config.securityToken =
-          make_shared<string>(result["SecurityToken"].asString());
-      _expiration = strtotime(result["Expiration"].asString());
+          make_shared<string>(boost::any_cast<string>(result["SecurityToken"]));
+      _expiration = strtotime(boost::any_cast<string>(result["Expiration"]));
     } else {
       RefreshCredentialException rce(ECS_META_DATA_FETCH_ERROR_MSG);
       rce.setHttpResponse(response);
@@ -377,16 +400,17 @@ void RamRoleArnCredential::refreshCredential() {
     params.insert(pair<string, string>("Policy", policy));
   }
   string json = requestSTS(*_config.accessKeySecret, methods::GET, params);
-  Json::Value result = json_decode(json);
-  string code = result["Code"].asString();
+  map<string, boost::any> result = boost::any_cast<map<string, boost::any>>(json_decode(json));
+  string code = boost::any_cast<string>(result["Code"]);
   if (code == "Success") {
+    map<string, boost::any> credential = boost::any_cast<map<string, boost::any>>(result["Credentials"]);
     _config.accessKeyId =
-        make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
+        make_shared<string>(boost::any_cast<string>(credential["AccessKeyId"]));
     _config.accessKeySecret = make_shared<string>(
-        result["Credentials"]["AccessKeySecret"].asString());
-    _expiration = strtotime(result["Credentials"]["Expiration"].asString());
+        boost::any_cast<string>(credential["AccessKeySecret"]));
+    _expiration = strtotime(boost::any_cast<string>(credential["Expiration"]));
     _config.securityToken =
-        make_shared<string>(result["Credentials"]["SecurityToken"].asString());
+        make_shared<string>(boost::any_cast<string>(credential["SecurityToken"]));
   } else {
     RefreshCredentialException rce(
         "Failed to get Security Token from STS service.");
@@ -447,16 +471,16 @@ void RsaKeyPairCredential::refreshCredential() {
   params.insert(pair<string, string>("SignatureNonce", uuid()));
   string secret = !_config.accessKeySecret ? "" : *_config.accessKeySecret;
   string json = requestSTS(secret, methods::GET, params);
-  Json::Value result = json_decode(json);
-  string code = result["Code"].asString();
+
+  map<string, boost::any> result = boost::any_cast<map<string, boost::any>>(json_decode(json));
+  string code = boost::any_cast<string>(result["Code"]);
   if (code == "Success") {
+    map<string, boost::any> SessionAccessKey = boost::any_cast<map<string, boost::any>>(result["SessionAccessKey"]);
     _config.accessKeyId =
-        make_shared<string>(result["Credentials"]["AccessKeyId"].asString());
+        make_shared<string>(boost::any_cast<string>(SessionAccessKey["SessionAccessKeyId"]));
     _config.accessKeySecret = make_shared<string>(
-        result["Credentials"]["AccessKeySecret"].asString());
-    _expiration = strtotime(result["Credentials"]["Expiration"].asString());
-    _config.securityToken =
-        make_shared<string>(result["Credentials"]["SecurityToken"].asString());
+        boost::any_cast<string>(SessionAccessKey["SessionAccessKeySecret"]));
+    _expiration = strtotime(boost::any_cast<string>(SessionAccessKey["Expiration"]));
   } else {
     RefreshCredentialException rce(
         "Failed to get Security Token from STS service.");
