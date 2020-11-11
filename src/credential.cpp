@@ -445,7 +445,7 @@ void RsaKeyPairCredential::refreshCredential() {
   params.insert(pair<string, string>("SignatureMethod", "HMAC-SHA1"));
   params.insert(pair<string, string>("Timestamp", gmt_datetime()));
   params.insert(pair<string, string>("SignatureNonce", uuid()));
-  string secret = !_config.privateKeySecret ? "" : *_config.privateKeySecret;
+  string secret = !_config.accessKeySecret ? "" : *_config.accessKeySecret;
   string json = requestSTS(secret, methods::GET, params);
   Json::Value result = json_decode(json);
   string code = result["Code"].asString();

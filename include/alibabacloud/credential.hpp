@@ -1,6 +1,7 @@
 #ifndef ALIBABACLOUD_CREDENTIAL_H_
 #define ALIBABACLOUD_CREDENTIAL_H_
 
+#include <darabonba/core.hpp>
 #include <boost/any.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/ssl/stream.hpp>
@@ -36,31 +37,117 @@ private:
   string _msg;
   web::http::http_response _res;
 };
-class Config {
+
+class Config : public Darabonba::Model {
 public:
-  explicit Config(const boost::any &config);
+  Config() {}
+  explicit Config(const std::map<string, boost::any> &config) : Darabonba::Model(config) {
+    fromMap(config);
+  };
 
-  Config();
+  void validate() override {}
 
-  ~Config();
+  map<string, boost::any> toMap() override {
+    map<string, boost::any> res;
+    if (accessKeyId) {
+      res["accessKeyId"] = boost::any(*accessKeyId);
+    }
+    if (accessKeySecret) {
+      res["accessKeySecret"] = boost::any(*accessKeySecret);
+    }
+    if (securityToken) {
+      res["securityToken"] = boost::any(*securityToken);
+    }
+    if (bearerToken) {
+      res["bearerToken"] = boost::any(*bearerToken);
+    }
+    if (durationSeconds) {
+      res["durationSeconds"] = boost::any(*durationSeconds);
+    }
+    if (roleArn) {
+      res["roleArn"] = boost::any(*roleArn);
+    }
+    if (policy) {
+      res["policy"] = boost::any(*policy);
+    }
+    if (roleSessionExpiration) {
+      res["roleSessionExpiration"] = boost::any(*roleSessionExpiration);
+    }
+    if (roleSessionName) {
+      res["roleSessionName"] = boost::any(*roleSessionName);
+    }
+    if (publicKeyId) {
+      res["publicKeyId"] = boost::any(*publicKeyId);
+    }
+    if (privateKeyFile) {
+      res["privateKeyFile"] = boost::any(*privateKeyFile);
+    }
+    if (roleName) {
+      res["roleName"] = boost::any(*roleName);
+    }
+    if (type) {
+      res["type"] = boost::any(*type);
+    }
+    return res;
+  }
 
-  shared_ptr<string> accessKeyId;
-  shared_ptr<string> accessKeySecret;
-  shared_ptr<string> securityToken;
-  shared_ptr<string> bearerToken;
-  shared_ptr<int> durationSeconds;
-  shared_ptr<string> roleArn;
-  shared_ptr<string> policy;
-  shared_ptr<int> roleSessionExpiration;
-  shared_ptr<string> roleSessionName;
-  shared_ptr<string> publicKeyId;
-  shared_ptr<string> privateKeyFile;
-  shared_ptr<string> privateKeySecret;
-  shared_ptr<string> roleName;
-  shared_ptr<string> type;
+  void fromMap(map<string, boost::any> m) override {
+    if (m.find("accessKeyId") != m.end()) {
+      accessKeyId = make_shared<string>(boost::any_cast<string>(m["accessKeyId"]));
+    }
+    if (m.find("accessKeySecret") != m.end()) {
+      accessKeySecret = make_shared<string>(boost::any_cast<string>(m["accessKeySecret"]));
+    }
+    if (m.find("securityToken") != m.end()) {
+      securityToken = make_shared<string>(boost::any_cast<string>(m["securityToken"]));
+    }
+    if (m.find("bearerToken") != m.end()) {
+      bearerToken = make_shared<string>(boost::any_cast<string>(m["bearerToken"]));
+    }
+    if (m.find("durationSeconds") != m.end()) {
+      durationSeconds = make_shared<int>(boost::any_cast<int>(m["durationSeconds"]));
+    }
+    if (m.find("roleArn") != m.end()) {
+      roleArn = make_shared<string>(boost::any_cast<string>(m["roleArn"]));
+    }
+    if (m.find("policy") != m.end()) {
+      policy = make_shared<string>(boost::any_cast<string>(m["policy"]));
+    }
+    if (m.find("roleSessionExpiration") != m.end()) {
+      roleSessionExpiration = make_shared<int>(boost::any_cast<int>(m["roleSessionExpiration"]));
+    }
+    if (m.find("roleSessionName") != m.end()) {
+      roleSessionName = make_shared<string>(boost::any_cast<string>(m["roleSessionName"]));
+    }
+    if (m.find("publicKeyId") != m.end()) {
+      publicKeyId = make_shared<string>(boost::any_cast<string>(m["publicKeyId"]));
+    }
+    if (m.find("privateKeyFile") != m.end()) {
+      privateKeyFile = make_shared<string>(boost::any_cast<string>(m["privateKeyFile"]));
+    }
+    if (m.find("roleName") != m.end()) {
+      roleName = make_shared<string>(boost::any_cast<string>(m["roleName"]));
+    }
+    if (m.find("type") != m.end()) {
+      type = make_shared<string>(boost::any_cast<string>(m["type"]));
+    }
+  }
 
-private:
-  void resolve(map<string, string> config);
+  shared_ptr<string> accessKeyId{};
+  shared_ptr<string> accessKeySecret{};
+  shared_ptr<string> securityToken{};
+  shared_ptr<string> bearerToken{};
+  shared_ptr<int> durationSeconds{};
+  shared_ptr<string> roleArn{};
+  shared_ptr<string> policy{};
+  shared_ptr<int> roleSessionExpiration{};
+  shared_ptr<string> roleSessionName{};
+  shared_ptr<string> publicKeyId{};
+  shared_ptr<string> privateKeyFile{};
+  shared_ptr<string> roleName{};
+  shared_ptr<string> type{};
+
+  ~Config() = default;
 };
 
 class Credential {
