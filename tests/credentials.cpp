@@ -8,11 +8,11 @@ using namespace Alibabacloud_Credential;
 using namespace testing;
 
 TEST(tests_credential, access_key) {
-  map<string, string> m;
-  m.insert(pair<string, string>("type", string("access_key")));
-  m.insert(pair<string, string>("accessKeyId", string("fakeAccessKeyId")));
+  map<string, boost::any> m;
+  m.insert(pair<string, boost::any>("type", string("access_key")));
+  m.insert(pair<string, boost::any>("accessKeyId", string("fakeAccessKeyId")));
   m.insert(
-      pair<string, string>("accessKeySecret", string("fakeAccessKeySecret")));
+      pair<string, boost::any>("accessKeySecret", string("fakeAccessKeySecret")));
 
   Client client = Client(make_shared<Config>(m));
 
@@ -20,10 +20,10 @@ TEST(tests_credential, access_key) {
 }
 
 TEST(tests_credential, bearer_token) {
-  map<string, string> m;
+  map<string, boost::any> m;
 
-  m.insert(pair<string, string>("type", string("bearer_token")));
-  m.insert(pair<string, string>("bearerToken", string("<BearerToken>")));
+  m.insert(pair<string, boost::any>("type", string("bearer_token")));
+  m.insert(pair<string, boost::any>("bearerToken", string("<BearerToken>")));
 
   Client client = Client(make_shared<Config>(m));
 
@@ -31,12 +31,12 @@ TEST(tests_credential, bearer_token) {
 }
 
 TEST(tests_credential, sts) {
-  map<string, string> m;
-  m.insert(pair<string, string>("type", string("sts")));
-  m.insert(pair<string, string>("accessKeyId", string("<AccessKeyId>")));
+  map<string, boost::any> m;
+  m.insert(pair<string, boost::any>("type", string("sts")));
+  m.insert(pair<string, boost::any>("accessKeyId", string("<AccessKeyId>")));
   m.insert(
-      pair<string, string>("accessKeySecret", string("<AccessKeySecret>")));
-  m.insert(pair<string, string>("securityToken", string("<SecurityToken>")));
+      pair<string, boost::any>("accessKeySecret", string("<AccessKeySecret>")));
+  m.insert(pair<string, boost::any>("securityToken", string("<SecurityToken>")));
 
   Client client = Client(make_shared<Config>(m));
 
@@ -46,14 +46,14 @@ TEST(tests_credential, sts) {
 }
 
 TEST(tests_credential, config) {
-  map<string, string> m;
-  m.insert(pair<string, string>("durationSeconds", string("10000")));
-  m.insert(pair<string, string>("roleSessionExpiration", string("10000")));
-  m.insert(pair<string, string>("roleName", string("fake-role-name")));
+  map<string, boost::any> m;
+  m.insert(pair<string, boost::any>("durationSeconds", 10000));
+  m.insert(pair<string, boost::any>("roleSessionExpiration", 20000));
+  m.insert(pair<string, boost::any>("roleName", string("fake-role-name")));
   Alibabacloud_Credential::Config config(m);
 
   ASSERT_EQ(10000, *config.durationSeconds);
-  ASSERT_EQ(10000, *config.roleSessionExpiration);
+  ASSERT_EQ(20000, *config.roleSessionExpiration);
   ASSERT_EQ(string("fake-role-name"), *config.roleName);
 }
 
