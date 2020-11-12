@@ -92,43 +92,43 @@ public:
   }
 
   void fromMap(map<string, boost::any> m) override {
-    if (m.find("accessKeyId") != m.end()) {
+    if (m.find("accessKeyId") != m.end() && !m["accessKeyId"].empty()) {
       accessKeyId = make_shared<string>(boost::any_cast<string>(m["accessKeyId"]));
     }
-    if (m.find("accessKeySecret") != m.end()) {
+    if (m.find("accessKeySecret") != m.end() && !m["accessKeySecret"].empty()) {
       accessKeySecret = make_shared<string>(boost::any_cast<string>(m["accessKeySecret"]));
     }
-    if (m.find("securityToken") != m.end()) {
+    if (m.find("securityToken") != m.end() && !m["securityToken"].empty()) {
       securityToken = make_shared<string>(boost::any_cast<string>(m["securityToken"]));
     }
-    if (m.find("bearerToken") != m.end()) {
+    if (m.find("bearerToken") != m.end() && !m["bearerToken"].empty()) {
       bearerToken = make_shared<string>(boost::any_cast<string>(m["bearerToken"]));
     }
-    if (m.find("durationSeconds") != m.end()) {
+    if (m.find("durationSeconds") != m.end() && !m["durationSeconds"].empty()) {
       durationSeconds = make_shared<int>(boost::any_cast<int>(m["durationSeconds"]));
     }
-    if (m.find("roleArn") != m.end()) {
+    if (m.find("roleArn") != m.end() && !m["roleArn"].empty()) {
       roleArn = make_shared<string>(boost::any_cast<string>(m["roleArn"]));
     }
-    if (m.find("policy") != m.end()) {
+    if (m.find("policy") != m.end() && !m["policy"].empty()) {
       policy = make_shared<string>(boost::any_cast<string>(m["policy"]));
     }
-    if (m.find("roleSessionExpiration") != m.end()) {
+    if (m.find("roleSessionExpiration") != m.end() && !m["roleSessionExpiration"].empty()) {
       roleSessionExpiration = make_shared<int>(boost::any_cast<int>(m["roleSessionExpiration"]));
     }
-    if (m.find("roleSessionName") != m.end()) {
+    if (m.find("roleSessionName") != m.end() && !m["roleSessionName"].empty()) {
       roleSessionName = make_shared<string>(boost::any_cast<string>(m["roleSessionName"]));
     }
-    if (m.find("publicKeyId") != m.end()) {
+    if (m.find("publicKeyId") != m.end() && !m["publicKeyId"].empty()) {
       publicKeyId = make_shared<string>(boost::any_cast<string>(m["publicKeyId"]));
     }
-    if (m.find("privateKeyFile") != m.end()) {
+    if (m.find("privateKeyFile") != m.end() && !m["privateKeyFile"].empty()) {
       privateKeyFile = make_shared<string>(boost::any_cast<string>(m["privateKeyFile"]));
     }
-    if (m.find("roleName") != m.end()) {
+    if (m.find("roleName") != m.end() && !m["roleName"].empty()) {
       roleName = make_shared<string>(boost::any_cast<string>(m["roleName"]));
     }
-    if (m.find("type") != m.end()) {
+    if (m.find("type") != m.end() && !m["type"].empty()) {
       type = make_shared<string>(boost::any_cast<string>(m["type"]));
     }
   }
@@ -158,15 +158,15 @@ public:
 
   long getExpiration() const { return _expiration; }
 
-  virtual string getAccessKeyId() { return *_config.accessKeyId; }
+  virtual string getAccessKeyId() { return _config.accessKeyId ? *_config.accessKeyId : ""; }
 
-  virtual string getAccessKeySecret() { return *_config.accessKeySecret; }
+  virtual string getAccessKeySecret() { return _config.accessKeySecret ? *_config.accessKeySecret: ""; }
 
-  virtual string getSecurityToken() { return *_config.securityToken; }
+  virtual string getSecurityToken() { return _config.securityToken ? *_config.securityToken : ""; }
 
-  virtual string getBearerToken() { return *_config.bearerToken; }
+  virtual string getBearerToken() { return _config.bearerToken ? *_config.bearerToken : ""; }
 
-  string getType() const { return *_config.type; }
+  string getType() const { return _config.type ? *_config.type : ""; }
 
   Config getConfig() { return _config; }
 
