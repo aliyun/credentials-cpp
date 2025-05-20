@@ -1,4 +1,6 @@
 find_package(darabonba_core QUIET)
+find_package(nlohmann_json REQUIRED)
+find_package(CURL REQUIRED)
 
 if(darabonba_core_FOUND)
   message(STATUS "Found darabonba_core version ${darabonba_core_VERSION}")
@@ -8,11 +10,13 @@ else()
 
   FetchContent_Declare(
     _darabonba_core
-    GIT_REPOSITORY https://github.com/aliyun/tea-cpp.git
-    GIT_TAG master
+    # 这段逻辑将从git上下载darabonba_core的源代码
+    # GIT_REPOSITORY https://github.com/peze/tea-cpp.git
+    # GIT_TAG v2.x
+    SOURCE_DIR /Users/wenping/Desktop/tea-cpp
     CMAKE_ARGS
-      -DENABLE_UNIT_TESTS:BOOL="0")
-
+      -DENABLE_UNIT_TESTS:BOOL="0"
+      )
   FetchContent_GetProperties(_darabonba_core)
   if(NOT _darabonba_core_POPULATED)
     FetchContent_Populate(_darabonba_core)

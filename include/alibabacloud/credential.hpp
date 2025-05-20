@@ -8,8 +8,8 @@
 #include <cpprest/http_client.h>
 #include <exception>
 #include <iostream>
-#include <json/json.h>
 #include <map>
+#include <nlohmann/json.hpp>
 
 using namespace std;
 
@@ -41,96 +41,44 @@ private:
 class Config : public Darabonba::Model {
 public:
   Config() {}
-  explicit Config(const std::map<string, boost::any> &config) : Darabonba::Model(config) {
-    fromMap(config);
-  };
+  // explicit Config(const Darabonba::Json &config) { fromMap(config); }
 
-  void validate() override {}
-
-  map<string, boost::any> toMap() override {
-    map<string, boost::any> res;
-    if (accessKeyId) {
-      res["accessKeyId"] = boost::any(*accessKeyId);
-    }
-    if (accessKeySecret) {
-      res["accessKeySecret"] = boost::any(*accessKeySecret);
-    }
-    if (securityToken) {
-      res["securityToken"] = boost::any(*securityToken);
-    }
-    if (bearerToken) {
-      res["bearerToken"] = boost::any(*bearerToken);
-    }
-    if (durationSeconds) {
-      res["durationSeconds"] = boost::any(*durationSeconds);
-    }
-    if (roleArn) {
-      res["roleArn"] = boost::any(*roleArn);
-    }
-    if (policy) {
-      res["policy"] = boost::any(*policy);
-    }
-    if (roleSessionExpiration) {
-      res["roleSessionExpiration"] = boost::any(*roleSessionExpiration);
-    }
-    if (roleSessionName) {
-      res["roleSessionName"] = boost::any(*roleSessionName);
-    }
-    if (publicKeyId) {
-      res["publicKeyId"] = boost::any(*publicKeyId);
-    }
-    if (privateKeyFile) {
-      res["privateKeyFile"] = boost::any(*privateKeyFile);
-    }
-    if (roleName) {
-      res["roleName"] = boost::any(*roleName);
-    }
-    if (type) {
-      res["type"] = boost::any(*type);
-    }
-    return res;
+    // 实现基类的 validate 函数，保持 const 修饰符
+  void validate() const override {
+    // 这里可以添加具体的验证逻辑
   }
 
-  void fromMap(map<string, boost::any> m) override {
-    if (m.find("accessKeyId") != m.end() && !m["accessKeyId"].empty()) {
-      accessKeyId = make_shared<string>(boost::any_cast<string>(m["accessKeyId"]));
+  Darabonba::Json toMap() const override{
+     Darabonba::Json j;
+    if (accessKeyId) j["accessKeyId"] = *accessKeyId;
+    if (accessKeySecret) j["accessKeySecret"] = *accessKeySecret;
+    if (securityToken) j["securityToken"] = *securityToken;
+    if (bearerToken) j["bearerToken"] = *bearerToken;
+    if (durationSeconds) j["durationSeconds"] = *durationSeconds;
+    if (roleArn) j["roleArn"] = *roleArn;
+    if (policy) j["policy"] = *policy;
+    if (roleSessionExpiration) j["roleSessionExpiration"] = *roleSessionExpiration;
+    if (roleSessionName) j["roleSessionName"] = *roleSessionName;
+    if (publicKeyId) j["publicKeyId"] = *publicKeyId;
+    if (privateKeyFile) j["privateKeyFile"] = *privateKeyFile;
+    if (roleName) j["roleName"] = *roleName;
+    if (type) j["type"] = *type;
+    return j;
+  }
+
+  void fromMap(const Darabonba::Json &j) override {
+    if (j.contains("accessKeyId") && !j["accessKeyId"].is_null()) {
+      accessKeyId = std::make_shared<std::string>(j["accessKeyId"].get<std::string>());
     }
-    if (m.find("accessKeySecret") != m.end() && !m["accessKeySecret"].empty()) {
-      accessKeySecret = make_shared<string>(boost::any_cast<string>(m["accessKeySecret"]));
+    if (j.contains("accessKeySecret") && !j["accessKeySecret"].is_null()) {
+      accessKeySecret = std::make_shared<std::string>(j["accessKeySecret"].get<std::string>());
     }
-    if (m.find("securityToken") != m.end() && !m["securityToken"].empty()) {
-      securityToken = make_shared<string>(boost::any_cast<string>(m["securityToken"]));
+    if (j.contains("securityToken") && !j["securityToken"].is_null()) {
+      securityToken = std::make_shared<std::string>(j["securityToken"].get<std::string>());
     }
-    if (m.find("bearerToken") != m.end() && !m["bearerToken"].empty()) {
-      bearerToken = make_shared<string>(boost::any_cast<string>(m["bearerToken"]));
-    }
-    if (m.find("durationSeconds") != m.end() && !m["durationSeconds"].empty()) {
-      durationSeconds = make_shared<int>(boost::any_cast<int>(m["durationSeconds"]));
-    }
-    if (m.find("roleArn") != m.end() && !m["roleArn"].empty()) {
-      roleArn = make_shared<string>(boost::any_cast<string>(m["roleArn"]));
-    }
-    if (m.find("policy") != m.end() && !m["policy"].empty()) {
-      policy = make_shared<string>(boost::any_cast<string>(m["policy"]));
-    }
-    if (m.find("roleSessionExpiration") != m.end() && !m["roleSessionExpiration"].empty()) {
-      roleSessionExpiration = make_shared<int>(boost::any_cast<int>(m["roleSessionExpiration"]));
-    }
-    if (m.find("roleSessionName") != m.end() && !m["roleSessionName"].empty()) {
-      roleSessionName = make_shared<string>(boost::any_cast<string>(m["roleSessionName"]));
-    }
-    if (m.find("publicKeyId") != m.end() && !m["publicKeyId"].empty()) {
-      publicKeyId = make_shared<string>(boost::any_cast<string>(m["publicKeyId"]));
-    }
-    if (m.find("privateKeyFile") != m.end() && !m["privateKeyFile"].empty()) {
-      privateKeyFile = make_shared<string>(boost::any_cast<string>(m["privateKeyFile"]));
-    }
-    if (m.find("roleName") != m.end() && !m["roleName"].empty()) {
-      roleName = make_shared<string>(boost::any_cast<string>(m["roleName"]));
-    }
-    if (m.find("type") != m.end() && !m["type"].empty()) {
-      type = make_shared<string>(boost::any_cast<string>(m["type"]));
-    }
+  }
+  virtual bool empty() const override {
+    
   }
 
   shared_ptr<string> accessKeyId{};
@@ -158,13 +106,21 @@ public:
 
   long getExpiration() const { return _expiration; }
 
-  virtual string getAccessKeyId() { return _config.accessKeyId ? *_config.accessKeyId : ""; }
+  virtual string getAccessKeyId() {
+    return _config.accessKeyId ? *_config.accessKeyId : "";
+  }
 
-  virtual string getAccessKeySecret() { return _config.accessKeySecret ? *_config.accessKeySecret: ""; }
+  virtual string getAccessKeySecret() {
+    return _config.accessKeySecret ? *_config.accessKeySecret : "";
+  }
 
-  virtual string getSecurityToken() { return _config.securityToken ? *_config.securityToken : ""; }
+  virtual string getSecurityToken() {
+    return _config.securityToken ? *_config.securityToken : "";
+  }
 
-  virtual string getBearerToken() { return _config.bearerToken ? *_config.bearerToken : ""; }
+  virtual string getBearerToken() {
+    return _config.bearerToken ? *_config.bearerToken : "";
+  }
 
   string getType() const { return _config.type ? *_config.type : ""; }
 

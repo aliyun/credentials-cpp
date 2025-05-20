@@ -13,7 +13,7 @@
 #include <cpprest/http_client.h>
 #include <curl/curl.h>
 #include <iostream>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <map>
 
 using namespace std;

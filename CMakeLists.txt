@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10)
 
 project(alibabacloud_credential VERSION "0.1.0")
 
@@ -62,8 +62,9 @@ endif ()
 add_subdirectory(external)
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_library(CPPREST_LIB cpprest)
-target_link_libraries(${PROJECT_NAME} PRIVATE crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
-
+find_package(OpenSSL REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
+target_link_libraries(${PROJECT_NAME} PRIVATE  ${Boost_LIBRARIES} ${CPPREST_LIB})
 if (ENABLE_UNIT_TESTS)
     target_include_directories(tests_alibabacloud_credential
             PRIVATE
