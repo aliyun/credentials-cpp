@@ -35,7 +35,7 @@ sh scripts/install.sh
     * click `generate`, Generate VS solution
 
 3. Build and Install C++ SDK
-  * Go to the cmake_build directory and open alibabacloud_credentials.sln with Visual Studio Solutions
+  * Go to the cmake_build directory and open AlibabaCloud_credentials.sln with Visual Studio Solutions
   * Select  `Release`
   * Check INSTALL option from Build -> Configuration Manager
   * Build->Build Solutions to build.
@@ -51,9 +51,9 @@ Before you begin, you need to sign up for an Alibaba Cloud account and retrieve 
 Setup access_key credential through [User Information Management][ak], it have full authority over the account, please keep it safe. Sometimes for security reasons, you cannot hand over a primary account AccessKey with full access to the developer of a project. You may create a sub-account [RAM Sub-account][ram] , grant its [authorization][permissions]，and use the AccessKey of RAM Sub-account.
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("access_key")));
@@ -72,9 +72,9 @@ printf("%s", client.getAccessKeySecret().c_str());
 Create a temporary security credential by applying Temporary Security Credentials (TSC) through the Security Token Service (STS).
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("sts")));
@@ -97,9 +97,9 @@ By specifying [RAM Role][RAM Role], the credential will be able to automatically
 If the environment variable `ALIBABA_CLOUD_ECS_METADATA` is defined and not empty, the program will take the value of the environment variable as the role name and request `http://100.100.100.200/latest/meta-data/ram/security-credentials/` to get the temporary Security credentials are used as default credentials.
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("ram_role_arn")));
@@ -124,9 +124,9 @@ printf("%s", client.getPolicy().c_str());
 By specifying the role name, the credential will be able to automatically request maintenance of STS Token.
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("ecs_ram_role")));
@@ -147,9 +147,9 @@ printf("%s", client.getRoleName().c_str());
 By specifying the public key Id and the private key file, the credential will be able to automatically request maintenance of the AccessKey before sending the request. Only Japan station is supported.
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("rsa_key_pair")));
@@ -168,9 +168,9 @@ printf("%s", client.getPrivateKey().c_str());
 If credential is required by the Cloud Call Centre (CCC), please apply for Bearer Token maintenance by yourself.
 
 ```c++
-#include <alibabacloud/credential.hpp>
+#include <alibabacloud.hpp>
 
-using namespace Alibabacloud_Credential;
+using namespace AlibabaCloud_Credential;
 
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("bearer_token")));
@@ -194,7 +194,7 @@ Detailed changes for each version are recorded in the [Release Notes](/CHANGELOG
 
 * [OpenAPI Developer Portal][open-api]
 * [Latest Release][latest-release]
-* [Alibabacloud Console System][console]
+* [AlibabaCloud Console System][console]
 * [Alibaba Cloud Home Page][aliyun]
 
 ## License
