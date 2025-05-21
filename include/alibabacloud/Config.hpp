@@ -1,11 +1,12 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_CONFIG_HPP_
-#define ALIBABACLOUD_CREDENTIAL_CONFIG_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_CONFIG_HPP_
+#define AlibabaCloud_CREDENTIAL_CONFIG_HPP_
 
 #include <darabonba/Model.hpp>
 #include <memory>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
+namespace Models {
 class Config : public Darabonba::Model {
   friend void to_json(Darabonba::Json &j, const Config &obj) {
     DARABONBA_PTR_TO_JSON(accessKeyId, accessKeyId_);
@@ -329,5 +330,6 @@ protected:
 };
 
 } // namespace Credential
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
+} // namespace Models
 #endif

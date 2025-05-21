@@ -1,11 +1,11 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
 
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
+#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/provider/Provider.hpp>
 #include <memory>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 
 namespace Credential {
 
@@ -38,6 +38,6 @@ protected:
 };
 
 } // namespace Credential
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif

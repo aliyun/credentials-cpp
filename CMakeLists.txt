@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(alibabacloud_credential VERSION "0.1.0")
+project(AlibabaCloud_credential VERSION "0.1.0")
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< General set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
 set(CMAKE_CXX_STANDARD 11)
@@ -22,13 +22,18 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Target set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
 add_library(${PROJECT_NAME} SHARED "")
-set(headers
-        include/alibabacloud/credential.hpp)
+# 收集 include/AlibabaCloud 目录下的所有 .hpp 文件
+file(GLOB_RECURSE headers "${CMAKE_SOURCE_DIR}/include/AlibabaCloud/*.hpp")
+
+# 收集 src 目录下的所有 .cpp 文件
+file(GLOB sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
+
+# 将文件添加到目标
 target_sources(${PROJECT_NAME}
         PRIVATE
-        src/credential.cpp
-        src/client.cpp
+        ${sources}
         ${headers})
+
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -53,7 +58,7 @@ if (ENABLE_UNIT_TESTS)
     endif ()
     include(CTest)
     enable_testing()
-    add_executable(tests_alibabacloud_credential
+    add_executable(tests_AlibabaCloud_credential
             tests/main.cpp
             tests/credentials.cpp)
 endif ()
@@ -66,16 +71,16 @@ find_package(OpenSSL REQUIRED)
 # target_link_libraries(${PROJECT_NAME} PRIVATE crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
 target_link_libraries(${PROJECT_NAME} PRIVATE  ${Boost_LIBRARIES} ${CPPREST_LIB})
 if (ENABLE_UNIT_TESTS)
-    target_include_directories(tests_alibabacloud_credential
+    target_include_directories(tests_AlibabaCloud_credential
             PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(tests_alibabacloud_credential
+    target_link_libraries(tests_AlibabaCloud_credential
             PRIVATE
             ${PROJECT_NAME}
             gtest_main
             gmock_main crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
     add_test(NAME google_test
-            COMMAND $<TARGET_FILE:tests_alibabacloud_credential>)
+            COMMAND $<TARGET_FILE:tests_AlibabaCloud_credential>)
 endif ()
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Install set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
@@ -124,7 +129,7 @@ install(
         TARGETS
         ${PROJECT_NAME}
         EXPORT
-        alibabacloud_credentialTargets
+        AlibabaCloud_credentialTargets
         ARCHIVE
         DESTINATION ${INSTALL_LIBDIR}
         COMPONENT lib
@@ -135,16 +140,16 @@ install(
         DESTINATION ${INSTALL_LIBDIR}
         COMPONENT lib
         PUBLIC_HEADER
-        DESTINATION ${INSTALL_INCLUDEDIR}/alibabacloud
+        DESTINATION ${INSTALL_INCLUDEDIR}/AlibabaCloud
         COMPONENT dev
 )
 
 # Install cmake config
 install(
         EXPORT
-        alibabacloud_credentialTargets
+        AlibabaCloud_credentialTargets
         NAMESPACE
-        "alibabacloud_credential::"
+        "AlibabaCloud_credential::"
         DESTINATION
         ${INSTALL_CMAKEDIR}
         COMPONENT

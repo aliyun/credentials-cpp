@@ -1,18 +1,18 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
-#include <alibabacloud/credential/Config.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
+#ifndef AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
+#include <alibabacloud/Config.hpp>
+#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/provider/NeedFreshProvider.hpp>
 
 #include <string>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 
 class RsaKeyPairProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<RsaKeyPairProvider> {
 public:
-  RsaKeyPairProvider(std::shared_ptr<Config> config)
+  RsaKeyPairProvider(std::shared_ptr<Models::Config> config)
       : durationSeconds_(config->durationSeconds()),
         regionId_(config->regionId()), stsEndpoint_(config->stsEndpoint()) {
     credential_.setAccessKeyId(config->accessKeyId())
@@ -43,6 +43,6 @@ protected:
 
 } // namespace Credential
 
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif

@@ -1,17 +1,17 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_STSPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_STSPROVIDER_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_STSPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_STSPROVIDER_HPP_
 
-#include <alibabacloud/credential/Config.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
+#include <alibabacloud/Config.hpp>
+#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/provider/Provider.hpp>
 #include <memory>
 #include <string>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 class StsProvider : public Provider {
 public:
-  StsProvider(std::shared_ptr<Config> config) {
+  StsProvider(std::shared_ptr<Models::Config> config) {
     credential_.setAccessKeyId(config->accessKeyId())
         .setAccessKeySecret(config->accessKeySecret())
         .setSecurityToken(config->securityToken())
@@ -28,15 +28,15 @@ public:
 
   virtual ~StsProvider() {}
 
-  virtual Credential &getCredential() override { return credential_; }
-  virtual const Credential &getCredential() const override {
+  virtual Models::Credential &getCredential() override { return credential_; }
+  virtual const Models::Credential &getCredential() const override {
     return credential_;
   }
 
 protected:
-  mutable Credential credential_;
+  mutable Models::Credential credential_;
 };
 } // namespace Credential
 
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 #endif

@@ -1,16 +1,16 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
 
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
+#include <alibabacloud/Constant.hpp>
+// #include <alibabacloud/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/provider/Provider.hpp>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 
-class OIDCRoleArnProvider : public NeedFreshProvider {
+class OIDCRoleArnProvider {
 public:
-  OIDCRoleArnProvider(std::shared_ptr<Config> config)
+  OIDCRoleArnProvider(std::shared_ptr<Models::Config> config)
       : roleArn_(config->roleArn()),
         oidcProviderArn_(config->oidcProviderArn()),
         oidcTokenFilePath_(config->oidcTokenFilePath()),
@@ -41,9 +41,9 @@ public:
   virtual ~OIDCRoleArnProvider() = default;
 
 protected:
-  virtual bool refreshCredential() const override;
+  // virtual bool refreshCredential() const override;
 
-  mutable Credential credential_;
+  mutable Models::Credential credential_;
 
   std::string roleArn_;
   std::string oidcProviderArn_;
@@ -55,6 +55,6 @@ protected:
   std::string stsEndpoint_ = "sts.aliyuncs.com";
 };
 } // namespace Credential
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif

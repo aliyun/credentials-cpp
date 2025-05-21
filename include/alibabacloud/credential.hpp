@@ -1,266 +1,120 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_H_
-#define ALIBABACLOUD_CREDENTIAL_H_
+#ifndef AlibabaCloud_CREDENTIAL_CREDENTIAL_HPP_
+#define AlibabaCloud_CREDENTIAL_CREDENTIAL_HPP_
 
-#include <darabonba/core.hpp>
-#include <boost/any.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <cpprest/http_client.h>
-#include <exception>
-#include <iostream>
-#include <map>
-#include <nlohmann/json.hpp>
+#include <alibabacloud/Config.hpp>
+#include <darabonba/Model.hpp>
+#include <memory>
+#include <string>
 
-using namespace std;
+namespace AlibabaCloud {
+namespace Credential {
+namespace Models {
 
-namespace Alibabacloud_Credential {
-class RefreshCredentialException : public exception {
+class Credential : public Darabonba::Model {
+  friend void to_json(Darabonba::Json &j, const Credential &obj) {
+    DARABONBA_PTR_TO_JSON(accessKeyId, accessKeyId_);
+    DARABONBA_PTR_TO_JSON(accessKeySecret, accessKeySecret_);
+    DARABONBA_PTR_TO_JSON(bearerToken, bearerToken_);
+    DARABONBA_PTR_TO_JSON(securityToken, securityToken_);
+    DARABONBA_PTR_TO_JSON(type, type_);
+  }
+
+  friend void from_json(const Darabonba::Json &j, Credential &obj) {
+    DARABONBA_PTR_FROM_JSON(accessKeyId, accessKeyId_);
+    DARABONBA_PTR_FROM_JSON(accessKeySecret, accessKeySecret_);
+    DARABONBA_PTR_FROM_JSON(bearerToken, bearerToken_);
+    DARABONBA_PTR_FROM_JSON(securityToken, securityToken_);
+    DARABONBA_PTR_FROM_JSON(type, type_);
+  }
+
 public:
-  explicit RefreshCredentialException(const string &msg) { _msg = msg; }
+  Credential() = default;
+  Credential(const Credential &) = default;
+  Credential(Credential &&) = default;
+  Credential(const Darabonba::Json &obj) { from_json(obj, *this); }
 
-  const char *what() const noexcept override {
-    string error_info;
-    if (_msg.empty()) {
-      error_info = "Refresh Credential Error ";
-    } else {
-      error_info = "Refresh Credential Error : " + _msg;
-    }
-    const char *c = error_info.c_str();
-    return c;
+  virtual ~Credential() = default;
+
+  virtual void validate() const override {}
+
+  virtual void fromMap(const Darabonba::Json &obj) override {
+    from_json(obj, *this);
+    validate();
   }
 
-  void setHttpResponse(const web::http::http_response &res) { _res = res; }
-
-  web::http::http_response getHttpResponse() { return _res; }
-
-private:
-  string _msg;
-  web::http::http_response _res;
-};
-
-class Config : public Darabonba::Model {
-public:
-  Config() {}
-  // explicit Config(const Darabonba::Json &config) { fromMap(config); }
-
-    // 实现基类的 validate 函数，保持 const 修饰符
-  void validate() const override {
-    // 这里可以添加具体的验证逻辑
+  virtual Darabonba::Json toMap() const override {
+    Darabonba::Json obj;
+    to_json(obj, *this);
+    return obj;
   }
 
-  Darabonba::Json toMap() const override{
-     Darabonba::Json j;
-    if (accessKeyId) j["accessKeyId"] = *accessKeyId;
-    if (accessKeySecret) j["accessKeySecret"] = *accessKeySecret;
-    if (securityToken) j["securityToken"] = *securityToken;
-    if (bearerToken) j["bearerToken"] = *bearerToken;
-    if (durationSeconds) j["durationSeconds"] = *durationSeconds;
-    if (roleArn) j["roleArn"] = *roleArn;
-    if (policy) j["policy"] = *policy;
-    if (roleSessionExpiration) j["roleSessionExpiration"] = *roleSessionExpiration;
-    if (roleSessionName) j["roleSessionName"] = *roleSessionName;
-    if (publicKeyId) j["publicKeyId"] = *publicKeyId;
-    if (privateKeyFile) j["privateKeyFile"] = *privateKeyFile;
-    if (roleName) j["roleName"] = *roleName;
-    if (type) j["type"] = *type;
-    return j;
-  }
-
-  void fromMap(const Darabonba::Json &j) override {
-    if (j.contains("accessKeyId") && !j["accessKeyId"].is_null()) {
-      accessKeyId = std::make_shared<std::string>(j["accessKeyId"].get<std::string>());
-    }
-    if (j.contains("accessKeySecret") && !j["accessKeySecret"].is_null()) {
-      accessKeySecret = std::make_shared<std::string>(j["accessKeySecret"].get<std::string>());
-    }
-    if (j.contains("securityToken") && !j["securityToken"].is_null()) {
-      securityToken = std::make_shared<std::string>(j["securityToken"].get<std::string>());
-    }
-  }
   virtual bool empty() const override {
-    
+    return accessKeyId_ == nullptr && accessKeySecret_ == nullptr &&
+           bearerToken_ == nullptr && securityToken_ == nullptr &&
+           type_ == nullptr;
   }
 
-  shared_ptr<string> accessKeyId{};
-  shared_ptr<string> accessKeySecret{};
-  shared_ptr<string> securityToken{};
-  shared_ptr<string> bearerToken{};
-  shared_ptr<int> durationSeconds{};
-  shared_ptr<string> roleArn{};
-  shared_ptr<string> policy{};
-  shared_ptr<int> roleSessionExpiration{};
-  shared_ptr<string> roleSessionName{};
-  shared_ptr<string> publicKeyId{};
-  shared_ptr<string> privateKeyFile{};
-  shared_ptr<string> roleName{};
-  shared_ptr<string> type{};
-
-  ~Config() = default;
-};
-
-class Credential {
-public:
-  explicit Credential(const Config &config);
-  Credential();
-  ~Credential();
-
-  long getExpiration() const { return _expiration; }
-
-  virtual string getAccessKeyId() {
-    return _config.accessKeyId ? *_config.accessKeyId : "";
+  bool hasAccessKeyId() const { return this->accessKeyId_ != nullptr; }
+  std::string accessKeyId() const {
+    DARABONBA_PTR_GET_DEFAULT(accessKeyId_, "");
+  }
+  Credential &setAccessKeyId(const std::string &accessKeyId) {
+    DARABONBA_PTR_SET_VALUE(accessKeyId_, accessKeyId);
+  }
+  Credential &setAccessKeyId(std::string &&accessKeyId) {
+    DARABONBA_PTR_SET_RVALUE(accessKeyId_, accessKeyId);
   }
 
-  virtual string getAccessKeySecret() {
-    return _config.accessKeySecret ? *_config.accessKeySecret : "";
+  bool hasAccessKeySecret() const { return this->accessKeySecret_ != nullptr; }
+  std::string accessKeySecret() const {
+    DARABONBA_PTR_GET_DEFAULT(accessKeySecret_, "");
+  }
+  Credential &setAccessKeySecret(const std::string &accessKeySecret) {
+    DARABONBA_PTR_SET_VALUE(accessKeySecret_, accessKeySecret);
+  }
+  Credential &setAccessKeySecret(std::string &&accessKeySecret) {
+    DARABONBA_PTR_SET_RVALUE(accessKeySecret_, accessKeySecret);
   }
 
-  virtual string getSecurityToken() {
-    return _config.securityToken ? *_config.securityToken : "";
+  bool hasBearerToken() const { return this->bearerToken_ != nullptr; }
+  std::string bearerToken() const {
+    DARABONBA_PTR_GET_DEFAULT(bearerToken_, "");
+  }
+  Credential &setBearerToken(const std::string &bearerToken) {
+    DARABONBA_PTR_SET_VALUE(bearerToken_, bearerToken);
+  }
+  Credential &setBearerToken(std::string &&bearerToken) {
+    DARABONBA_PTR_SET_RVALUE(bearerToken_, bearerToken);
   }
 
-  virtual string getBearerToken() {
-    return _config.bearerToken ? *_config.bearerToken : "";
+  bool hasSecurityToken() const { return this->securityToken_ != nullptr; }
+  std::string securityToken() const {
+    DARABONBA_PTR_GET_DEFAULT(securityToken_, "");
+  }
+  Credential &setSecurityToken(const std::string &securityToken) {
+    DARABONBA_PTR_SET_VALUE(securityToken_, securityToken);
+  }
+  Credential &setSecurityToken(std::string &&securityToken) {
+    DARABONBA_PTR_SET_RVALUE(securityToken_, securityToken);
   }
 
-  string getType() const { return _config.type ? *_config.type : ""; }
-
-  Config getConfig() { return _config; }
-
-  string requestSTS(string accessKeySecret, web::http::method mtd,
-                    map<string, string> query);
-
-  virtual web::http::http_response request(string url);
+  bool hasType() const { return this->type_ != nullptr; }
+  std::string type() const { DARABONBA_PTR_GET_DEFAULT(type_, ""); }
+  Credential &setType(const std::string &type) {
+    DARABONBA_PTR_SET_VALUE(type_, type);
+  }
+  Credential &setType(std::string &&type) {
+    DARABONBA_PTR_SET_RVALUE(type_, type);
+  }
 
 protected:
-  Config _config;
-  string _credentialType;
-  long _expiration = 0;
-
-  bool has_expired() const;
+  std::shared_ptr<std::string> accessKeyId_ = nullptr;
+  std::shared_ptr<std::string> accessKeySecret_ = nullptr;
+  std::shared_ptr<std::string> bearerToken_ = nullptr;
+  std::shared_ptr<std::string> securityToken_ = nullptr;
+  std::shared_ptr<std::string> type_ = nullptr;
 };
-
-class AccessKeyCredential : public Credential {
-public:
-  explicit AccessKeyCredential(const Config &config);
-
-  string getAccessKeyId() override;
-
-  string getAccessKeySecret() override;
-};
-
-class BearerTokenCredential : public Credential {
-public:
-  explicit BearerTokenCredential(const Config &config);
-
-  string getBearerToken() override;
-};
-
-class StsCredential : public Credential {
-public:
-  explicit StsCredential(const Config &config);
-
-  string getAccessKeyId() override;
-
-  string getAccessKeySecret() override;
-
-  string getSecurityToken() override;
-};
-
-class EcsRamRoleCredential : public Credential {
-public:
-  explicit EcsRamRoleCredential(const Config &config);
-
-  string getAccessKeyId() override;
-
-  string getAccessKeySecret() override;
-
-  string getSecurityToken() override;
-
-private:
-  void refresh();
-
-  void refreshRam();
-
-  void refreshCredential();
-
-  const string URL_IN_ECS_META_DATA =
-      "/latest/meta-data/ram/security-credentials/";
-  const string ECS_META_DATA_FETCH_ERROR_MSG =
-      "Failed to get RAM session credentials from ECS metadata service.";
-  const string META_DATA_SERVICE_HOST = "100.100.100.200";
-};
-
-class RamRoleArnCredential : public Credential {
-public:
-  explicit RamRoleArnCredential(const Config &config);
-
-  string getAccessKeyId() override;
-
-  string getAccessKeySecret() override;
-
-  string getSecurityToken() override;
-
-  string getRoleArn();
-
-  string getPolicy();
-
-private:
-  void refresh();
-
-  void refreshCredential();
-
-  string _regionId = "cn-hangzhou";
-};
-
-class RsaKeyPairCredential : public Credential {
-public:
-  explicit RsaKeyPairCredential(const Config &config);
-  string getPublicKeyId();
-  string getPrivateKeySecret();
-  string getAccessKeyId() override;
-  string getAccessKeySecret() override;
-  string getSecurityToken() override;
-
-private:
-  void refresh();
-  void refreshCredential();
-};
-
-class Client {
-public:
-  Client();
-
-  ~Client();
-
-  explicit Client(shared_ptr<Config> config);
-
-  string getAccessKeyId();
-
-  string getAccessKeySecret();
-
-  string getSecurityToken();
-
-  string getBearerToken();
-
-  string getType();
-
-  string getRoleArn();
-
-  string getRoleSessionName();
-
-  string getPolicy();
-
-  string getRoleName();
-
-  string getPublicKeyId();
-
-  string getPrivateKey();
-
-  Credential getCredential();
-
-private:
-  Credential *_credential{};
-};
-} // namespace Alibabacloud_Credential
-
+} // namespace Models
+} // namespace Credential
+} // namespace AlibabaCloud
 #endif

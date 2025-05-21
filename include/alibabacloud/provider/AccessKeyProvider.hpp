@@ -1,19 +1,19 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
 
-#include <alibabacloud/credential/Config.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/Credential.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
+#include <alibabacloud/Config.hpp>
+#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/Credential.hpp>
+#include <alibabacloud/provider/Provider.hpp>
 #include <memory>
 #include <string>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 
 class AccessKeyProvider : public Provider {
 public:
-  AccessKeyProvider(std::shared_ptr<Config> config) {
+  AccessKeyProvider(std::shared_ptr<Models::Config> config) {
     credential_.setAccessKeyId(config->accessKeyId())
         .setAccessKeySecret(config->accessKeySecret())
         .setType(Constant::ACCESS_KEY);
@@ -26,15 +26,15 @@ public:
   }
   virtual ~AccessKeyProvider() {}
 
-  virtual Credential &getCredential() override { return credential_; }
-  virtual const Credential &getCredential() const override {
+  virtual Models::Credential &getCredential() override { return credential_; }
+  virtual const Models::Credential &getCredential() const override {
     return credential_;
   }
 
 protected:
-  mutable Credential credential_;
+  mutable Models::Credential credential_;
 };
 } // namespace Credential
 
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 #endif

@@ -1,7 +1,7 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_CONSTANT_HPP_
-#define ALIBABACLOUD_CREDENTIAL_CONSTANT_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_CONSTANT_HPP_
+#define AlibabaCloud_CREDENTIAL_CONSTANT_HPP_
 #include <string>
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 class Constant {
 public:
@@ -35,6 +35,6 @@ public:
   static const std::string URL_STS;
 };
 } // namespace Credential
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif

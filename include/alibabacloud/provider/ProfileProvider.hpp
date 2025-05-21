@@ -1,9 +1,9 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_PROFILEPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_PROFILEPROVIDER_HPP_
-#include <alibabacloud/credential/provider/Provider.hpp>
+#ifndef AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
+#include <alibabacloud/provider/Provider.hpp>
 #include <memory>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 
 namespace Credential {
 class ProfileProvider : public Provider {
@@ -35,6 +35,6 @@ protected:
 };
 
 } // namespace Credential
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif

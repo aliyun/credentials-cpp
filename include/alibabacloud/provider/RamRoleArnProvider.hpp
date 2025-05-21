@@ -1,17 +1,17 @@
-#ifndef ALIBABACLOUD_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
-#define ALIBABACLOUD_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
-#include <alibabacloud/credential/Config.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
+#ifndef AlibabaCloud_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
+#define AlibabaCloud_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
+#include <alibabacloud/Config.hpp>
+#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/provider/NeedFreshProvider.hpp>
 #include <string>
 
-namespace Alibabacloud {
+namespace AlibabaCloud {
 namespace Credential {
 
 class RamRoleArnProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<RamRoleArnProvider> {
 public:
-  RamRoleArnProvider(std::shared_ptr<Config> config)
+  RamRoleArnProvider(std::shared_ptr<Models::Config> config)
       : roleArn_(config->roleArn()),
         roleSessionName_(config->roleSessionName()),
         policy_(config->hasPolicy()
@@ -45,7 +45,7 @@ public:
 protected:
   virtual bool refreshCredential() const override;
 
-  mutable Credential credential_;
+  mutable Models::Credential credential_;
   std::string roleArn_;
   std::string roleSessionName_;
   std::shared_ptr<std::string> policy_ = nullptr;
@@ -56,6 +56,6 @@ protected:
 
 } // namespace Credential
 
-} // namespace Alibabacloud
+} // namespace AlibabaCloud
 
 #endif
