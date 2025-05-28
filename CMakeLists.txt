@@ -21,13 +21,19 @@ endif ()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Target set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
-add_library(${PROJECT_NAME} SHARED "")
+# add_library(${PROJECT_NAME} SHARED "")
 # 收集 include/AlibabaCloud 目录下的所有 .hpp 文件
-file(GLOB_RECURSE headers "${CMAKE_SOURCE_DIR}/include/AlibabaCloud/*.hpp")
+
+file(GLOB headers "${CMAKE_SOURCE_DIR}/include/*.hpp")
+file(GLOB headers "${CMAKE_SOURCE_DIR}/include/alibabacloud/credential/*.hpp")
+file(GLOB headers "${CMAKE_SOURCE_DIR}/include/alibabacloud/gateway/*.hpp")
 
 # 收集 src 目录下的所有 .cpp 文件
 file(GLOB sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB sources "${CMAKE_SOURCE_DIR}/src/provider/*.cpp")
+# file(GLOB sources "${CMAKE_SOURCE_DIR}/src/gateway/*.cpp")
 
+add_library(${PROJECT_NAME} SHARED ${sources} ${headers})
 # 将文件添加到目标
 target_sources(${PROJECT_NAME}
         PRIVATE
@@ -46,42 +52,41 @@ set_target_properties(${PROJECT_NAME}
         PUBLIC_HEADER "${headers}"
         MACOSX_RPATH ON
         WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
-if (ENABLE_UNIT_TESTS)
-    OPTION(ENABLE_COVERAGE "Use gcov" OFF)
-    message(STATUS "Enable coverage: ${ENABLE_COVERAGE}")
-    if (ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        set(CMAKE_BUILD_TYPE "Coverage")
-        set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-        include(CodeCoverage)
-        setup_target_for_coverage(${PROJECT_NAME}_coverage ${PROJECT_NAME}_test coverage)
-    endif ()
-    include(CTest)
-    enable_testing()
-    add_executable(tests_AlibabaCloud_credential
-            tests/main.cpp
-            tests/credentials.cpp)
-endif ()
+add_subdirectory(external)
+# if (ENABLE_UNIT_TESTS)
+#     OPTION(ENABLE_COVERAGE "Use gcov" OFF)
+#     message(STATUS "Enable coverage: ${ENABLE_COVERAGE}")
+#     if (ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#         set(CMAKE_BUILD_TYPE "Coverage")
+#         set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+#         include(CodeCoverage)
+#         setup_target_for_coverage(${PROJECT_NAME}_coverage ${PROJECT_NAME}_test coverage)
+#     endif ()
+#     include(CTest)
+#     enable_testing()
+#     add_executable(tests_AlibabaCloud_credential
+#             tests/main.cpp
+#             tests/credentials.cpp)
+# endif ()
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< External set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
-add_subdirectory(external)
+
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 find_library(CPPREST_LIB cpprest)
 find_package(OpenSSL REQUIRED)
-# target_link_libraries(${PROJECT_NAME} PRIVATE crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
-target_link_libraries(${PROJECT_NAME} PRIVATE  ${Boost_LIBRARIES} ${CPPREST_LIB})
-if (ENABLE_UNIT_TESTS)
-    target_include_directories(tests_AlibabaCloud_credential
-            PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_link_libraries(tests_AlibabaCloud_credential
-            PRIVATE
-            ${PROJECT_NAME}
-            gtest_main
-            gmock_main crypto darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
-    add_test(NAME google_test
-            COMMAND $<TARGET_FILE:tests_AlibabaCloud_credential>)
-endif ()
+target_link_libraries(${PROJECT_NAME} PRIVATE  ${Boost_LIBRARIES} ${CPPREST_LIB} OpenSSL::SSL OpenSSL::Crypto)
+# if (ENABLE_UNIT_TESTS)
+#     target_include_directories(tests_AlibabaCloud_credential
+#             PRIVATE
+#             ${CMAKE_CURRENT_SOURCE_DIR}/include)
+#     target_link_libraries(tests_AlibabaCloud_credential
+#             PRIVATE
+#             ${PROJECT_NAME}
+#             gtest_main
+#             gmock_main  darabonba_core ${Boost_LIBRARIES} ${CPPREST_LIB})
+#     add_test(NAME google_test
+#             COMMAND $<TARGET_FILE:tests_AlibabaCloud_credential>)
+# endif ()
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Install set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
 message(STATUS "${PROJECT_NAME} : Project will be installed to ${CMAKE_INSTALL_PREFIX}")

@@ -1,4 +1,4 @@
-#include <alibabacloud/provider/EcsRamRoleProvider.hpp>
+#include <alibabacloud/credential/provider/EcsRamRoleProvider.hpp>
 #include <darabonba/Core.hpp>
 #include <darabonba/Util.hpp>
 #include <memory>
@@ -15,7 +15,7 @@ const std::string EcsRamRoleProvider::META_DATA_SERVICE_HOST =
 const std::string EcsRamRoleProvider::ECS_METADATA_FETCH_ERROR_MSG =
     "Failed to get RAM session credentials from ECS metadata service.";
 
-bool EcsRamRoleProvider::refreshCredential() const {
+bool EcsRamRoleProvider::refreshCredential() {
   if (roleName_.empty()) {
     roleName_ = getRoleName();
   }

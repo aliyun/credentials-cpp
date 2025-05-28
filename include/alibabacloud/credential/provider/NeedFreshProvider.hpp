@@ -1,7 +1,7 @@
 #ifndef AlibabaCloud_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
 
-#include <alibabacloud/provider/Provider.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 #include <ctime>
 
 #include <ctime>
@@ -13,14 +13,14 @@ public:
   NeedFreshProvider(long long expiration) : expiration_(expiration) {}
   virtual ~NeedFreshProvider() {}
 
-  virtual Models::Credential &getCredential() override {
+  virtual Models::CredentialModel &getCredential() override {
     refresh();
     return credential_;
   }
-  virtual const Models::Credential &getCredential() const override {
-    refresh();
-    return credential_;
-  }
+  // virtual  Models::CredentialModel &getCredential()  override {
+  //   refresh();
+  //   return credential_;
+  // }
 
 protected:
   virtual bool needFresh() const {
@@ -28,9 +28,9 @@ protected:
     return expiration_ - now <= 180;
   }
 
-  virtual bool refreshCredential() const = 0;
+  virtual bool refreshCredential() = 0;
 
-  virtual void refresh() const {
+  virtual void refresh()  {
     if (needFresh()) {
       refreshCredential();
     }
@@ -51,7 +51,7 @@ protected:
     return buf;
   }
 
-  mutable Models::Credential credential_;
+  mutable Models::CredentialModel credential_;
   mutable int64_t expiration_ = 0;
 };
 } // namespace Credential

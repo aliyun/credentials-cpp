@@ -1,9 +1,8 @@
 #ifndef AlibabaCloud_CREDENTIAL_ECSRAMROLEPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_ECSRAMROLEPROVIDER_HPP_
-#include <alibabacloud/Config.hpp>
-#include <alibabacloud/Constant.hpp>
-#include <alibabacloud/provider/NeedFreshProvider.hpp>
-#include <alibabacloud/provider/Provider.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
 #include <memory>
 #include <string>
 
@@ -23,8 +22,8 @@ public:
   }
   virtual ~EcsRamRoleProvider() {}
 
-protected:
-  virtual bool refreshCredential() const override;
+private:
+  virtual bool refreshCredential() override;
   static std::string getRoleName();
 
   static const std::string URL_IN_ECS_META_DATA;
@@ -32,7 +31,7 @@ protected:
   static const std::string META_DATA_SERVICE_HOST;
   static const std::string ECS_METADATA_FETCH_ERROR_MSG;
 
-  mutable Models::Credential credential_;
+  mutable Models::CredentialModel credential_;
   mutable std::string roleName_;
 };
 

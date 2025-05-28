@@ -1,5 +1,5 @@
-#ifndef AlibabaCloud_CREDENTIAL_CONFIG_HPP_
-#define AlibabaCloud_CREDENTIAL_CONFIG_HPP_
+#ifndef AlibabaCloud_CREDENTIAL_MODEL_HPP_
+#define AlibabaCloud_CREDENTIAL_MODEL_HPP_
 
 #include <darabonba/Model.hpp>
 #include <memory>
@@ -7,6 +7,124 @@
 namespace AlibabaCloud {
 namespace Credential {
 namespace Models {
+
+class CredentialModel : public Darabonba::Model {
+  friend void to_json(Darabonba::Json &j, const CredentialModel &obj) {
+    DARABONBA_PTR_TO_JSON(accessKeyId, accessKeyId_);
+    DARABONBA_PTR_TO_JSON(accessKeySecret, accessKeySecret_);
+    DARABONBA_PTR_TO_JSON(bearerToken, bearerToken_);
+    DARABONBA_PTR_TO_JSON(securityToken, securityToken_);
+    DARABONBA_PTR_TO_JSON(type, type_);
+    DARABONBA_PTR_TO_JSON(providerName, providerName_);
+  }
+
+  friend void from_json(const Darabonba::Json &j, CredentialModel &obj) {
+    DARABONBA_PTR_FROM_JSON(accessKeyId, accessKeyId_);
+    DARABONBA_PTR_FROM_JSON(accessKeySecret, accessKeySecret_);
+    DARABONBA_PTR_FROM_JSON(bearerToken, bearerToken_);
+    DARABONBA_PTR_FROM_JSON(securityToken, securityToken_);
+    DARABONBA_PTR_FROM_JSON(providerName, providerName_);
+    DARABONBA_PTR_FROM_JSON(type, type_);
+  }
+
+public:
+  CredentialModel() = default;
+  CredentialModel(const CredentialModel &) = default;
+  CredentialModel(CredentialModel &&) = default;
+  CredentialModel(const Darabonba::Json &obj) { from_json(obj, *this); }
+
+  virtual ~CredentialModel() = default;
+
+  virtual void validate() const override {}
+
+  virtual void fromMap(const Darabonba::Json &obj) override {
+    from_json(obj, *this);
+    validate();
+  }
+
+  virtual Darabonba::Json toMap() const override {
+    Darabonba::Json obj;
+    to_json(obj, *this);
+    return obj;
+  }
+
+  virtual bool empty() const override {
+    return accessKeyId_ == nullptr && accessKeySecret_ == nullptr &&
+           bearerToken_ == nullptr && securityToken_ == nullptr &&
+           type_ == nullptr && providerName_ == nullptr;
+  }
+
+  bool hasAccessKeyId() const { return this->accessKeyId_ != nullptr; }
+  std::string accessKeyId() const {
+    DARABONBA_PTR_GET_DEFAULT(accessKeyId_, "");
+  }
+  CredentialModel &setAccessKeyId(const std::string &accessKeyId) {
+    DARABONBA_PTR_SET_VALUE(accessKeyId_, accessKeyId);
+  }
+  CredentialModel &setAccessKeyId(std::string &&accessKeyId) {
+    DARABONBA_PTR_SET_RVALUE(accessKeyId_, accessKeyId);
+  }
+
+  bool hasAccessKeySecret() const { return this->accessKeySecret_ != nullptr; }
+  std::string accessKeySecret() const {
+    DARABONBA_PTR_GET_DEFAULT(accessKeySecret_, "");
+  }
+  CredentialModel &setAccessKeySecret(const std::string &accessKeySecret) {
+    DARABONBA_PTR_SET_VALUE(accessKeySecret_, accessKeySecret);
+  }
+  CredentialModel &setAccessKeySecret(std::string &&accessKeySecret) {
+    DARABONBA_PTR_SET_RVALUE(accessKeySecret_, accessKeySecret);
+  }
+
+  bool hasBearerToken() const { return this->bearerToken_ != nullptr; }
+  std::string bearerToken() const {
+    DARABONBA_PTR_GET_DEFAULT(bearerToken_, "");
+  }
+  CredentialModel &setBearerToken(const std::string &bearerToken) {
+    DARABONBA_PTR_SET_VALUE(bearerToken_, bearerToken);
+  }
+  CredentialModel &setBearerToken(std::string &&bearerToken) {
+    DARABONBA_PTR_SET_RVALUE(bearerToken_, bearerToken);
+  }
+
+  bool hasSecurityToken() const { return this->securityToken_ != nullptr; }
+  std::string securityToken() const {
+    DARABONBA_PTR_GET_DEFAULT(securityToken_, "");
+  }
+  CredentialModel &setSecurityToken(const std::string &securityToken) {
+    DARABONBA_PTR_SET_VALUE(securityToken_, securityToken);
+  }
+  CredentialModel &setSecurityToken(std::string &&securityToken) {
+    DARABONBA_PTR_SET_RVALUE(securityToken_, securityToken);
+  }
+
+  bool hasType() const { return this->type_ != nullptr; }
+  std::string type() const { DARABONBA_PTR_GET_DEFAULT(type_, ""); }
+  CredentialModel &setType(const std::string &type) {
+    DARABONBA_PTR_SET_VALUE(type_, type);
+  }
+  CredentialModel &setType(std::string &&type) {
+    DARABONBA_PTR_SET_RVALUE(type_, type);
+  }
+
+  bool hasProviderName() const { return this->providerName_ != nullptr; }
+  std::string providerName() const { DARABONBA_PTR_GET_DEFAULT(providerName_, ""); }
+  CredentialModel &setProviderName(const std::string &providerName) {
+    DARABONBA_PTR_SET_VALUE(providerName_, providerName);
+  }
+  CredentialModel &setProviderName(std::string &&providerName) {
+    DARABONBA_PTR_SET_RVALUE(providerName_, providerName);
+  }
+
+protected:
+  std::shared_ptr<std::string> accessKeyId_ = nullptr;
+  std::shared_ptr<std::string> accessKeySecret_ = nullptr;
+  std::shared_ptr<std::string> bearerToken_ = nullptr;
+  std::shared_ptr<std::string> securityToken_ = nullptr;
+  std::shared_ptr<std::string> providerName_ = nullptr;
+  std::shared_ptr<std::string> type_ = nullptr;
+};
+
 class Config : public Darabonba::Model {
   friend void to_json(Darabonba::Json &j, const Config &obj) {
     DARABONBA_PTR_TO_JSON(accessKeyId, accessKeyId_);

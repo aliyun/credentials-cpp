@@ -1,8 +1,8 @@
 #ifndef AlibabaCloud_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_RAMROLEARNPROVIDER_HPP_
-#include <alibabacloud/Config.hpp>
-#include <alibabacloud/Constant.hpp>
-#include <alibabacloud/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
 #include <string>
 
 namespace AlibabaCloud {
@@ -42,10 +42,10 @@ public:
 
   virtual ~RamRoleArnProvider() {}
 
-protected:
-  virtual bool refreshCredential() const override;
+private:
+  virtual bool refreshCredential()  override;
 
-  mutable Models::Credential credential_;
+  mutable Models::CredentialModel credential_;
   std::string roleArn_;
   std::string roleSessionName_;
   std::shared_ptr<std::string> policy_ = nullptr;

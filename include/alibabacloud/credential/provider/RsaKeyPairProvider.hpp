@@ -1,8 +1,8 @@
 #ifndef AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
-#include <alibabacloud/Config.hpp>
-#include <alibabacloud/Constant.hpp>
-#include <alibabacloud/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
 
 #include <string>
 
@@ -34,7 +34,7 @@ public:
   virtual ~RsaKeyPairProvider() {}
 
 protected:
-  virtual bool refreshCredential() const override;
+  virtual bool refreshCredential()  override ;
 
   int64_t durationSeconds_ = 3600;
   std::string regionId_ = "cn-hangzhou";

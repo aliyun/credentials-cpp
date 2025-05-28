@@ -1,6 +1,6 @@
-#include <alibabacloud/provider/AccessKeyProvider.hpp>
-#include <alibabacloud/provider/EnvironmentVariableProvider.hpp>
-#include <alibabacloud/provider/StsProvider.hpp>
+#include <alibabacloud/credential/provider/AccessKeyProvider.hpp>
+#include <alibabacloud/credential/provider/EnvironmentVariableProvider.hpp>
+#include <alibabacloud/credential/provider/StsProvider.hpp>
 #include <darabonba/Env.hpp>
 #include <memory>
 

@@ -1,9 +1,8 @@
 #ifndef AlibabaCloud_CREDENTIAL_DEFAULTPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_DEFAULTPROVIDER_HPP_
 
-#include <alibabacloud/Credential.hpp>
-#include <alibabacloud/provider/Provider.hpp>
-#include <darabonba/Env.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 #include <memory>
 #include <string>
 
@@ -11,10 +10,11 @@ namespace AlibabaCloud {
 namespace Credential {
 class DefaultProvider : public Provider {
 public:
-  DefaultProvider();
-  virtual ~DefaultProvider() {}
+  DefaultProvider() = default;
 
-  virtual Models::Credential &getCredential() override {
+  virtual ~DefaultProvider() = default;
+
+  virtual Models::CredentialModel &getCredential() override{
     for (auto &provider : providers_) {
       if (provider) {
         try {
@@ -26,7 +26,7 @@ public:
     }
     throw Darabonba::Exception("Can't get the credential.");
   }
-  virtual const Models::Credential &getCredential() const override {
+  virtual const Models::CredentialModel &getCredential() const override {
     for (auto &provider : providers_) {
       if (provider) {
         try {

@@ -1,16 +1,16 @@
-#ifndef AlibabaCloud_CREDENTIAL_CLIENT_HPP_
-#define AlibabaCloud_CREDENTIAL_CLIENT_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_CLIENT_HPP_
+#define ALIBABACLOUD_CREDENTIAL_CLIENT_HPP_
 
-#include <alibabacloud/Config.hpp>
-#include <alibabacloud/provider/Provider.hpp>
-#include <darabonba/Model.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
+// #include <darabonba/Model.hpp>
+using namespace AlibabaCloud::Credential::Models;
 
 #include <memory>
 #include <string>
 
 namespace AlibabaCloud {
 namespace Credential {
-namespace Models {
 class Client : public Darabonba::Model {
   friend void to_json(Darabonba::Json &j, const Client &obj) {
     DARABONBA_PTR_TO_JSON(config, config_);
@@ -67,7 +67,7 @@ public:
   /**
    * @note Return a copy to avoid inconsistencies
    */
-  Credential getCredential() const { return provider_->getCredential(); }
+  CredentialModel getCredential() const { return provider_->getCredential(); }
 
 private:
   static std::shared_ptr<Provider> makeProvider(std::shared_ptr<Config> config);
@@ -78,8 +78,7 @@ private:
   std::shared_ptr<Provider> provider_ = nullptr;
 };
 
-} // namespace Models
 } // namespace Credential
-} // namespace AlibabaCloud
+} // namespace Alibabacloud
 
 #endif

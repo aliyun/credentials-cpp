@@ -1,10 +1,10 @@
 #ifndef AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
-
-#include <alibabacloud/Constant.hpp>
-#include <alibabacloud/provider/Provider.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 #include <memory>
-
+using namespace AlibabaCloud::Credential::Models;
 namespace AlibabaCloud {
 
 namespace Credential {
@@ -14,7 +14,7 @@ public:
   EnvironmentVariableProvider() = default;
   virtual ~EnvironmentVariableProvider() {}
 
-  virtual Credential &getCredential() override {
+  virtual CredentialModel &getCredential() override {
     provider_ = createProvider();
     if (provider_ == nullptr) {
       throw Darabonba::Exception("Can't create the ProfileProvider.");
@@ -22,7 +22,7 @@ public:
     return provider_->getCredential();
   }
 
-  virtual const Credential &getCredential() const override {
+  virtual const CredentialModel &getCredential() const override {
     provider_ = createProvider();
     if (provider_ == nullptr) {
       throw Darabonba::Exception("Can't create the ProfileProvider.");
@@ -34,7 +34,7 @@ protected:
   static std::unique_ptr<Provider> createProvider();
 
   mutable std::unique_ptr<Provider> provider_ = nullptr;
-  mutable Credential credential_;
+  mutable CredentialModel credential_;
 };
 
 } // namespace Credential

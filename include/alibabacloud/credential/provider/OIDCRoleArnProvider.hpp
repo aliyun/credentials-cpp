@@ -1,14 +1,15 @@
 #ifndef AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
 
-#include <alibabacloud/Constant.hpp>
-// #include <alibabacloud/provider/NeedFreshProvider.hpp>
-#include <alibabacloud/provider/Provider.hpp>
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {
 
-class OIDCRoleArnProvider {
+class OIDCRoleArnProvider : public NeedFreshProvider,
+                           std::enable_shared_from_this<OIDCRoleArnProvider>{
 public:
   OIDCRoleArnProvider(std::shared_ptr<Models::Config> config)
       : roleArn_(config->roleArn()),
@@ -41,9 +42,9 @@ public:
   virtual ~OIDCRoleArnProvider() = default;
 
 protected:
-  // virtual bool refreshCredential() const override;
+  virtual bool refreshCredential()  override {};
 
-  mutable Models::Credential credential_;
+  mutable Models::CredentialModel credential_;
 
   std::string roleArn_;
   std::string oidcProviderArn_;

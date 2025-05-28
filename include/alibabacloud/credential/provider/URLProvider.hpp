@@ -1,7 +1,7 @@
 #ifndef AlibabaCloud_CREDENTIAL_URLPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_URLPROVIDER_HPP_
-#include <alibabacloud/Config.hpp>
-#include <alibabacloud/Constant.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/Constant.hpp>
 // #include <alibabacloud/provider/NeedFreshProvider.hpp>
 #include <string>
 
@@ -24,10 +24,10 @@ public:
   virtual ~URLProvider() {}
 
 protected:
-  // virtual bool refreshCredential() const override;
+  virtual bool refreshCredential()  override {};
 
   std::string url_;
-  mutable Models::Credential credential_;
+  mutable Models::CredentialModel credential_;
 };
 
 } // namespace Credential
