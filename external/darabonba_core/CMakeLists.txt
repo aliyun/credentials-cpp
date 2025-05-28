@@ -1,34 +1,59 @@
 find_package(darabonba_core QUIET)
-find_package(nlohmann_json REQUIRED)
-find_package(CURL REQUIRED)
 
 if(darabonba_core_FOUND)
   message(STATUS "Found darabonba_core version ${darabonba_core_VERSION}")
 else()
-  message(STATUS "darabonba_core could not be located, Building darabonba_core instead.")
-  include(FetchContent)
+  message(STATUS "darabonba_core could not be located, download darabonba_core instead.")
+  function(download_file url filename)
+    message(STATUS "Download ${url} to ${filename} ...")
+    file(DOWNLOAD
+            ${url}
+            ${filename}
+            TIMEOUT 50000
+            STATUS ERR
+            SHOW_PROGRESS )
+    IF(ERR EQUAL 0)
+      #如果下载无错误则设置压缩包名称标记下载成功
+      MESSAGE(STATUS "Download darabonba_core success")
+    ELSE()
+      #下载错误输出相关的提示信息
+      MESSAGE(STATUS "Download failed, error: ${ERR}")
+      MESSAGE(FATAL_ERROR
+              "using curl/wget or a similar tool"
+              )
+    ENDIF()
+  endfunction()
 
-  FetchContent_Declare(
-    _darabonba_core
-    # 这段逻辑将从git上下载darabonba_core的源代码
-    # GIT_REPOSITORY https://github.com/peze/tea-cpp.git
-    # GIT_TAG v2.x
-    SOURCE_DIR /Users/wenping/Desktop/tea-cpp
-    CMAKE_ARGS
-      -DENABLE_UNIT_TESTS:BOOL="0"
-      )
-  FetchContent_GetProperties(_darabonba_core)
-  if(NOT _darabonba_core_POPULATED)
-    FetchContent_Populate(_darabonba_core)
-    message(STATUS "Added darabonba_core source : ${_darabonba_core_SOURCE_DIR}")
-    message(STATUS "Added darabonba_core binary : ${_darabonba_core_BINARY_DIR}")
-    add_subdirectory(
-      ${_darabonba_core_SOURCE_DIR}
-      ${_darabonba_core_BINARY_DIR}
-    )
-  endif()
-  target_include_directories(AlibabaCloud_credential PRIVATE "${_darabonba_core_SOURCE_DIR}/include")
-  # if(ENABLE_UNIT_TESTS)
-  #   target_include_directories(tests_AlibabaCloud_credential PRIVATE "${_darabonba_core_SOURCE_DIR}/include")
-  # endif()
+  function(extract_file filename extract_dir)
+    message(STATUS "Extract ${filename} to ${extract_dir} ...")
+    # cmake -E tar -xf filename.tgz
+    set(temp_dir ${CMAKE_BINARY_DIR}/tmp_for_extract.dir)
+    if(EXISTS ${temp_dir})
+      file(REMOVE_RECURSE ${temp_dir})
+    endif()
+    file(MAKE_DIRECTORY ${temp_dir})
+    execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xf ${CMAKE_BINARY_DIR}/${filename}
+            WORKING_DIRECTORY ${temp_dir})
+
+    file(GLOB contents "${temp_dir}/*")
+    list(LENGTH contents n)
+    if(NOT n EQUAL 1 OR NOT IS_DIRECTORY "${contents}")
+      set(contents "${temp_dir}")
+    endif()
+
+    get_filename_component(contents ${contents} ABSOLUTE)
+    file(INSTALL "${contents}/" DESTINATION ${extract_dir})
+
+    file(REMOVE_RECURSE ${temp_dir})
+  endfunction()
+
+  #if(CMAKE_HOST_WIN32)
+  #  download_file("http://alibabaclou-cpp-package.oss-cn-shanghai.aliyuncs.com/darabonba/darabonba_core/latest/win.zip" "darabonba_core_latest.zip")
+  #elseif(APPLE)
+  #  download_file("http://alibabaclou-cpp-package.oss-cn-shanghai.aliyuncs.com/darabonba/darabonba_core/latest/mac.zip" "darabonba_core_latest.zip")
+  #else()
+  #  download_file("http://alibabaclou-cpp-package.oss-cn-shanghai.aliyuncs.com/darabonba/darabonba_core/latest/linux.zip" "darabonba_core_latest.zip")
+  #endif()
+  #extract_file("darabonba_core_latest.zip" "${PROJECT_SOURCE_DIR}/deps")
+  target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/deps/include")
 endif()

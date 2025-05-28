@@ -111,6 +111,8 @@ url/cache/
 # cedet
 ede-projects.el
 
+deps/
+
 # smex
 smex-items
 

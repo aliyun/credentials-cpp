@@ -15,7 +15,7 @@ const std::string EcsRamRoleProvider::META_DATA_SERVICE_HOST =
 const std::string EcsRamRoleProvider::ECS_METADATA_FETCH_ERROR_MSG =
     "Failed to get RAM session credentials from ECS metadata service.";
 
-bool EcsRamRoleProvider::refreshCredential() {
+bool EcsRamRoleProvider::refreshCredential() const {
   if (roleName_.empty()) {
     roleName_ = getRoleName();
   }

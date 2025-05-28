@@ -10,7 +10,7 @@
 namespace AlibabaCloud {
 namespace Credential {
 
-bool RamRoleArnProvider::refreshCredential()  {
+bool RamRoleArnProvider::refreshCredential() const  {
   Darabonba::Http::Query query = {
       {"Action", "AssumeRole"},
       {"Format", "JSON"},

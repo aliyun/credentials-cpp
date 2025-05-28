@@ -34,7 +34,7 @@ public:
   virtual ~RsaKeyPairProvider() {}
 
 protected:
-  virtual bool refreshCredential()  override ;
+  virtual bool refreshCredential() const override ;
 
   int64_t durationSeconds_ = 3600;
   std::string regionId_ = "cn-hangzhou";

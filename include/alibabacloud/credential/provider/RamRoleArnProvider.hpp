@@ -43,7 +43,7 @@ public:
   virtual ~RamRoleArnProvider() {}
 
 private:
-  virtual bool refreshCredential()  override;
+  virtual bool refreshCredential() const override;
 
   mutable Models::CredentialModel credential_;
   std::string roleArn_;
