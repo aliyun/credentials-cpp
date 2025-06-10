@@ -23,7 +23,7 @@ public:
   virtual ~EcsRamRoleProvider() {}
 
 private:
-  virtual bool refreshCredential() override;
+  virtual bool refreshCredential() const override;
   static std::string getRoleName();
 
   static const std::string URL_IN_ECS_META_DATA;

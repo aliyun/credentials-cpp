@@ -42,7 +42,7 @@ public:
   virtual ~OIDCRoleArnProvider() = default;
 
 protected:
-  virtual bool refreshCredential()  override {};
+  virtual bool refreshCredential() const override {};
 
   mutable Models::CredentialModel credential_;
 

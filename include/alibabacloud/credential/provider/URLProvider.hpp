@@ -24,7 +24,7 @@ public:
   virtual ~URLProvider() {}
 
 protected:
-  virtual bool refreshCredential()  override {};
+  virtual bool refreshCredential() const override {};
 
   std::string url_;
   mutable Models::CredentialModel credential_;

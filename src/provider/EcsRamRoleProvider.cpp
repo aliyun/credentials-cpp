@@ -1,6 +1,7 @@
+#include "darabonba/encode/Encoder.hpp"
+
 #include <alibabacloud/credential/provider/EcsRamRoleProvider.hpp>
 #include <darabonba/Core.hpp>
-#include <darabonba/Util.hpp>
 #include <memory>
 
 namespace AlibabaCloud {
@@ -15,7 +16,7 @@ const std::string EcsRamRoleProvider::META_DATA_SERVICE_HOST =
 const std::string EcsRamRoleProvider::ECS_METADATA_FETCH_ERROR_MSG =
     "Failed to get RAM session credentials from ECS metadata service.";
 
-bool EcsRamRoleProvider::refreshCredential() {
+bool EcsRamRoleProvider::refreshCredential() const {
   if (roleName_.empty()) {
     roleName_ = getRoleName();
   }
@@ -29,7 +30,7 @@ bool EcsRamRoleProvider::refreshCredential() {
                                " Status code is " +
                                std::to_string(resp->statusCode()));
   }
-  auto result = Darabonba::Util::readAsJSON(resp->body());
+  auto result = Darabonba::IFStream::readAsJSON(resp->body());
   if (result["Code"].get<std::string>() != "Success") {
     throw Darabonba::Exception(
         ECS_METADATA_FETCH_ERROR_MSG + " Status code is " +
@@ -55,10 +56,10 @@ std::string EcsRamRoleProvider::getRoleName() {
     throw Darabonba::Exception(
         ECS_METADATA_FETCH_ERROR_MSG + " Status code is " +
         std::to_string(resp->statusCode()) + ", Body is " +
-        Darabonba::Util::readAsString(resp->body()));
+        Darabonba::IFStream::readAsString(resp->body()));
   }
 
-  return Darabonba::Util::readAsString(resp->body());
+  return Darabonba::IFStream::readAsString(resp->body());
 }
 
 } // namespace Credential

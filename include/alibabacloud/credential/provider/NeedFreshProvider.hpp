@@ -17,10 +17,10 @@ public:
     refresh();
     return credential_;
   }
-  // virtual  Models::CredentialModel &getCredential()  override {
-  //   refresh();
-  //   return credential_;
-  // }
+   virtual const Models::CredentialModel &getCredential() const override {
+     refresh();
+     return credential_;
+   }
 
 protected:
   virtual bool needFresh() const {
@@ -28,9 +28,9 @@ protected:
     return expiration_ - now <= 180;
   }
 
-  virtual bool refreshCredential() = 0;
+  virtual bool refreshCredential() const = 0;
 
-  virtual void refresh()  {
+  virtual void refresh() const {
     if (needFresh()) {
       refreshCredential();
     }

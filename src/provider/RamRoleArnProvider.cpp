@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <darabonba/Core.hpp>
-#include <darabonba/Util.hpp>
+#include <darabonba/encode/Encoder.hpp>
 #include <darabonba/http/Query.hpp>
 #include <darabonba/http/URL.hpp>
 #include <darabonba/signature/Signer.hpp>
@@ -10,7 +10,7 @@
 namespace AlibabaCloud {
 namespace Credential {
 
-bool RamRoleArnProvider::refreshCredential()  {
+bool RamRoleArnProvider::refreshCredential() const  {
   Darabonba::Http::Query query = {
       {"Action", "AssumeRole"},
       {"Format", "JSON"},
@@ -32,7 +32,7 @@ bool RamRoleArnProvider::refreshCredential()  {
   // %2F is the url_encode of '/'
   std::string stringToSign = "GET&%2F&" + std::string(query);
   std::string signature =
-      Darabonba::Util::toString(Darabonba::Signature::Signer::HmacSHA1Sign(
+      Darabonba::Encode::Encoder::toString(Darabonba::Signature::Signer::HmacSHA1Sign(
           stringToSign, credential_.accessKeySecret()));
   query.emplace("Signature", signature);
 
@@ -44,10 +44,10 @@ bool RamRoleArnProvider::refreshCredential()  {
   auto future = Darabonba::Core::doAction(req);
   auto resp = future.get();
   if (resp->statusCode() != 200) {
-    throw Darabonba::Exception(Darabonba::Util::readAsString(resp->body()));
+    throw Darabonba::Exception(Darabonba::Stream::readAsString(resp->body()));
   }
 
-  auto result = Darabonba::Util::readAsJSON(resp->body());
+  auto result = Darabonba::Stream::readAsJSON(resp->body());
   if (result["Code"].get<std::string>() != "Success") {
     throw Darabonba::Exception(result.dump());
   }

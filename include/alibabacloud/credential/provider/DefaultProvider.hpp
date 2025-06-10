@@ -4,6 +4,7 @@
 #include <alibabacloud/credential/Model.hpp>
 #include <alibabacloud/credential/provider/Provider.hpp>
 #include <memory>
+#include <darabonba/Exception.hpp>
 #include <string>
 
 namespace AlibabaCloud {

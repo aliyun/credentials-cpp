@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(AlibabaCloud_credential VERSION "0.1.0")
+project(alibabacloud_credential VERSION "0.1.0")
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< General set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
 set(CMAKE_CXX_STANDARD 11)
@@ -23,22 +23,22 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Target set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
 # add_library(${PROJECT_NAME} SHARED "")
 # 收集 include/AlibabaCloud 目录下的所有 .hpp 文件
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-file(GLOB headers "${CMAKE_SOURCE_DIR}/include/*.hpp")
-file(GLOB headers "${CMAKE_SOURCE_DIR}/include/alibabacloud/credential/*.hpp")
-file(GLOB headers "${CMAKE_SOURCE_DIR}/include/alibabacloud/gateway/*.hpp")
+set(SOURCE_FILES
+        src/client.cpp
+        src/AuthUtil.cpp
+        src/Constant.cpp
+        src/provider/DefaultProvider.cpp
+        src/provider/EcsRamRoleProvider.cpp
+        src/provider/EnvironmentVariableProvider.cpp
+        src/provider/OIDCRoleArnProvider.cpp
+        src/provider/ProfileProvider.cpp
+        src/provider/RamRoleArnProvider.cpp
+        src/provider/RsaKeyPairProvider.cpp
+        src/provider/URLProvider.cpp)
 
-# 收集 src 目录下的所有 .cpp 文件
-file(GLOB sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB sources "${CMAKE_SOURCE_DIR}/src/provider/*.cpp")
-# file(GLOB sources "${CMAKE_SOURCE_DIR}/src/gateway/*.cpp")
-
-add_library(${PROJECT_NAME} SHARED ${sources} ${headers})
-# 将文件添加到目标
-target_sources(${PROJECT_NAME}
-        PRIVATE
-        ${sources}
-        ${headers})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
@@ -52,29 +52,11 @@ set_target_properties(${PROJECT_NAME}
         PUBLIC_HEADER "${headers}"
         MACOSX_RPATH ON
         WINDOWS_EXPORT_ALL_SYMBOLS ON)
-add_subdirectory(external)
-# if (ENABLE_UNIT_TESTS)
-#     OPTION(ENABLE_COVERAGE "Use gcov" OFF)
-#     message(STATUS "Enable coverage: ${ENABLE_COVERAGE}")
-#     if (ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-#         set(CMAKE_BUILD_TYPE "Coverage")
-#         set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-#         include(CodeCoverage)
-#         setup_target_for_coverage(${PROJECT_NAME}_coverage ${PROJECT_NAME}_test coverage)
-#     endif ()
-#     include(CTest)
-#     enable_testing()
-#     add_executable(tests_AlibabaCloud_credential
-#             tests/main.cpp
-#             tests/credentials.cpp)
-# endif ()
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< External set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
-
-find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
-find_library(CPPREST_LIB cpprest)
+add_subdirectory(external)
 find_package(OpenSSL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE  ${Boost_LIBRARIES} ${CPPREST_LIB} OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(${PROJECT_NAME} PRIVATE  darabonba_core OpenSSL::SSL OpenSSL::Crypto)
 # if (ENABLE_UNIT_TESTS)
 #     target_include_directories(tests_AlibabaCloud_credential
 #             PRIVATE
@@ -134,7 +116,7 @@ install(
         TARGETS
         ${PROJECT_NAME}
         EXPORT
-        AlibabaCloud_credentialTargets
+        alibabacloud_credentialTargets
         ARCHIVE
         DESTINATION ${INSTALL_LIBDIR}
         COMPONENT lib
@@ -152,9 +134,9 @@ install(
 # Install cmake config
 install(
         EXPORT
-        AlibabaCloud_credentialTargets
+        alibabacloud_credentialTargets
         NAMESPACE
-        "AlibabaCloud_credential::"
+        "alibabacloud_credential::"
         DESTINATION
         ${INSTALL_CMAKEDIR}
         COMPONENT
