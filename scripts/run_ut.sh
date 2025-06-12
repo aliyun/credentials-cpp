@@ -13,7 +13,7 @@ main() {
     cmake --build . || {
         error_exit "Failed to make."
     }
-    ./tests_alibabacloud_credential || {
+    ./tests_AlibabaCloud_credential || {
         error_exit "Failed to test."
     }
 }
