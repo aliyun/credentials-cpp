@@ -20,7 +20,6 @@ std::unique_ptr<Provider> EnvironmentVariableProvider::createProvider() {
       return std::unique_ptr<Provider>(new StsProvider(accessKeyId, accessKeySecret, securityToken));
     }
   }
-  return nullptr;
   if (accessKeyId.empty()) {
     throw Darabonba::Exception(
         "Environment variable accessKeyId cannot be empty");

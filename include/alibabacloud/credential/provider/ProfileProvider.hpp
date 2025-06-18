@@ -1,6 +1,7 @@
 #ifndef AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
 #define AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
 #include <alibabacloud/credential/provider/Provider.hpp>
+#include <darabonba/Exception.hpp>
 #include <memory>
 namespace AlibabaCloud {
 

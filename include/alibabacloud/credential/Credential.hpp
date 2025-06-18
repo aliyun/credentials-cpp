@@ -3,7 +3,6 @@
 
 #include <alibabacloud/credential/Model.hpp>
 #include <alibabacloud/credential/provider/Provider.hpp>
-// #include <darabonba/Model.hpp>
 
 #include <memory>
 #include <string>
@@ -92,7 +91,7 @@ namespace nlohmann {
     static std::shared_ptr<AlibabaCloud::Credential::Client> from_json(const json &j) {
       if (!j.is_null()) {
         AlibabaCloud::Credential::Client *ptr = reinterpret_cast<AlibabaCloud::Credential::Client *>(j.get<uintptr_t>());
-        return std::shared_ptr<AlibabaCloud::Credential::Client>(ptr);
+        return std::make_shared<AlibabaCloud::Credential::Client>(*ptr);
       }
       return nullptr;
     }

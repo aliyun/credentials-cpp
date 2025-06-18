@@ -11,7 +11,7 @@ namespace AlibabaCloud {
 namespace Credential {
 class DefaultProvider : public Provider {
 public:
-  DefaultProvider() = default;
+  DefaultProvider();
 
   virtual ~DefaultProvider() = default;
 
