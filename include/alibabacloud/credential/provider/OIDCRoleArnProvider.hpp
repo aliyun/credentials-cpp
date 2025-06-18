@@ -42,8 +42,7 @@ public:
   virtual ~OIDCRoleArnProvider() = default;
 
 protected:
-  virtual bool refreshCredential() const override {};
-
+  virtual bool refreshCredential() const override;
   mutable Models::CredentialModel credential_;
 
   std::string roleArn_;

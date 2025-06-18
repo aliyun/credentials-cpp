@@ -14,6 +14,9 @@ namespace AlibabaCloud {
 namespace Credential {
 
 std::shared_ptr<Provider> Client::makeProvider(std::shared_ptr<Models::Config> config) {
+  if(config == nullptr) {
+    return std::shared_ptr<Provider>(new DefaultProvider());
+  }
 
   auto type = config->type();
 
