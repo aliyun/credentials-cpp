@@ -1,15 +1,15 @@
-#ifndef AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_PROFILEPROVIDER_HPP_
-#include <alibabacloud/credential/provider/Provider.hpp>
-#include <darabonba/Exception.hpp>
-#include <memory>
-namespace AlibabaCloud {
+#ifndef ALIBABACLOUD_CREDENTIAL_PROFILEPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_PROFILEPROVIDER_HPP_
 
+#include <memory>
+
+#include <darabonba/Exception.hpp>
+
+#include <alibabacloud/credential/provider/Provider.hpp>
+namespace AlibabaCloud {
 namespace Credential {
 class ProfileProvider : public Provider {
 public:
-  // ProfileProvider() = default;
-  // virtual ~ProfileProvider() = default;
 
   virtual Models::CredentialModel &getCredential() override {
     provider_ = createProvider();
@@ -26,9 +26,19 @@ public:
     }
     return provider_->getCredential();
   }
+  
+  /**
+   * @brief Get provider name
+   */
+  std::string getProviderName() const override {
+    provider_ = createProvider();
+    if (provider_ == nullptr) {
+      throw Darabonba::Exception("Can't create the ProfileProvider.");
+    }
+    return provider_->getProviderName();
+  }
 
 protected:
-
   static std::unique_ptr<Provider> createProvider();
 
   mutable std::unique_ptr<Provider> provider_ = nullptr;

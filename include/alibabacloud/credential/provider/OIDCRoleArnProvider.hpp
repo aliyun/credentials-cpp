@@ -1,7 +1,10 @@
-#ifndef AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_OIDCROLEARNPROVIDER_HPP_
+
+#include <darabonba/Env.hpp>
 
 #include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/Model.hpp>
 #include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
 #include <alibabacloud/credential/provider/Provider.hpp>
 
@@ -12,15 +15,35 @@ class OIDCRoleArnProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<OIDCRoleArnProvider>{
 public:
   OIDCRoleArnProvider(std::shared_ptr<Models::Config> config)
-      : roleArn_(config->roleArn()),
-        oidcProviderArn_(config->oidcProviderArn()),
-        oidcTokenFilePath_(config->oidcTokenFilePath()),
-        roleSessionName_(config->roleSessionName()),
+      : roleArn_(config->hasRoleArn() && !config->roleArn().empty()
+                     ? config->roleArn()
+                     : Darabonba::Env::getEnv(Constant::ENV_ROLE_ARN)),
+        oidcProviderArn_(config->hasOidcProviderArn() && !config->oidcProviderArn().empty()
+                             ? config->oidcProviderArn()
+                             : Darabonba::Env::getEnv(Constant::ENV_OIDC_PROVIDER_ARN)),
+        oidcTokenFilePath_(config->hasOidcTokenFilePath() && !config->oidcTokenFilePath().empty()
+                               ? config->oidcTokenFilePath()
+                               : Darabonba::Env::getEnv(Constant::ENV_OIDC_TOKEN_FILE)),
+        roleSessionName_(config->hasRoleSessionName() && !config->roleSessionName().empty()
+                             ? config->roleSessionName()
+                             : (Darabonba::Env::getEnv(Constant::ENV_ROLE_SESSION_NAME).empty()
+                                    ? "defaultSessionName"
+                                    : Darabonba::Env::getEnv(Constant::ENV_ROLE_SESSION_NAME))),
         policy_(config->hasPolicy()
                     ? std::make_shared<std::string>(config->policy())
                     : nullptr),
         durationSeconds_(config->durationSeconds()),
-        regionId_(config->regionId()), stsEndpoint_(config->stsEndpoint()) {
+        regionId_(config->hasStsRegionId() && !config->stsRegionId().empty()
+                      ? config->stsRegionId()
+                      : (Darabonba::Env::getEnv(Constant::ENV_STS_REGION).empty()
+                             ? config->regionId()
+                             : Darabonba::Env::getEnv(Constant::ENV_STS_REGION))),
+        stsEndpoint_(config->stsEndpoint()),
+        enableVpc_(config->hasEnableVpc()
+                       ? config->enableVpc()
+                       : (Darabonba::Env::getEnv(Constant::ENV_VPC_ENDPOINT_ENABLED) == "true")),
+        connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
+        readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
     credential_.setType(Constant::OIDC_ROLE_ARN);
   }
 
@@ -40,6 +63,11 @@ public:
     credential_.setType(Constant::OIDC_ROLE_ARN);
   }
   virtual ~OIDCRoleArnProvider() = default;
+  
+  /**
+   * @brief Get provider name
+   */
+  std::string getProviderName() const override { return Constant::OIDC_ROLE_ARN; }
 
 protected:
   virtual bool refreshCredential() const override;
@@ -53,6 +81,9 @@ protected:
   int64_t durationSeconds_ = 3600;
   std::string regionId_ = "cn-hangzhou";
   std::string stsEndpoint_ = "sts.aliyuncs.com";
+  bool enableVpc_ = false;
+  int64_t connectTimeout_ = 10000;  // Connection timeout in milliseconds
+  int64_t readTimeout_ = 5000;      // Read timeout in milliseconds
 };
 } // namespace Credential
 } // namespace AlibabaCloud

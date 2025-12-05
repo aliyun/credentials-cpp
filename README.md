@@ -8,6 +8,36 @@ English | [简体中文](/README-zh-CN.md)
 
 Alibaba Cloud Credentials for C++ is a tool that helps C++ developers manage their credentials.
 
+## Requirements
+
+### Compiler Requirements
+
+- **Windows**: Visual Studio 2015 or later
+- **Linux**: GCC 4.9 or later
+- **macOS**: Clang (Xcode Command Line Tools)
+
+### Build Tools
+
+- **CMake**: 3.5 or later (3.10+ recommended)
+- **C++ Standard**: C++11 or higher
+
+### System Requirements
+
+- **Memory**: 4GB or more recommended
+- **Disk Space**: At least 500MB available space
+
+### Dependencies
+
+- **OpenSSL**: For encryption and network communication
+  - Windows: Install via vcpkg or chocolatey
+  - Linux: `sudo apt-get install libssl-dev` (Ubuntu/Debian) or `sudo yum install openssl-devel` (CentOS/RHEL)
+  - macOS: `brew install openssl`
+
+- **nlohmann_json** (Optional): For CLIProfileProvider JSON support
+  - Windows: `vcpkg install nlohmann-json`
+  - Linux: `sudo apt-get install nlohmann-json3-dev`
+  - macOS: `brew install nlohmann-json`
+
 ## Installation
 
 ### Linux
@@ -44,7 +74,73 @@ sh scripts/install.sh
 
 Before you begin, you need to sign up for an Alibaba Cloud account and retrieve your [Credentials](https://usercenter.console.aliyun.com/#/manage/ak).
 
-### Credential Type
+### Default Credentials Provider Chain (Recommended)
+
+If you do not specify a credential type, the client will search for credentials in the following order:
+
+1. **Environment Variables**: `ALIBABA_CLOUD_ACCESS_KEY_ID` and `ALIBABA_CLOUD_ACCESS_KEY_SECRET`
+2. **OIDC RAM Role**: Configured via environment variables `ALIBABA_CLOUD_ROLE_ARN`, `ALIBABA_CLOUD_OIDC_PROVIDER_ARN`, and `ALIBABA_CLOUD_OIDC_TOKEN_FILE`
+3. **Configuration File**: `~/.alibabacloud/credentials.ini` or `~/.alibabacloud/credentials.json`
+4. **ECS Instance RAM Role**: Retrieved via ECS Instance Metadata Service (IMDS)
+5. **Credentials URI**: Retrieved from URL specified by environment variable `ALIBABA_CLOUD_CREDENTIALS_URI`
+
+**Using Default Credentials Provider Chain (Best Practice):**
+
+```c++
+#include <alibabacloud/credential/Credential.hpp>
+
+using namespace AlibabaCloud::Credential;
+
+// Use default credentials provider chain without specifying any configuration
+Client client;
+
+// Get credentials
+auto credential = client.getCredential();
+printf("AccessKeyId: %s\n", credential.accessKeyId().c_str());
+printf("AccessKeySecret: %s\n", credential.accessKeySecret().c_str());
+printf("Type: %s\n", credential.type().c_str());
+```
+
+**Setting credentials via environment variables:**
+
+```bash
+# Linux/macOS
+export ALIBABA_CLOUD_ACCESS_KEY_ID="<your-access-key-id>"
+export ALIBABA_CLOUD_ACCESS_KEY_SECRET="<your-access-key-secret>"
+
+# Windows (PowerShell)
+$env:ALIBABA_CLOUD_ACCESS_KEY_ID="<your-access-key-id>"
+$env:ALIBABA_CLOUD_ACCESS_KEY_SECRET="<your-access-key-secret>"
+
+# Windows (CMD)
+set ALIBABA_CLOUD_ACCESS_KEY_ID=<your-access-key-id>
+set ALIBABA_CLOUD_ACCESS_KEY_SECRET=<your-access-key-secret>
+```
+
+**Setting credentials via configuration file:**
+
+Create file `~/.alibabacloud/credentials.ini`:
+
+```ini
+[default]
+type = access_key
+access_key_id = <your-access-key-id>
+access_key_secret = <your-access-key-secret>
+```
+
+Or create file `~/.alibabacloud/credentials.json` (requires nlohmann_json):
+
+```json
+{
+  "mode": "AK",
+  "accessKeyId": "<your-access-key-id>",
+  "accessKeySecret": "<your-access-key-secret>"
+}
+```
+
+### Specifying Credential Type
+
+If you need to explicitly specify a credential type, you can use the following methods:
 
 #### AccessKey
 
@@ -123,6 +219,15 @@ printf("%s", client.getPolicy().c_str());
 
 By specifying the role name, the credential will be able to automatically request maintenance of STS Token.
 
+By default, the Credentials tool accesses the metadata server of ECS in security hardening mode (IMDSv2). If an exception is thrown, the Credentials tool switches to the normal mode (IMDSv1). You can also configure the `disableIMDSv1` parameter or the `ALIBABA_CLOUD_IMDSV1_DISABLE` environment variable to specify the exception handling logic. Valid values:
+
+- false (default): The Credentials tool continues to obtain the access credential in normal mode (IMDSv1).
+- true: The exception is thrown and the Credentials tool continues to obtain the access credential in security hardening mode.
+
+The configurations for the metadata server determine whether the server supports the security hardening mode (IMDSv2).
+
+In addition, you can specify `ALIBABA_CLOUD_ECS_METADATA_DISABLED=true` to disable access from the Credentials tool to the metadata server of ECS.
+
 ```c++
 #include <alibabacloud.hpp>
 
@@ -133,6 +238,8 @@ m.insert(pair<string, string*>("type", new string("ecs_ram_role")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
 m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 m.insert(pair<string, string*>("roleName", new string("<RoleName>")));
+// Optional. Specifies whether to disable IMDSv1. Default value: false
+// m.insert(pair<string, string*>("disableIMDSv1", new string("true")));
 
 auto *config = new Config(m);
 Client client = Client(config);
@@ -175,6 +282,50 @@ using namespace AlibabaCloud_Credential;
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("bearer_token")));
 m.insert(pair<string, string*>("bearerToken", new string(new string("<BearerToken>"))));
+
+auto *config = new Config(m);
+Client client = Client(config);
+
+printf("%s", client.getBearerToken().c_str());
+```
+
+#### CloudSSO
+
+Use Alibaba Cloud SSO managed role credentials.
+
+```c++
+#include <alibabacloud.hpp>
+
+using namespace AlibabaCloud_Credential;
+
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("sso")));
+m.insert(pair<string, string*>("roleName", new string("<RoleName>")));
+m.insert(pair<string, string*>("regionId", new string("cn-hangzhou")));
+
+auto *config = new Config(m);
+Client client = Client(config);
+
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
+printf("%s", client.getSecurityToken().c_str());
+```
+
+#### OAuth
+
+Use OAuth 2.0 protocol to obtain access credentials.
+
+```c++
+#include <alibabacloud.hpp>
+
+using namespace AlibabaCloud_Credential;
+
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("oauth")));
+m.insert(pair<string, string*>("accessKeyId", new string("<ClientId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<ClientSecret>")));
+m.insert(pair<string, string*>("stsEndpoint", new string("https://oauth.aliyuncs.com/v1/token")));
+m.insert(pair<string, string*>("regionId", new string("cn-hangzhou")));
 
 auto *config = new Config(m);
 Client client = Client(config);

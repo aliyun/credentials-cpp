@@ -1,10 +1,11 @@
-#ifndef AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
-#include <alibabacloud/credential/Model.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
+#ifndef ALIBABACLOUD_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_RSAKEYPAIRPROVIDER_HPP_
 
 #include <string>
+
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {
@@ -32,6 +33,11 @@ public:
   }
 
   virtual ~RsaKeyPairProvider() {}
+  
+  /**
+   * @brief Get provider name
+   */
+  std::string getProviderName() const override { return Constant::RSA_KEY_PAIR; }
 
 protected:
   virtual bool refreshCredential() const override ;

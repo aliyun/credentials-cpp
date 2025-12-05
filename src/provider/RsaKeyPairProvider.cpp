@@ -1,5 +1,6 @@
 #include <darabonba/encode/Encoder.hpp>
 #include <alibabacloud/credential/provider/RsaKeyPairProvider.hpp>
+#include <alibabacloud/credential/AuthUtil.hpp>
 #include <darabonba/Core.hpp>
 #include <darabonba/http/Query.hpp>
 #include <darabonba/signature/Signer.hpp>
@@ -28,9 +29,9 @@ namespace Credential {
            stringToSign, credential_.accessKeySecret()));
    query.emplace("Signature", signature);
 
-   Darabonba::Http::Request req;
-   req.url().setScheme("https");
-   req.header()["host"] = stsEndpoint_;
+   // 使用 getNewRequest 创建带 User-Agent 的请求（对应 Python SDK 的 getNewRequest）
+   std::string url = "https://" + stsEndpoint_ + "/";
+   auto req = AuthUtil::getNewRequest(url);
    req.setQuery(std::move(query));
 
    auto future = Darabonba::Core::doAction(req);

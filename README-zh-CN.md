@@ -8,6 +8,36 @@
 
 Alibaba Cloud Credentials for C++ 是帮助 C++ 开发者管理凭据的工具。
 
+## 环境要求
+
+### 编译器要求
+
+- **Windows**: Visual Studio 2015 或以上版本
+- **Linux**: GCC 4.9 或以上版本
+- **macOS**: Clang (Xcode Command Line Tools)
+
+### 构建工具
+
+- **CMake**: 3.5 或以上版本（推荐 3.10+）
+- **C++ 标准**: C++11 或更高版本
+
+### 系统要求
+
+- **内存**: 建议 4GB 或以上
+- **磁盘空间**: 建议至少 500MB 可用空间
+
+### 依赖库
+
+- **OpenSSL**: 用于加密和网络通信
+  - Windows: 通过 vcpkg 或 chocolatey 安装
+  - Linux: `sudo apt-get install libssl-dev` (Ubuntu/Debian) 或 `sudo yum install openssl-devel` (CentOS/RHEL)
+  - macOS: `brew install openssl`
+
+- **nlohmann_json** (可选): 用于 CLIProfileProvider 的 JSON 支持
+  - Windows: `vcpkg install nlohmann-json`
+  - Linux: `sudo apt-get install nlohmann-json3-dev`
+  - macOS: `brew install nlohmann-json`
+
 ## 安装
 
 ### Linux
@@ -44,7 +74,73 @@ sh scripts/install.sh
 
 在您开始之前，您需要注册阿里云帐户并获取您的[凭证](https://usercenter.console.aliyun.com/#/manage/ak)。
 
-### 凭证类型
+### 默认凭证提供者链（推荐）
+
+如果您不设置凭证类型，客户端会按照如下顺序查找凭证：
+
+1. **环境变量**：`ALIBABA_CLOUD_ACCESS_KEY_ID` 和 `ALIBABA_CLOUD_ACCESS_KEY_SECRET`
+2. **OIDC RAM 角色**：通过环境变量 `ALIBABA_CLOUD_ROLE_ARN`、`ALIBABA_CLOUD_OIDC_PROVIDER_ARN` 和 `ALIBABA_CLOUD_OIDC_TOKEN_FILE` 配置
+3. **配置文件**：`~/.alibabacloud/credentials.ini` 或 `~/.alibabacloud/credentials.json`
+4. **ECS 实例 RAM 角色**：通过 ECS 实例元数据服务（IMDS）获取
+5. **Credentials URI**：通过环境变量 `ALIBABA_CLOUD_CREDENTIALS_URI` 指定的 URL 获取
+
+**使用默认凭证提供者链（最佳实践）：**
+
+```c++
+#include <alibabacloud/credential/Credential.hpp>
+
+using namespace AlibabaCloud::Credential;
+
+// 不指定任何配置，使用默认凭证提供者链
+Client client;
+
+// 获取凭证
+auto credential = client.getCredential();
+printf("AccessKeyId: %s\n", credential.accessKeyId().c_str());
+printf("AccessKeySecret: %s\n", credential.accessKeySecret().c_str());
+printf("Type: %s\n", credential.type().c_str());
+```
+
+**通过环境变量设置：**
+
+```bash
+# Linux/macOS
+export ALIBABA_CLOUD_ACCESS_KEY_ID="<your-access-key-id>"
+export ALIBABA_CLOUD_ACCESS_KEY_SECRET="<your-access-key-secret>"
+
+# Windows (PowerShell)
+$env:ALIBABA_CLOUD_ACCESS_KEY_ID="<your-access-key-id>"
+$env:ALIBABA_CLOUD_ACCESS_KEY_SECRET="<your-access-key-secret>"
+
+# Windows (CMD)
+set ALIBABA_CLOUD_ACCESS_KEY_ID=<your-access-key-id>
+set ALIBABA_CLOUD_ACCESS_KEY_SECRET=<your-access-key-secret>
+```
+
+**通过配置文件设置：**
+
+创建文件 `~/.alibabacloud/credentials.ini`：
+
+```ini
+[default]
+type = access_key
+access_key_id = <your-access-key-id>
+access_key_secret = <your-access-key-secret>
+```
+
+或创建文件 `~/.alibabacloud/credentials.json`（需要安装 nlohmann_json）：
+
+```json
+{
+  "mode": "AK",
+  "accessKeyId": "<your-access-key-id>",
+  "accessKeySecret": "<your-access-key-secret>"
+}
+```
+
+### 指定凭证类型
+
+如果您需要明确指定凭证类型，可以使用以下方式：
 
 #### AccessKey
 
@@ -121,7 +217,16 @@ printf("%s", client.getPolicy().c_str());
 
 #### EcsRamRole
 
-通过指定角色名称，让凭证自动申请维护 STS Token
+通过指定角色名称，让凭证自动申请维护 STS Token。
+
+默认情况下，凭证工具会以安全强化模式（IMDSv2）访问 ECS 的元数据服务。如果抛出异常，凭证工具会切换到普通模式（IMDSv1）。您也可以配置 `disableIMDSv1` 参数或 `ALIBABA_CLOUD_IMDSV1_DISABLE` 环境变量来指定异常处理逻辑。取值如下：
+
+- false（默认值）：凭证工具继续以普通模式（IMDSv1）获取访问凭证。
+- true：抛出异常，凭证工具继续以安全强化模式获取访问凭证。
+
+元数据服务器的配置决定了服务器是否支持安全强化模式（IMDSv2）。
+
+此外，您可以指定 `ALIBABA_CLOUD_ECS_METADATA_DISABLED=true` 来禁止凭证工具访问 ECS 的元数据服务。
 
 ```c++
 #include <alibabacloud.hpp>
@@ -133,6 +238,8 @@ m.insert(pair<string, string*>("type", new string("ecs_ram_role")));
 m.insert(pair<string, string*>("accessKeyId", new string("<AccessKeyId>")));
 m.insert(pair<string, string*>("accessKeySecret", new string("<AccessKeySecret>")));
 m.insert(pair<string, string*>("roleName", new string("<roleName>")));
+// 可选。指定是否禁用IMDSv1。默认值：false
+// m.insert(pair<string, string*>("disableIMDSv1", new string("true")));
 
 auto *config = new Config(m);
 Client client = Client(config);
@@ -175,6 +282,50 @@ using namespace AlibabaCloud_Credential;
 map<string, string*> m;
 m.insert(pair<string, string*>("type", new string("bearer_token")));
 m.insert(pair<string, string*>("bearerToken", new string("<BearerToken>")));
+
+auto *config = new Config(m);
+Client client = Client(config);
+
+printf("%s", client.getBearerToken().c_str());
+```
+
+#### CloudSSO
+
+通过阿里云SSO托管的角色凭证。
+
+```c++
+#include <alibabacloud.hpp>
+
+using namespace AlibabaCloud_Credential;
+
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("sso")));
+m.insert(pair<string, string*>("roleName", new string("<RoleName>")));
+m.insert(pair<string, string*>("regionId", new string("cn-hangzhou")));
+
+auto *config = new Config(m);
+Client client = Client(config);
+
+printf("%s", client.getAccessKeyId().c_str());
+printf("%s", client.getAccessKeySecret().c_str());
+printf("%s", client.getSecurityToken().c_str());
+```
+
+#### OAuth
+
+使用OAuth 2.0协议获取访问凭证。
+
+```c++
+#include <alibabacloud.hpp>
+
+using namespace AlibabaCloud_Credential;
+
+map<string, string*> m;
+m.insert(pair<string, string*>("type", new string("oauth")));
+m.insert(pair<string, string*>("accessKeyId", new string("<ClientId>")));
+m.insert(pair<string, string*>("accessKeySecret", new string("<ClientSecret>")));
+m.insert(pair<string, string*>("stsEndpoint", new string("https://oauth.aliyuncs.com/v1/token")));
+m.insert(pair<string, string*>("regionId", new string("cn-hangzhou")));
 
 auto *config = new Config(m);
 Client client = Client(config);

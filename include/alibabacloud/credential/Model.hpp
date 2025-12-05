@@ -1,8 +1,16 @@
-#ifndef AlibabaCloud_CREDENTIAL_MODEL_HPP_
-#define AlibabaCloud_CREDENTIAL_MODEL_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_MODEL_HPP_
+#define ALIBABACLOUD_CREDENTIAL_MODEL_HPP_
+
+#include <memory>
 
 #include <darabonba/Model.hpp>
-#include <memory>
+
+// Forward declaration to avoid circular dependency
+namespace AlibabaCloud {
+namespace Credential {
+class AuthUtil;
+}
+}
 
 namespace AlibabaCloud {
 namespace Credential {
@@ -147,7 +155,13 @@ class Config : public Darabonba::Model {
     DARABONBA_PTR_TO_JSON(roleSessionName, roleSessionName_);
     DARABONBA_PTR_TO_JSON(securityToken, securityToken_);
     DARABONBA_PTR_TO_JSON(stsEndpoint, stsEndpoint_);
+    DARABONBA_PTR_TO_JSON(stsRegionId, stsRegionId_);
+    DARABONBA_PTR_TO_JSON(enableVpc, enableVpc_);
     DARABONBA_PTR_TO_JSON(type, type_);
+    DARABONBA_PTR_TO_JSON(timeout, timeout_);
+    DARABONBA_PTR_TO_JSON(connectTimeout, connectTimeout_);
+    DARABONBA_PTR_TO_JSON(disableIMDSv1, disableIMDSv1_);
+    DARABONBA_PTR_TO_JSON(reuseLastProviderEnabled, reuseLastProviderEnabled_);
   }
 
   friend void from_json(const Darabonba::Json &j, Config &obj) {
@@ -171,7 +185,13 @@ class Config : public Darabonba::Model {
     DARABONBA_PTR_FROM_JSON(roleSessionName, roleSessionName_);
     DARABONBA_PTR_FROM_JSON(securityToken, securityToken_);
     DARABONBA_PTR_FROM_JSON(stsEndpoint, stsEndpoint_);
+    DARABONBA_PTR_FROM_JSON(stsRegionId, stsRegionId_);
+    DARABONBA_PTR_FROM_JSON(enableVpc, enableVpc_);
     DARABONBA_PTR_FROM_JSON(type, type_);
+    DARABONBA_PTR_FROM_JSON(timeout, timeout_);
+    DARABONBA_PTR_FROM_JSON(connectTimeout, connectTimeout_);
+    DARABONBA_PTR_FROM_JSON(disableIMDSv1, disableIMDSv1_);
+    DARABONBA_PTR_FROM_JSON(reuseLastProviderEnabled, reuseLastProviderEnabled_);
   }
 
 public:
@@ -209,7 +229,8 @@ public:
            roleArn_ == nullptr && roleName_ == nullptr &&
            roleSessionExpiration_ == nullptr && roleSessionName_ == nullptr &&
            securityToken_ == nullptr && stsEndpoint_ == nullptr &&
-           type_ == nullptr;
+           type_ == nullptr && timeout_ == nullptr &&
+           connectTimeout_ == nullptr && disableIMDSv1_ == nullptr;
   }
   bool hasAccessKeyId() const { return this->accessKeyId_ != nullptr; }
   std::string accessKeyId() const {
@@ -381,9 +402,7 @@ public:
   }
 
   bool hasRoleSessionName() const { return this->roleSessionName_ != nullptr; }
-  std::string roleSessionName() const {
-    DARABONBA_PTR_GET_DEFAULT(roleSessionName_, "");
-  }
+  std::string roleSessionName() const;  // Implemented in Model.cpp for dynamic default
   Config &setRoleSessionName(const std::string &roleSessionName) {
     DARABONBA_PTR_SET_VALUE(roleSessionName_, roleSessionName);
   }
@@ -413,12 +432,53 @@ public:
     DARABONBA_PTR_SET_RVALUE(stsEndpoint_, stsEndpoint);
   }
 
+  bool hasStsRegionId() const { return this->stsRegionId_ != nullptr; }
+  std::string stsRegionId() const {
+    DARABONBA_PTR_GET_DEFAULT(stsRegionId_, "");
+  }
+  Config &setStsRegionId(const std::string &stsRegionId) {
+    DARABONBA_PTR_SET_VALUE(stsRegionId_, stsRegionId);
+  }
+  Config &setStsRegionId(std::string &&stsRegionId) {
+    DARABONBA_PTR_SET_RVALUE(stsRegionId_, stsRegionId);
+  }
+
+  bool hasEnableVpc() const { return this->enableVpc_ != nullptr; }
+  bool enableVpc() const { DARABONBA_PTR_GET_DEFAULT(enableVpc_, false); }
+  Config &setEnableVpc(bool enableVpc) {
+    DARABONBA_PTR_SET_VALUE(enableVpc_, enableVpc);
+  }
+
   bool hasType() const { return this->type_ != nullptr; }
   std::string type() const { DARABONBA_PTR_GET_DEFAULT(type_, ""); }
   Config &setType(const std::string &type) {
     DARABONBA_PTR_SET_VALUE(type_, type);
   }
   Config &setType(std::string &&type) { DARABONBA_PTR_SET_RVALUE(type_, type); }
+
+  bool hasTimeout() const { return this->timeout_ != nullptr; }
+  int64_t timeout() const { DARABONBA_PTR_GET_DEFAULT(timeout_, 5000); }
+  Config &setTimeout(int64_t timeout) {
+    DARABONBA_PTR_SET_VALUE(timeout_, timeout);
+  }
+
+  bool hasConnectTimeout() const { return this->connectTimeout_ != nullptr; }
+  int64_t connectTimeout() const { DARABONBA_PTR_GET_DEFAULT(connectTimeout_, 10000); }
+  Config &setConnectTimeout(int64_t connectTimeout) {
+    DARABONBA_PTR_SET_VALUE(connectTimeout_, connectTimeout);
+  }
+
+  bool hasDisableIMDSv1() const { return this->disableIMDSv1_ != nullptr; }
+  bool disableIMDSv1() const { DARABONBA_PTR_GET_DEFAULT(disableIMDSv1_, false); }
+  Config &setDisableIMDSv1(bool disableIMDSv1) {
+    DARABONBA_PTR_SET_VALUE(disableIMDSv1_, disableIMDSv1);
+  }
+
+  bool hasReuseLastProviderEnabled() const { return this->reuseLastProviderEnabled_ != nullptr; }
+  bool reuseLastProviderEnabled() const { DARABONBA_PTR_GET_DEFAULT(reuseLastProviderEnabled_, false); }
+  Config &setReuseLastProviderEnabled(bool reuseLastProviderEnabled) {
+    DARABONBA_PTR_SET_VALUE(reuseLastProviderEnabled_, reuseLastProviderEnabled);
+  }
 
 protected:
   std::shared_ptr<std::string> accessKeyId_ = nullptr;
@@ -434,17 +494,20 @@ protected:
   std::shared_ptr<std::string> privateKeyFile_ = nullptr;
   std::shared_ptr<std::string> proxy_ = nullptr;
   std::shared_ptr<std::string> publicKeyId_ = nullptr;
-  std::shared_ptr<std::string> regionId_ =
-      std::make_shared<std::string>("cn-hangzhou");
+  std::shared_ptr<std::string> regionId_ = std::make_shared<std::string>("cn-hangzhou");
   std::shared_ptr<std::string> roleArn_ = nullptr;
   std::shared_ptr<std::string> roleName_ = nullptr;
   std::shared_ptr<int64_t> roleSessionExpiration_ = nullptr;
-  std::shared_ptr<std::string> roleSessionName_ =
-      std::make_shared<std::string>("defaultSessionName");
+  std::shared_ptr<std::string> roleSessionName_ = nullptr;  // Dynamic default via generateSessionName()
   std::shared_ptr<std::string> securityToken_ = nullptr;
-  std::shared_ptr<std::string> stsEndpoint_ =
-      std::make_shared<std::string>("sts.aliyuncs.com");
+  std::shared_ptr<std::string> stsEndpoint_ = std::make_shared<std::string>("sts.aliyuncs.com");
+  std::shared_ptr<std::string> stsRegionId_ = nullptr;
+  std::shared_ptr<bool> enableVpc_ = std::make_shared<bool>(false);
   std::shared_ptr<std::string> type_ = nullptr;
+  std::shared_ptr<int64_t> timeout_ = std::make_shared<int64_t>(5000);
+  std::shared_ptr<int64_t> connectTimeout_ = std::make_shared<int64_t>(10000);
+  std::shared_ptr<bool> disableIMDSv1_ = std::make_shared<bool>(false);
+  std::shared_ptr<bool> reuseLastProviderEnabled_ = std::make_shared<bool>(false);
 };
 
 } // namespace Credential

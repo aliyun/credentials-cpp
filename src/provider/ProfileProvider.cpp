@@ -1,16 +1,18 @@
+ #include <fstream>
+
+ #include <darabonba/Env.hpp>
+ #include <darabonba/Exception.hpp>
+ #include <darabonba/Ini.hpp>
+
  #include <alibabacloud/credential/AuthUtil.hpp>
- #include <alibabacloud/credential/Model.hpp>
  #include <alibabacloud/credential/Constant.hpp>
+ #include <alibabacloud/credential/Model.hpp>
  #include <alibabacloud/credential/provider/AccessKeyProvider.hpp>
  #include <alibabacloud/credential/provider/EcsRamRoleProvider.hpp>
  #include <alibabacloud/credential/provider/OIDCRoleArnProvider.hpp>
  #include <alibabacloud/credential/provider/ProfileProvider.hpp>
  #include <alibabacloud/credential/provider/RamRoleArnProvider.hpp>
  #include <alibabacloud/credential/provider/RsaKeyPairProvider.hpp>
-#include <darabonba/Exception.hpp>
- #include <darabonba/Env.hpp>
- #include <darabonba/Ini.hpp>
- #include <fstream>
 
  static std::string getProfilePath() {
  #ifdef _WIN32
@@ -24,6 +26,12 @@
      return home;
    if (home.back() != sep) {
      home.push_back(sep);
+   }
+   // Support both .aliyun/config.json (new) and .alibabaclouds.ini (legacy)
+   std::string newPath = home + ".aliyun" + sep + "config.json";
+   std::ifstream testFile(newPath);
+   if (testFile.good()) {
+     return newPath;
    }
    return home + ".alibabaclouds.ini";
  }

@@ -19,15 +19,20 @@ class Client : public Darabonba::Model {
   }
 
 public:
-  Client() = default;
-  Client(const Models::Config &obj)
-      : config_(std::make_shared<Models::Config>(obj)),
-        provider_(makeProvider(config_)) {}
-  Client(Models::Config &&obj)
-      : config_(std::make_shared<Models::Config>(std::move(obj))),
-        provider_(makeProvider(config_)) {}
-  Client(std::shared_ptr<Models::Config> config)
-      : config_(config), provider_(makeProvider(config_)) {}
+  // Constructor 1: Default constructor
+  // Equivalent to Java: public Client()
+  Client();
+  
+  // Constructor 2: Config-based constructors (3 overloads for different config types)
+  // Equivalent to Java: public Client(Config config)
+  Client(const Models::Config &obj);
+  Client(Models::Config &&obj);
+  Client(std::shared_ptr<Models::Config> config);
+  
+  // Constructor 3: Provider-based constructor
+  // Equivalent to Java: public Client(AlibabaCloudCredentialsProvider provider)
+  Client(std::shared_ptr<Provider> provider);
+  
   virtual ~Client() = default;
 
   virtual void validate() const override {}
@@ -48,6 +53,7 @@ public:
     return provider_ == nullptr;
   }
 
+  // Deprecated: use getCredentials() to avoid AK/SK misalignment due to refresh
   std::string getAccessKeyId() {
     return provider_->getCredential().accessKeyId();
   };

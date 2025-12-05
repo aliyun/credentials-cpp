@@ -1,47 +1,86 @@
 #include <cstdint>
+#include <memory>
+
 #include <darabonba/Core.hpp>
 #include <darabonba/encode/Encoder.hpp>
+#include <darabonba/encode/SHA256.hpp>
 #include <darabonba/http/Query.hpp>
 #include <darabonba/http/URL.hpp>
 #include <darabonba/signature/Signer.hpp>
+
 #include <alibabacloud/credential/provider/RamRoleArnProvider.hpp>
-#include <memory>
+#include <alibabacloud/credential/AuthUtil.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {
 
 bool RamRoleArnProvider::refreshCredential() const  {
   Darabonba::Http::Query query = {
-      {"Action", "AssumeRole"},
-      {"Format", "JSON"},
-      {"Version", "2015-04-01"},
       {"DurationSeconds", std::to_string(durationSeconds_)},
       {"RoleArn", roleArn_},
-      {"AccessKeyId", credential_.accessKeyId()},
-      {"RegionId", regionId_},
       {"RoleSessionName", roleSessionName_},
-      {"SignatureMethod", "HMAC-SHA1"},
-      {"SignatureVersion", "1.0"},
-      {"Timestamp", gmt_datetime()},
-      {"SignatureNonce", Darabonba::Core::uuid()},
   };
   if (policy_) {
     query.emplace("Policy", *policy_);
   }
 
-  // %2F is the url_encode of '/'
-  std::string stringToSign = "GET&%2F&" + std::string(query);
-  std::string signature =
-      Darabonba::Encode::Encoder::toString(Darabonba::Signature::Signer::HmacSHA1Sign(
-          stringToSign, credential_.accessKeySecret()));
-  query.emplace("Signature", signature);
-
-  Darabonba::Http::Request req;
-  req.url().setScheme("https");
-  req.header()["host"] = stsEndpoint_;
+  // Build request
+  std::string url = "https://" + stsEndpoint_ + "/";
+  auto req = AuthUtil::getNewRequest(url);
   req.setQuery(std::move(query));
+  req.setMethod("POST");
 
-  auto future = Darabonba::Core::doAction(req);
+  // V3 signature: common parameters in Header
+  std::string utcDate = gmt_datetime();
+  std::string nonce = Darabonba::Core::uuid();
+  
+  req.header()["host"] = stsEndpoint_;
+  req.header()["x-acs-action"] = "AssumeRole";
+  req.header()["x-acs-version"] = "2015-04-01";
+  req.header()["x-acs-date"] = utcDate;
+  req.header()["x-acs-signature-nonce"] = nonce;
+  req.header()["x-acs-content-sha256"] = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // SHA256 of empty body
+
+  // Build canonical request string
+  std::string canonicalQueryString = std::string(req.query());
+  std::string canonicalHeaders = "host:" + stsEndpoint_ + "\n" +
+                                  "x-acs-action:AssumeRole\n" +
+                                  "x-acs-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n" +
+                                  "x-acs-date:" + utcDate + "\n" +
+                                  "x-acs-signature-nonce:" + nonce + "\n" +
+                                  "x-acs-version:2015-04-01";
+  std::string signedHeaders = "host;x-acs-action;x-acs-content-sha256;x-acs-date;x-acs-signature-nonce;x-acs-version";
+  std::string hashedRequestPayload = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // empty body
+
+  std::string canonicalRequest = "POST\n/\n" + canonicalQueryString + "\n" +
+                                  canonicalHeaders + "\n\n" +
+                                  signedHeaders + "\n" +
+                                  hashedRequestPayload;
+
+  // Calculate hash of canonical request
+  Darabonba::Encode::SHA256 sha256;
+  auto hashedBytes = sha256.hash(canonicalRequest.c_str(), canonicalRequest.size());
+  std::string hashedCanonicalRequest = Darabonba::Encode::Encoder::hexEncode(hashedBytes);
+
+  // Build string to sign
+  std::string stringToSign = "ACS3-HMAC-SHA256\n" + hashedCanonicalRequest;
+
+  // Calculate signature
+  std::string signature = 
+      Darabonba::Encode::Encoder::hexEncode(Darabonba::Signature::Signer::HmacSHA256Sign(
+          stringToSign, credential_.accessKeySecret()));
+
+  // Build Authorization Header
+  std::string authorization = "ACS3-HMAC-SHA256 Credential=" + credential_.accessKeyId() +
+                               ",SignedHeaders=" + signedHeaders +
+                               ",Signature=" + signature;
+  req.header()["Authorization"] = authorization;
+
+  // Use saved timeout configuration
+  Darabonba::RuntimeOptions runtime;
+  runtime.setConnectTimeout(connectTimeout_);
+  runtime.setReadTimeout(readTimeout_);
+  auto future = Darabonba::Core::doAction(req, runtime);
   auto resp = future.get();
   if (resp->statusCode() != 200) {
     throw Darabonba::Exception(Darabonba::Stream::readAsString(resp->body()));
@@ -53,7 +92,7 @@ bool RamRoleArnProvider::refreshCredential() const  {
   }
   auto &credential = result["Credentials"];
   this->expiration_ = strtotime(credential["Expiration"].get<std::string>());
-  credential_.setAccessKeySecret(credential["AccessKeyId"].get<std::string>())
+  credential_.setAccessKeyId(credential["AccessKeyId"].get<std::string>())
       .setAccessKeySecret(credential["AccessKeySecret"].get<std::string>())
       .setSecurityToken(credential["SecurityToken"].get<std::string>());
   return true;

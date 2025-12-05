@@ -1,6 +1,8 @@
-#ifndef AlibabaCloud_CREDENTIAL_CONSTANT_HPP_
-#define AlibabaCloud_CREDENTIAL_CONSTANT_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_CONSTANT_HPP_
+#define ALIBABACLOUD_CREDENTIAL_CONSTANT_HPP_
+
 #include <string>
+
 namespace AlibabaCloud {
 namespace Credential {
 class Constant {
@@ -33,6 +35,27 @@ public:
   static const std::string BEARER;
   static const std::string OIDC_ROLE_ARN;
   static const std::string URL_STS;
+  static const std::string CLOUD_SSO;
+  static const std::string OAUTH;
+
+  // Environment Variables
+  static const std::string ENV_STS_REGION;
+  static const std::string ENV_VPC_ENDPOINT_ENABLED;
+  static const std::string ENV_CLI_PROFILE_DISABLED;
+  
+  // OIDC Environment Variables
+  static const std::string ENV_ROLE_ARN;
+  static const std::string ENV_OIDC_PROVIDER_ARN;
+  static const std::string ENV_OIDC_TOKEN_FILE;
+  static const std::string ENV_ROLE_SESSION_NAME;
+  
+  // Cloud SSO Environment Variables
+  static const std::string ENV_CLOUD_SSO_ROLE_NAME;
+  
+  // OAuth Environment Variables
+  static const std::string ENV_OAUTH_CLIENT_ID;
+  static const std::string ENV_OAUTH_CLIENT_SECRET;
+  static const std::string ENV_OAUTH_TOKEN_ENDPOINT;
 };
 } // namespace Credential
 } // namespace AlibabaCloud

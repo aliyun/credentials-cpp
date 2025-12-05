@@ -10,8 +10,31 @@
 #include <alibabacloud/credential/provider/RsaKeyPairProvider.hpp>
 #include <alibabacloud/credential/provider/StsProvider.hpp>
 #include <alibabacloud/credential/provider/URLProvider.hpp>
+
 namespace AlibabaCloud {
 namespace Credential {
+
+// Constructor 1: Default constructor
+// Equivalent to Java: public Client()
+Client::Client() : provider_(std::make_shared<DefaultProvider>()) {}
+
+// Constructor 2: Config-based constructors
+// Equivalent to Java: public Client(Config config)
+Client::Client(const Models::Config &obj)
+    : config_(std::make_shared<Models::Config>(obj)),
+      provider_(makeProvider(config_)) {}
+
+Client::Client(Models::Config &&obj)
+    : config_(std::make_shared<Models::Config>(std::move(obj))),
+      provider_(makeProvider(config_)) {}
+
+Client::Client(std::shared_ptr<Models::Config> config)
+    : config_(config), provider_(makeProvider(config_)) {}
+
+// Constructor 3: Provider-based constructor
+// Equivalent to Java: public Client(AlibabaCloudCredentialsProvider provider)
+Client::Client(std::shared_ptr<Provider> provider)
+    : config_(nullptr), provider_(provider) {}
 
 std::shared_ptr<Provider> Client::makeProvider(std::shared_ptr<Models::Config> config) {
   if(config == nullptr) {

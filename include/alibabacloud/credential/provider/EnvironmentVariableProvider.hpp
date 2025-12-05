@@ -1,10 +1,13 @@
-#ifndef AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
-#include <alibabacloud/credential/Model.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
+#ifndef ALIBABACLOUD_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_ENVIRONMENTVARIABLEPROVIDER_HPP_
+
 #include <memory>
+
 #include <darabonba/Exception.hpp>
+
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 namespace AlibabaCloud {
 
 namespace Credential {
@@ -28,6 +31,17 @@ public:
       throw Darabonba::Exception("Can't create the ProfileProvider.");
     }
     return provider_->getCredential();
+  }
+  
+  /**
+   * @brief Get provider name
+   */
+  std::string getProviderName() const override {
+    provider_ = createProvider();
+    if (provider_ == nullptr) {
+      throw Darabonba::Exception("Can't create the ProfileProvider.");
+    }
+    return provider_->getProviderName();
   }
 
 protected:

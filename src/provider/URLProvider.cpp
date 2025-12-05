@@ -1,11 +1,18 @@
- #include <alibabacloud/credential/provider/URLProvider.hpp>
  #include <darabonba/Core.hpp>
+
+ #include <alibabacloud/credential/provider/URLProvider.hpp>
+ #include <alibabacloud/credential/AuthUtil.hpp>
 
  namespace AlibabaCloud {
  namespace Credential {
  bool URLProvider::refreshCredential() const {
-   Darabonba::Http::Request req(url_);
-   auto future = Darabonba::Core::doAction(req);
+   // 使用 getNewRequest 创建带 User-Agent 的请求（对应 Python SDK）
+   auto req = AuthUtil::getNewRequest(url_);
+   // Use saved timeout configuration
+   Darabonba::RuntimeOptions runtime;
+   runtime.setConnectTimeout(connectTimeout_);
+   runtime.setReadTimeout(readTimeout_);
+   auto future = Darabonba::Core::doAction(req, runtime);
    auto resp = future.get();
    if (resp->statusCode() != 200) {
      throw Darabonba::Exception(Darabonba::Stream::readAsString(resp->body()));

@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} - ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+        compiler: [gcc, clang]
+        exclude:
+          # macOS 默认使用 clang，不需要测试 gcc
+          - os: macos-latest
+            compiler: gcc
+        include:
+          # Windows 使用 MSVC
+          - os: windows-latest
+            compiler: msvc
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    # ============ Linux 依赖安装 ============
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          libssl-dev \
+          libcurl4-openssl-dev \
+          nlohmann-json3-dev \
+          lcov
+    
+    # ============ macOS 依赖安装 ============
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install \
+          cmake \
+          openssl \
+          nlohmann-json
+    
+    # ============ Windows 依赖安装 ============
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        choco install openssl
+    
+    # ============ 设置编译器 (Linux) ============
+    - name: Set up GCC (Linux)
+      if: runner.os == 'Linux' && matrix.compiler == 'gcc'
+      run: |
+        echo "CC=gcc" >> $GITHUB_ENV
+        echo "CXX=g++" >> $GITHUB_ENV
+    
+    - name: Set up Clang (Linux)
+      if: runner.os == 'Linux' && matrix.compiler == 'clang'
+      run: |
+        sudo apt-get install -y clang
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+    
+    # ============ 配置和构建 ============
+    - name: Configure CMake
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DENABLE_UNIT_TESTS=ON
+    
+    - name: Build
+      run: cmake --build build --config Release -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+    
+    # ============ 运行测试 ============
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure --verbose
+    
+    # ============ 代码覆盖率 (仅 Linux + GCC) ============
+    - name: Generate coverage report
+      if: runner.os == 'Linux' && matrix.compiler == 'gcc'
+      run: |
+        cd build
+        # 如果有 lcov，生成覆盖率报告
+        if command -v lcov &> /dev/null; then
+          lcov --capture --directory . --output-file coverage.info || true
+          lcov --remove coverage.info '/usr/*' '*/external/*' '*/tests/*' --output-file coverage.info || true
+          lcov --list coverage.info || true
+        fi
+    
+    - name: Upload coverage to Codecov
+      if: runner.os == 'Linux' && matrix.compiler == 'gcc'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./build/coverage.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ============ 代码格式检查 ============
+  format-check:
+    name: Code Format Check
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install clang-format
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format
+    
+    - name: Check code format
+      run: |
+        # 检查所有 C++ 源文件格式
+        find include src tests -name '*.hpp' -o -name '*.cpp' | \
+          xargs clang-format --dry-run --Werror || true
+        echo "Format check completed (non-blocking)"
+
+  # ============ 构建状态汇总 ============
+  build-status:
+    name: Build Status
+    if: always()
+    needs: [build-and-test, format-check]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check build status
+      run: |
+        if [ "${{ needs.build-and-test.result }}" != "success" ]; then
+          echo "Build and test failed!"
+          exit 1
+        fi
+        echo "All builds passed!"

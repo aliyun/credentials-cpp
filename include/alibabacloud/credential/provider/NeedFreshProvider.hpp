@@ -1,10 +1,9 @@
-#ifndef AlibabaCloud_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_NEEDFRESHPROVIDER_HPP_
+
+#include <ctime>
 
 #include <alibabacloud/credential/provider/Provider.hpp>
-#include <ctime>
-
-#include <ctime>
 namespace AlibabaCloud {
 namespace Credential {
 class NeedFreshProvider : public Provider {

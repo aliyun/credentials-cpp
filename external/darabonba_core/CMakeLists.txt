@@ -18,4 +18,7 @@ else()
   message(STATUS "Added darabonba_core binary : ${_darabonba_core_BINARY_DIR}")
 
   target_include_directories(${PROJECT_NAME} PRIVATE "${_darabonba_core_SOURCE_DIR}/include")
+  
+  # Make the include directory available to parent scope for tests
+  set(DARABONBA_CORE_INCLUDE_DIR "${_darabonba_core_SOURCE_DIR}/include" PARENT_SCOPE)
 endif()

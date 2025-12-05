@@ -1,12 +1,12 @@
-#ifndef AlibabaCloud_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
-#define AlibabaCloud_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
+#ifndef ALIBABACLOUD_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
+#define ALIBABACLOUD_CREDENTIAL_ACCESSKEYPROVIDER_HPP_
 
-#include <alibabacloud/credential/Model.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-// #include <alibabacloud/credential/Credential.hpp>
-#include <alibabacloud/credential/provider/Provider.hpp>
 #include <memory>
 #include <string>
+
+#include <alibabacloud/credential/Constant.hpp>
+#include <alibabacloud/credential/Model.hpp>
+#include <alibabacloud/credential/provider/Provider.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {
@@ -30,6 +30,11 @@ public:
   virtual const Models::CredentialModel &getCredential() const override {
     return credential_;
   }
+  
+  /**
+   * @brief Get provider name
+   */
+  std::string getProviderName() const override { return Constant::ACCESS_KEY; }
 
 protected:
   mutable Models::CredentialModel credential_;
