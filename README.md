@@ -70,6 +70,36 @@ sh scripts/install.sh
   * Check INSTALL option from Build -> Configuration Manager
   * Build->Build Solutions to build.
 
+### Command Line Build (Cross-platform)
+
+To build without the CMake GUI, run the commands below from the repo root (`credentials-cpp` directory that contains `CMakeLists.txt`). Always pair `-S` with the source directory and `-B` with the build directory so CMake never falls back to `/`.
+
+- **macOS/Linux (bash/zsh):**
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=ON
+cmake --build build --config Release
+```
+
+- **Windows PowerShell:** PowerShell does not treat `\` as a line continuation, so keep the command on one line or use the backtick (`` ` ``) continuation.
+
+```powershell
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_UNIT_TESTS=ON
+cmake --build build --config Release
+```
+
+If you prefer multi-line PowerShell commands, write them as:
+
+```powershell
+cmake `
+  -S . `
+  -B build `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DENABLE_UNIT_TESTS=ON
+```
+
+The first `cmake` command configures the project, while `cmake --build` compiles (passing `--config` is required on multi-config generators like Visual Studio).
+
 ## Quick Examples
 
 Before you begin, you need to sign up for an Alibaba Cloud account and retrieve your [Credentials](https://usercenter.console.aliyun.com/#/manage/ak).

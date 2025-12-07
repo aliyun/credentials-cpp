@@ -1,8 +1,9 @@
 #!/bin/bash
 
-basepath=$(cd `dirname $0`/../; pwd)
+# shellcheck disable=SC2046
+basepath=$(cd $(dirname "$0")/../ || exit; pwd)
 
-cd $basepath/
+cd "$basepath"/ || exit
 
 main() {
     mkdir -p cmake_build/
