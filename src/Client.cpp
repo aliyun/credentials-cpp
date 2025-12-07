@@ -3,8 +3,10 @@
 #include <alibabacloud/credential/Constant.hpp>
 #include <alibabacloud/credential/provider/AccessKeyProvider.hpp>
 #include <alibabacloud/credential/provider/BearerTokenProvider.hpp>
+#include <alibabacloud/credential/provider/CloudSSOCredentialsProvider.hpp>
 #include <alibabacloud/credential/provider/DefaultProvider.hpp>
 #include <alibabacloud/credential/provider/EcsRamRoleProvider.hpp>
+#include <alibabacloud/credential/provider/OAuthCredentialsProvider.hpp>
 #include <alibabacloud/credential/provider/OIDCRoleArnProvider.hpp>
 #include <alibabacloud/credential/provider/RamRoleArnProvider.hpp>
 #include <alibabacloud/credential/provider/RsaKeyPairProvider.hpp>
@@ -67,8 +69,13 @@ std::shared_ptr<Provider> Client::makeProvider(std::shared_ptr<Models::Config> c
   } else if(type == Constant::URL_STS) {
     auto p = new URLProvider(config);
     return std::shared_ptr<Provider>(p);
-  
-  }else {
+  } else if (type == Constant::CLOUD_SSO) {
+    auto p = new CloudSSOCredentialsProvider(config);
+    return std::shared_ptr<Provider>(p);
+  } else if (type == Constant::OAUTH) {
+    auto p = new OAuthCredentialsProvider(config);
+    return std::shared_ptr<Provider>(p);
+  } else {
     auto p = new DefaultProvider();
     return std::shared_ptr<Provider>(p);
   }

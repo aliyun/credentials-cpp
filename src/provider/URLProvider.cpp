@@ -22,7 +22,7 @@
      throw Darabonba::Exception(result.dump());
    }
    this->expiration_ = strtotime(result["Expiration"].get<std::string>());
-   credential_.setAccessKeySecret(result["AccessKeyId"].get<std::string>())
+   credential_.setAccessKeyId(result["AccessKeyId"].get<std::string>())
        .setAccessKeySecret(result["AccessKeySecret"].get<std::string>())
        .setSecurityToken(result["SecurityToken"].get<std::string>());
    return true;
