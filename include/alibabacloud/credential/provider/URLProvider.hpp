@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <darabonba/Exception.hpp>
 #include <alibabacloud/credential/Constant.hpp>
 #include <alibabacloud/credential/Model.hpp>
 #include <alibabacloud/credential/provider/NeedFreshProvider.hpp>
