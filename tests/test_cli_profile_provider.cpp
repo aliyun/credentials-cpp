@@ -1,9 +1,19 @@
 #include <gtest/gtest.h>
 #include <alibabacloud/credential/provider/CLIProfileProvider.hpp>
+#include <cstdlib>
+
+#if defined(_WIN32) || defined(_WIN64)
+static inline int setenv(const char* name, const char* value, int /*overwrite*/) {
+  return _putenv_s(name, value);
+}
+static inline int unsetenv(const char* name) {
+  return _putenv_s(name, "");
+}
+#endif
+
 #include <alibabacloud/credential/Constant.hpp>
 #include <darabonba/Exception.hpp>
 #include <fstream>
-#include <cstdlib>
 
 using namespace AlibabaCloud::Credential;
 
@@ -44,6 +54,21 @@ protected:
   
   std::map<std::string, std::string> savedEnv_;
 };
+
+static inline void SetEnvKV(const char* k, const char* v){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, v);
+#else
+  setenv(k, v, 1);
+#endif
+}
+static inline void UnsetEnvK(const char* k){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, "");
+#else
+  unsetenv(k);
+#endif
+}
 
 TEST_F(CLIProfileProviderTest, DefaultConstructor) {
   // Should use default profile name "default"

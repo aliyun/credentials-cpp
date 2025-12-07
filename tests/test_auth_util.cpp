@@ -22,9 +22,19 @@ protected:
   void TearDown() override {
     // Restore original environment
     if (!originalProfile_.empty()) {
+#if defined(_WIN32) || defined(_WIN64)
+      // Windows: set environment variable
+      _putenv_s("ALIBABA_CLOUD_PROFILE", originalProfile_.c_str());
+#else
       setenv("ALIBABA_CLOUD_PROFILE", originalProfile_.c_str(), 1);
+#endif
     } else {
+#if defined(_WIN32) || defined(_WIN64)
+      // Windows: clear environment variable
+      _putenv_s("ALIBABA_CLOUD_PROFILE", "");
+#else
       unsetenv("ALIBABA_CLOUD_PROFILE");
+#endif
     }
   }
   
@@ -33,7 +43,11 @@ protected:
 
 TEST_F(AuthUtilTest, DefaultClientType) {
   // Default should be "default" if no env var set
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s("ALIBABA_CLOUD_PROFILE", "");
+#else
   unsetenv("ALIBABA_CLOUD_PROFILE");
+#endif
   
   // Note: clientType_ is initialized at program start
   // We can only test the getter

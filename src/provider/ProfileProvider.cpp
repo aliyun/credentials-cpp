@@ -16,7 +16,7 @@
 
 static std::string getProfilePath() {
 #ifdef _WIN32
-  auto home = Darabonba::Env::get("USERPROFILE");
+  auto home = Darabonba::Env::getEnv("USERPROFILE");
   char sep = '\\';
 #else
   auto home = Darabonba::Env::getEnv("HOME");

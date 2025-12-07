@@ -43,7 +43,7 @@ public:
   EcsRamRoleProvider(
       std::shared_ptr<Models::Config> config,
       bool asyncUpdateEnabled = true,
-      StaleValueBehavior behavior = StaleValueBehavior::ALLOW,
+      StaleValueBehavior behavior = StaleValueBehavior::ALLOW_,
       std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
   /**
@@ -59,7 +59,7 @@ public:
       const std::string& roleName = "",
       bool disableIMDSv1 = false,
       bool asyncUpdateEnabled = true,
-      StaleValueBehavior behavior = StaleValueBehavior::ALLOW,
+      StaleValueBehavior behavior = StaleValueBehavior::ALLOW_,
       std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
   virtual ~EcsRamRoleProvider() = default;

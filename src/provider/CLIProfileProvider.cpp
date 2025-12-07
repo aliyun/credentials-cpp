@@ -38,7 +38,7 @@ std::string CLIProfileProvider::getCliProfilePath() {
 
 #ifdef _WIN32
   // Windows: 使用 USERPROFILE
-  auto home = Darabonba::Env::get("USERPROFILE");
+  auto home = Darabonba::Env::getEnv("USERPROFILE");
   if (home.empty()) {
     // 回退到 HOMEDRIVE + HOMEPATH
     auto homeDrive = Darabonba::Env::getEnv("HOMEDRIVE");

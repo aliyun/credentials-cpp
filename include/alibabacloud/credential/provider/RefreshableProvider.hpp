@@ -6,9 +6,17 @@
 #include <condition_variable>
 #include <ctime>
 #include <future>
+#include <iomanip>
+#include <iostream>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <thread>
+
+#ifndef _WIN32
+#include <time.h>
+#include <cstring>
+#endif
 
 #include <alibabacloud/credential/provider/Provider.hpp>
 
@@ -33,9 +41,17 @@ struct RefreshResult {
 /**
  * @brief Stale value behavior policy
  */
+
+// Avoid Windows macro name conflicts (e.g., STRICT, ALLOW)
+#ifdef STRICT_
+#undef STRICT_
+#endif
+#ifdef ALLOW_
+#undef ALLOW_
+#endif
 enum class StaleValueBehavior {
-  STRICT,  // Strict mode: never return stale cached values
-  ALLOW    // Allow mode: allow returning stale values to avoid service overload
+  STRICT_,  // Strict mode: never return stale cached values
+  ALLOW_    // Allow mode: allow returning stale values to avoid service overload
 };
 
 /**
@@ -59,6 +75,7 @@ public:
         action();
       } catch (const std::exception& e) {
         // Log error but don't throw exception
+        std::cerr << "NonBlockingPrefetch error: " << e.what() << std::endl;
       }
     }).detach();
   }
@@ -98,7 +115,7 @@ public:
    * @param prefetchStrategy 预取策略（默认非阻塞）
    */
   explicit RefreshableProvider(
-      StaleValueBehavior staleValueBehavior = StaleValueBehavior::STRICT,
+      StaleValueBehavior staleValueBehavior = StaleValueBehavior::STRICT_,
       std::shared_ptr<PrefetchStrategy> prefetchStrategy = 
           std::make_shared<NonBlockingPrefetch>())
       : staleValueBehavior_(staleValueBehavior),
@@ -146,23 +163,65 @@ protected:
 
   /**
    * @brief Time utility: convert GMT time string to timestamp
+   * 
+   * Accepts format: "%Y-%m-%dT%H:%M:%SZ"
    */
   static int64_t strtotime(const std::string& gmt) {
-    tm tm{};
-    strptime(gmt.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm);
-    time_t t = timegm(&tm);
+    std::tm tm{};
+#ifdef _WIN32
+    std::istringstream ss(gmt);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    if (ss.fail()) {
+      throw std::runtime_error("Failed to parse GMT datetime: " + gmt);
+    }
+    // Convert to time_t in UTC
+    time_t t = _mkgmtime(&tm);
+    if (t == -1) {
+      throw std::runtime_error("Failed to convert tm to time_t (UTC) for: " + gmt);
+    }
     return static_cast<int64_t>(t);
+#else
+    // Use strptime + timegm on POSIX
+    if (strptime(gmt.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm) == nullptr) {
+      throw std::runtime_error("Failed to parse GMT datetime: " + gmt);
+    }
+    time_t t = timegm(&tm);
+    if (t == -1) {
+      throw std::runtime_error("Failed to convert tm to time_t (UTC) for: " + gmt);
+    }
+    return static_cast<int64_t>(t);
+#endif
   }
 
   /**
-   * @brief Time utility: get current GMT time string
+   * @brief Time utility: get current GMT time string in ISO8601 format
+   * 
+   * Returns: "%Y-%m-%dT%H:%M:%SZ"
    */
   static std::string gmt_datetime() {
     time_t now;
     time(&now);
-    char buf[20];
-    strftime(buf, sizeof buf, "%FT%TZ", gmtime(&now));
-    return buf;
+#ifdef _WIN32
+    std::tm tm{};
+    if (gmtime_s(&tm, &now) != 0) {
+      throw std::runtime_error("gmtime_s failed");
+    }
+    char buf[21]; // "YYYY-MM-DDTHH:MM:SSZ" + '\0'
+    if (std::strftime(buf, sizeof(buf), "%FT%TZ", &tm) == 0) {
+      throw std::runtime_error("strftime failed");
+    }
+    return std::string(buf);
+#else
+    char buf[21];
+    std::tm* gmt = gmtime(&now);
+    if (!gmt) {
+      throw std::runtime_error("gmtime failed");
+    }
+    if (std::strftime(buf, sizeof(buf), "%FT%TZ", gmt) == 0) {
+      throw std::runtime_error("strftime failed");
+    }
+    return std::string(buf);
+#endif
   }
 
   /**
@@ -258,7 +317,7 @@ private:
     }
 
     // Decide how to handle expired cache based on policy
-    if (staleValueBehavior_ == StaleValueBehavior::STRICT) {
+    if (staleValueBehavior_ == StaleValueBehavior::STRICT_) {
       // Strict mode: return cache but set very short expiration (1 second)
       return RefreshResult(cachedValue_->credential, now + 1, cachedValue_->prefetchTime);
     } else {
@@ -283,7 +342,7 @@ private:
 
     consecutiveRefreshFailures_++;
 
-    if (staleValueBehavior_ == StaleValueBehavior::STRICT) {
+    if (staleValueBehavior_ == StaleValueBehavior::STRICT_) {
       throw ex;  // Strict mode: throw exception
     } else {
       // Allow mode: extend expiration time with exponential backoff

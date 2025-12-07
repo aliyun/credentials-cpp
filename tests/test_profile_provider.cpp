@@ -1,9 +1,15 @@
 #include <gtest/gtest.h>
 #include <alibabacloud/credential/provider/ProfileProvider.hpp>
-#include <alibabacloud/credential/Constant.hpp>
-#include <darabonba/Exception.hpp>
-#include <fstream>
 #include <cstdlib>
+
+#if defined(_WIN32) || defined(_WIN64)
+static inline int setenv(const char* name, const char* value, int /*overwrite*/) {
+  return _putenv_s(name, value);
+}
+static inline int unsetenv(const char* name) {
+  return _putenv_s(name, "");
+}
+#endif
 
 using namespace AlibabaCloud::Credential;
 
@@ -28,6 +34,24 @@ protected:
   
   std::string originalHome_;
 };
+
+void SetUpEnv(const char* key, const char* value)
+{
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(key, value);
+#else
+  setenv(key, value, 1);
+#endif
+}
+
+void UnsetEnv(const char* key)
+{
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(key, "");
+#else
+  unsetenv(key);
+#endif
+}
 
 TEST_F(ProfileProviderTest, DefaultConstructor) {
   // Provider should use default profile name "default"

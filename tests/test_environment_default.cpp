@@ -1,11 +1,38 @@
 #include <gtest/gtest.h>
+#include <cstdlib>
+
+#if defined(_WIN32) || defined(_WIN64)
+static inline int setenv(const char* name, const char* value, int /*overwrite*/) {
+  return _putenv_s(name, value);
+}
+static inline int unsetenv(const char* name) {
+  return _putenv_s(name, "");
+}
+#endif
+
 #include <alibabacloud/credential/provider/EnvironmentVariableProvider.hpp>
 #include <alibabacloud/credential/provider/DefaultProvider.hpp>
 #include <alibabacloud/credential/Constant.hpp>
 #include <darabonba/Env.hpp>
-#include <cstdlib>
 
 using namespace AlibabaCloud::Credential;
+
+// Cross-platform env helpers used by tests
+static inline void set_env(const char* k, const char* v, int overwrite = 1){
+#if defined(_WIN32) || defined(_WIN64)
+  (void)overwrite;
+  _putenv_s(k, v);
+#else
+  setenv(k, v, overwrite);
+#endif
+}
+static inline void unset_env(const char* k){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, "");
+#else
+  unsetenv(k);
+#endif
+}
 
 // ==================== EnvironmentVariableProvider Tests ====================
 
@@ -44,9 +71,9 @@ protected:
 };
 
 TEST_F(EnvironmentVariableProviderTest, AccessKeyFromEnvironment) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_ak_id", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_ak_secret", 1);
-  unsetenv("ALIBABA_CLOUD_SECURITY_TOKEN");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_ak_id");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_ak_secret");
+  unset_env("ALIBABA_CLOUD_SECURITY_TOKEN");
   
   EnvironmentVariableProvider provider;
   auto credential = provider.getCredential();
@@ -58,9 +85,9 @@ TEST_F(EnvironmentVariableProviderTest, AccessKeyFromEnvironment) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, StsFromEnvironment) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_sts_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_sts_secret", 1);
-  setenv("ALIBABA_CLOUD_SECURITY_TOKEN", "env_sts_token", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_sts_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_sts_secret");
+  set_env("ALIBABA_CLOUD_SECURITY_TOKEN", "env_sts_token");
   
   EnvironmentVariableProvider provider;
   auto credential = provider.getCredential();
@@ -72,8 +99,8 @@ TEST_F(EnvironmentVariableProviderTest, StsFromEnvironment) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, MissingAccessKeyId) {
-  unsetenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret", 1);
+  unset_env("ALIBABA_CLOUD_ACCESS_KEY_ID");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret");
   
   EnvironmentVariableProvider provider;
   
@@ -83,8 +110,8 @@ TEST_F(EnvironmentVariableProviderTest, MissingAccessKeyId) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, MissingAccessKeySecret) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak_id", 1);
-  unsetenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak_id");
+  unset_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
   
   EnvironmentVariableProvider provider;
   
@@ -94,8 +121,8 @@ TEST_F(EnvironmentVariableProviderTest, MissingAccessKeySecret) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, EmptyAccessKeyId) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret");
   
   EnvironmentVariableProvider provider;
   
@@ -105,8 +132,8 @@ TEST_F(EnvironmentVariableProviderTest, EmptyAccessKeyId) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, EmptyAccessKeySecret) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak_id", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak_id");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "");
   
   EnvironmentVariableProvider provider;
   
@@ -116,9 +143,9 @@ TEST_F(EnvironmentVariableProviderTest, EmptyAccessKeySecret) {
 }
 
 TEST_F(EnvironmentVariableProviderTest, SecurityTokenOptional) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret", 1);
-  setenv("ALIBABA_CLOUD_SECURITY_TOKEN", "", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "secret");
+  set_env("ALIBABA_CLOUD_SECURITY_TOKEN", "");
   
   EnvironmentVariableProvider provider;
   auto credential = provider.getCredential();
@@ -147,18 +174,18 @@ protected:
     saveEnv("ALIBABA_CLOUD_PROFILE");
     
     // Clear all for clean test environment
-    unsetenv("ALIBABA_CLOUD_ACCESS_KEY_ID");
-    unsetenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
-    unsetenv("ALIBABA_CLOUD_SECURITY_TOKEN");
-    unsetenv("ALIBABA_CLOUD_OIDC_TOKEN_FILE");
-    unsetenv("ALIBABA_CLOUD_ROLE_ARN");
-    unsetenv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN");
-    unsetenv("ALIBABA_CLOUD_ROLE_SESSION_NAME");
-    unsetenv("ALIBABA_CLOUD_ECS_METADATA");
-    unsetenv("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
-    unsetenv("ALIBABA_CLOUD_CREDENTIALS_URI");
-    unsetenv("ALIBABA_CLOUD_CREDENTIALS_FILE");
-    unsetenv("ALIBABA_CLOUD_PROFILE");
+    unset_env("ALIBABA_CLOUD_ACCESS_KEY_ID");
+    unset_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
+    unset_env("ALIBABA_CLOUD_SECURITY_TOKEN");
+    unset_env("ALIBABA_CLOUD_OIDC_TOKEN_FILE");
+    unset_env("ALIBABA_CLOUD_ROLE_ARN");
+    unset_env("ALIBABA_CLOUD_OIDC_PROVIDER_ARN");
+    unset_env("ALIBABA_CLOUD_ROLE_SESSION_NAME");
+    unset_env("ALIBABA_CLOUD_ECS_METADATA");
+    unset_env("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
+    unset_env("ALIBABA_CLOUD_CREDENTIALS_URI");
+    unset_env("ALIBABA_CLOUD_CREDENTIALS_FILE");
+    unset_env("ALIBABA_CLOUD_PROFILE");
   }
   
   void TearDown() override {
@@ -196,8 +223,8 @@ protected:
 };
 
 TEST_F(DefaultProviderTest, UsesEnvironmentVariableProvider) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "default_env_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "default_env_secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "default_env_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "default_env_secret");
   
   DefaultProvider provider;
   auto credential = provider.getCredential();
@@ -208,15 +235,15 @@ TEST_F(DefaultProviderTest, UsesEnvironmentVariableProvider) {
 }
 
 TEST_F(DefaultProviderTest, EcsMetadataDisabled) {
-  setenv("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "true", 1);
-  setenv("ALIBABA_CLOUD_ECS_METADATA", "test_role", 1);
+  set_env("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "true");
+  set_env("ALIBABA_CLOUD_ECS_METADATA", "test_role");
   
   // Even with ECS_METADATA set, it should be ignored when DISABLED=true
   // This test verifies that the ECS provider is not added to the chain
   
   // Set environment credentials so DefaultProvider can succeed
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "fallback_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "fallback_secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "fallback_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "fallback_secret");
   
   DefaultProvider provider;
   auto credential = provider.getCredential();
@@ -229,8 +256,8 @@ TEST_F(DefaultProviderTest, EcsMetadataNotDisabledByDefault) {
   // Don't set ALIBABA_CLOUD_ECS_METADATA_DISABLED
   // This just tests that provider construction succeeds
   
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "test_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "test_secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "test_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "test_secret");
   
   EXPECT_NO_THROW({
     DefaultProvider provider;
@@ -239,9 +266,9 @@ TEST_F(DefaultProviderTest, EcsMetadataNotDisabledByDefault) {
 
 TEST_F(DefaultProviderTest, EcsMetadataDisabledCaseInsensitive) {
   // Test "True" variant
-  setenv("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "True", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "test_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "test_secret", 1);
+  set_env("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "True");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "test_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "test_secret");
   
   DefaultProvider provider;
   auto credential = provider.getCredential();
@@ -249,7 +276,7 @@ TEST_F(DefaultProviderTest, EcsMetadataDisabledCaseInsensitive) {
   EXPECT_EQ("test_ak", credential.accessKeyId());
   
   // Test "TRUE" variant
-  setenv("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "TRUE", 1);
+  set_env("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "TRUE");
   
   DefaultProvider provider2;
   auto credential2 = provider2.getCredential();
@@ -274,8 +301,8 @@ TEST_F(DefaultProviderTest, ProviderChainOrder) {
   // 5. URLProvider (if CREDENTIALS_URI set)
   
   // Set environment credentials (first in chain)
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "env_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "env_secret");
   
   DefaultProvider provider;
   auto credential = provider.getCredential();
@@ -286,8 +313,8 @@ TEST_F(DefaultProviderTest, ProviderChainOrder) {
 }
 
 TEST_F(DefaultProviderTest, ConstGetCredential) {
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_ID", "const_ak", 1);
-  setenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "const_secret", 1);
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_ID", "const_ak");
+  set_env("ALIBABA_CLOUD_ACCESS_KEY_SECRET", "const_secret");
   
   const DefaultProvider provider;
   const auto &credential = provider.getCredential();

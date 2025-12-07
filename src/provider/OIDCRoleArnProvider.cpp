@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include <darabonba/Exception.hpp>
 #include <darabonba/Core.hpp>
 
 #include <alibabacloud/credential/AuthUtil.hpp>

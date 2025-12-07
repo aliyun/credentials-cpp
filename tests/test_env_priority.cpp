@@ -8,6 +8,22 @@
 
 using namespace AlibabaCloud::Credential;
 
+// Helper functions to set/unset environment variables in a cross-platform way
+static inline void env_set(const char* k, const char* v){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, v);
+#else
+  setenv(k, v, 1);
+#endif
+}
+static inline void env_unset(const char* k){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, "");
+#else
+  unsetenv(k);
+#endif
+}
+
 // ==================== OIDC Provider Environment Priority Tests ====================
 
 class OIDCEnvPriorityTest : public ::testing::Test {
@@ -22,12 +38,12 @@ protected:
     saveEnv("ALIBABA_CLOUD_VPC_ENDPOINT_ENABLED");
     
     // Clear all for clean test environment
-    unsetenv("ALIBABA_CLOUD_ROLE_ARN");
-    unsetenv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN");
-    unsetenv("ALIBABA_CLOUD_OIDC_TOKEN_FILE");
-    unsetenv("ALIBABA_CLOUD_ROLE_SESSION_NAME");
-    unsetenv("ALIBABA_CLOUD_STS_REGION");
-    unsetenv("ALIBABA_CLOUD_VPC_ENDPOINT_ENABLED");
+    env_unset("ALIBABA_CLOUD_ROLE_ARN");
+    env_unset("ALIBABA_CLOUD_OIDC_PROVIDER_ARN");
+    env_unset("ALIBABA_CLOUD_OIDC_TOKEN_FILE");
+    env_unset("ALIBABA_CLOUD_ROLE_SESSION_NAME");
+    env_unset("ALIBABA_CLOUD_STS_REGION");
+    env_unset("ALIBABA_CLOUD_VPC_ENDPOINT_ENABLED");
   }
   
   void TearDown() override {
@@ -49,9 +65,9 @@ protected:
   
   void restoreEnv(const std::string &name) {
     if (savedEnv_.find(name) != savedEnv_.end()) {
-      setenv(name.c_str(), savedEnv_[name].c_str(), 1);
+      env_set(name.c_str(), savedEnv_[name].c_str());
     } else {
-      unsetenv(name.c_str());
+      env_unset(name.c_str());
     }
   }
   
@@ -60,10 +76,10 @@ protected:
 
 TEST_F(OIDCEnvPriorityTest, ConfigValueTakesPriority) {
   // Set environment variables
-  setenv("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn", 1);
-  setenv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider", 1);
-  setenv("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file", 1);
-  setenv("ALIBABA_CLOUD_ROLE_SESSION_NAME", "env_session", 1);
+  env_set("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn");
+  env_set("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider");
+  env_set("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file");
+  env_set("ALIBABA_CLOUD_ROLE_SESSION_NAME", "env_session");
   
   // Create config with explicit values
   auto config = std::make_shared<Models::Config>();
@@ -81,10 +97,10 @@ TEST_F(OIDCEnvPriorityTest, ConfigValueTakesPriority) {
 
 TEST_F(OIDCEnvPriorityTest, FallbackToEnvironmentVariables) {
   // Set environment variables
-  setenv("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn", 1);
-  setenv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider", 1);
-  setenv("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file", 1);
-  setenv("ALIBABA_CLOUD_ROLE_SESSION_NAME", "env_session", 1);
+  env_set("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn");
+  env_set("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider");
+  env_set("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file");
+  env_set("ALIBABA_CLOUD_ROLE_SESSION_NAME", "env_session");
   
   // Create config with empty values
   auto config = std::make_shared<Models::Config>();
@@ -98,9 +114,9 @@ TEST_F(OIDCEnvPriorityTest, FallbackToEnvironmentVariables) {
 
 TEST_F(OIDCEnvPriorityTest, SessionNameDefaultValue) {
   // Don't set ALIBABA_CLOUD_ROLE_SESSION_NAME
-  setenv("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn", 1);
-  setenv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider", 1);
-  setenv("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file", 1);
+  env_set("ALIBABA_CLOUD_ROLE_ARN", "env_role_arn");
+  env_set("ALIBABA_CLOUD_OIDC_PROVIDER_ARN", "env_oidc_provider");
+  env_set("ALIBABA_CLOUD_OIDC_TOKEN_FILE", "/env/token/file");
   
   auto config = std::make_shared<Models::Config>();
   config->setRegionId("cn-hangzhou");
@@ -117,7 +133,7 @@ class CloudSSOEnvPriorityTest : public ::testing::Test {
 protected:
   void SetUp() override {
     saveEnv("ALIBABA_CLOUD_ROLE_NAME");
-    unsetenv("ALIBABA_CLOUD_ROLE_NAME");
+    env_unset("ALIBABA_CLOUD_ROLE_NAME");
   }
   
   void TearDown() override {
@@ -133,9 +149,9 @@ protected:
   
   void restoreEnv(const std::string &name) {
     if (savedEnv_.find(name) != savedEnv_.end()) {
-      setenv(name.c_str(), savedEnv_[name].c_str(), 1);
+      env_set(name.c_str(), savedEnv_[name].c_str());
     } else {
-      unsetenv(name.c_str());
+      env_unset(name.c_str());
     }
   }
   
@@ -144,7 +160,7 @@ protected:
 
 TEST_F(CloudSSOEnvPriorityTest, ConfigValueTakesPriority) {
   // Set environment variable
-  setenv("ALIBABA_CLOUD_ROLE_NAME", "env_role_name", 1);
+  env_set("ALIBABA_CLOUD_ROLE_NAME", "env_role_name");
   
   // Create config with explicit value
   auto config = std::make_shared<Models::Config>();
@@ -159,7 +175,7 @@ TEST_F(CloudSSOEnvPriorityTest, ConfigValueTakesPriority) {
 
 TEST_F(CloudSSOEnvPriorityTest, FallbackToEnvironmentVariable) {
   // Set environment variable
-  setenv("ALIBABA_CLOUD_ROLE_NAME", "env_role_name", 1);
+  env_set("ALIBABA_CLOUD_ROLE_NAME", "env_role_name");
   
   // Create config without roleName
   auto config = std::make_shared<Models::Config>();
@@ -180,9 +196,9 @@ protected:
     saveEnv("ALIBABA_CLOUD_CLIENT_SECRET");
     saveEnv("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT");
     
-    unsetenv("ALIBABA_CLOUD_CLIENT_ID");
-    unsetenv("ALIBABA_CLOUD_CLIENT_SECRET");
-    unsetenv("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT");
+    env_unset("ALIBABA_CLOUD_CLIENT_ID");
+    env_unset("ALIBABA_CLOUD_CLIENT_SECRET");
+    env_unset("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT");
   }
   
   void TearDown() override {
@@ -200,9 +216,9 @@ protected:
   
   void restoreEnv(const std::string &name) {
     if (savedEnv_.find(name) != savedEnv_.end()) {
-      setenv(name.c_str(), savedEnv_[name].c_str(), 1);
+      env_set(name.c_str(), savedEnv_[name].c_str());
     } else {
-      unsetenv(name.c_str());
+      env_unset(name.c_str());
     }
   }
   
@@ -211,9 +227,9 @@ protected:
 
 TEST_F(OAuthEnvPriorityTest, ConfigValueTakesPriority) {
   // Set environment variables
-  setenv("ALIBABA_CLOUD_CLIENT_ID", "env_client_id", 1);
-  setenv("ALIBABA_CLOUD_CLIENT_SECRET", "env_client_secret", 1);
-  setenv("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT", "https://env.example.com/token", 1);
+  env_set("ALIBABA_CLOUD_CLIENT_ID", "env_client_id");
+  env_set("ALIBABA_CLOUD_CLIENT_SECRET", "env_client_secret");
+  env_set("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT", "https://env.example.com/token");
   
   // Create config with explicit values
   auto config = std::make_shared<Models::Config>();
@@ -230,9 +246,9 @@ TEST_F(OAuthEnvPriorityTest, ConfigValueTakesPriority) {
 
 TEST_F(OAuthEnvPriorityTest, FallbackToEnvironmentVariables) {
   // Set environment variables
-  setenv("ALIBABA_CLOUD_CLIENT_ID", "env_client_id", 1);
-  setenv("ALIBABA_CLOUD_CLIENT_SECRET", "env_client_secret", 1);
-  setenv("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT", "https://env.example.com/token", 1);
+  env_set("ALIBABA_CLOUD_CLIENT_ID", "env_client_id");
+  env_set("ALIBABA_CLOUD_CLIENT_SECRET", "env_client_secret");
+  env_set("ALIBABA_CLOUD_OAUTH_TOKEN_ENDPOINT", "https://env.example.com/token");
   
   // Create config without OAuth-related values
   auto config = std::make_shared<Models::Config>();

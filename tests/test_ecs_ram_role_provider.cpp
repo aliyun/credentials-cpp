@@ -1,13 +1,41 @@
 #include <gtest/gtest.h>
 #include <alibabacloud/credential/provider/EcsRamRoleProvider.hpp>
+#include <alibabacloud/credential/provider/RefreshableProvider.hpp>
 #include <alibabacloud/credential/Constant.hpp>
 #include <darabonba/Exception.hpp>
 #include <darabonba/Core.hpp>
 #include <thread>
 #include <chrono>
 #include <cstdlib>
+#include <map>
 
 using namespace AlibabaCloud::Credential;
+
+#if defined(_WIN32) || defined(_WIN64)
+static inline int setenv(const char* name, const char* value, int /*overwrite*/) {
+  return _putenv_s(name, value);
+}
+static inline int unsetenv(const char* name) {
+  return _putenv_s(name, "");
+}
+#endif
+
+// Cross-platform env helpers
+static inline void env_set_kv(const char* k, const char* v, int overwrite = 1){
+#if defined(_WIN32) || defined(_WIN64)
+  (void)overwrite;
+  _putenv_s(k, v);
+#else
+  setenv(k, v, overwrite);
+#endif
+}
+static inline void env_unset_k(const char* k){
+#if defined(_WIN32) || defined(_WIN64)
+  _putenv_s(k, "");
+#else
+  unsetenv(k);
+#endif
+}
 
 // ==================== EcsRamRole Provider Comprehensive Tests ====================
 
@@ -99,10 +127,10 @@ TEST_F(EcsRamRoleTest, ConstructorWithAllParameters) {
       "test_role",
       true,  // disableIMDSv1
       true,  // asyncUpdateEnabled
-      StaleValueBehavior::ALLOW,
+      StaleValueBehavior::ALLOW_,
       std::make_shared<NonBlockingPrefetch>()
     );
-  });
+  });   
 }
 
 TEST_F(EcsRamRoleTest, ConstructorWithStrictBehavior) {
@@ -111,7 +139,7 @@ TEST_F(EcsRamRoleTest, ConstructorWithStrictBehavior) {
       "test_role",
       false,
       true,
-      StaleValueBehavior::STRICT
+      StaleValueBehavior::STRICT_   
     );
   });
 }
@@ -133,7 +161,7 @@ TEST_F(EcsRamRoleTest, ConstructorWithOneCallerBlocksPrefetch) {
       "test_role",
       false,
       true,
-      StaleValueBehavior::ALLOW,
+      StaleValueBehavior::ALLOW_,
       strategy
     );
   });
@@ -142,7 +170,7 @@ TEST_F(EcsRamRoleTest, ConstructorWithOneCallerBlocksPrefetch) {
 // ==================== Environment Variable Tests ====================
 
 TEST_F(EcsRamRoleTest, RoleNameFromEnvironment) {
-  setenv("ALIBABA_CLOUD_ECS_METADATA", "env_role_name", 1);
+  env_set_kv("ALIBABA_CLOUD_ECS_METADATA", "env_role_name");
   
   EXPECT_NO_THROW({
     EcsRamRoleProvider provider;
@@ -150,7 +178,7 @@ TEST_F(EcsRamRoleTest, RoleNameFromEnvironment) {
 }
 
 TEST_F(EcsRamRoleTest, RoleNamePriorityConfigOverEnv) {
-  setenv("ALIBABA_CLOUD_ECS_METADATA", "env_role", 1);
+  env_set_kv("ALIBABA_CLOUD_ECS_METADATA", "env_role", 1);
   
   auto config = std::make_shared<Models::Config>();
   config->setRoleName("config_role");
@@ -300,7 +328,7 @@ TEST_F(EcsRamRoleTest, AllowBehaviorTolerantToFailures) {
     "test_role",
     false,
     true,
-    StaleValueBehavior::ALLOW
+    StaleValueBehavior::ALLOW_
   );
   
   // With ALLOW behavior, provider should tolerate refresh failures
@@ -314,7 +342,7 @@ TEST_F(EcsRamRoleTest, StrictBehaviorThrowsOnFailure) {
     "test_role",
     false,
     true,
-    StaleValueBehavior::STRICT
+    StaleValueBehavior::STRICT_
   );
   
   // With STRICT behavior, provider should throw on refresh failures
@@ -399,7 +427,7 @@ TEST_F(EcsRamRoleTest, AllConfigurationOptionsSet) {
     EcsRamRoleProvider provider(
       config,
       true,  // asyncUpdateEnabled
-      StaleValueBehavior::ALLOW,
+      StaleValueBehavior::ALLOW_,
       std::make_shared<NonBlockingPrefetch>()
     );
   });
@@ -420,7 +448,7 @@ TEST_F(EcsRamRoleTest, NonBlockingPrefetchStrategy) {
       "test_role",
       false,
       true,
-      StaleValueBehavior::ALLOW,
+      StaleValueBehavior::ALLOW_,
       strategy
     );
   });
@@ -433,7 +461,7 @@ TEST_F(EcsRamRoleTest, OneCallerBlocksStrategy) {
       "test_role",
       false,
       true,
-      StaleValueBehavior::ALLOW,
+      StaleValueBehavior::ALLOW_,
       strategy
     );
   });

@@ -12,7 +12,7 @@ using namespace AlibabaCloud::Credential;
 class TestRefreshableProvider : public RefreshableProvider {
 public:
   TestRefreshableProvider(
-      StaleValueBehavior behavior = StaleValueBehavior::STRICT,
+      StaleValueBehavior behavior = StaleValueBehavior::STRICT_,
       std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>())
       : RefreshableProvider(behavior, strategy), 
         refreshCount_(0),
@@ -70,27 +70,27 @@ TEST(RefreshableProviderTest, DefaultConstructor) {
 
 TEST(RefreshableProviderTest, ConstructorWithStrictBehavior) {
   EXPECT_NO_THROW({
-    TestRefreshableProvider provider(StaleValueBehavior::STRICT);
+    TestRefreshableProvider provider(StaleValueBehavior::STRICT_);
   });
 }
 
 TEST(RefreshableProviderTest, ConstructorWithAllowBehavior) {
   EXPECT_NO_THROW({
-    TestRefreshableProvider provider(StaleValueBehavior::ALLOW);
+    TestRefreshableProvider provider(StaleValueBehavior::ALLOW_);
   });
 }
 
 TEST(RefreshableProviderTest, ConstructorWithNonBlockingPrefetch) {
   auto strategy = std::make_shared<NonBlockingPrefetch>();
   EXPECT_NO_THROW({
-    TestRefreshableProvider provider(StaleValueBehavior::STRICT, strategy);
+    TestRefreshableProvider provider(StaleValueBehavior::STRICT_, strategy);
   });
 }
 
 TEST(RefreshableProviderTest, ConstructorWithOneCallerBlocksPrefetch) {
   auto strategy = std::make_shared<OneCallerBlocksPrefetch>();
   EXPECT_NO_THROW({
-    TestRefreshableProvider provider(StaleValueBehavior::STRICT, strategy);
+    TestRefreshableProvider provider(StaleValueBehavior::STRICT_, strategy);
   });
 }
 
@@ -136,7 +136,7 @@ TEST(RefreshableProviderTest, ExpiredCredentialTriggersRefresh) {
 
 TEST(RefreshableProviderTest, PrefetchThresholdTriggersAsyncRefresh) {
   auto strategy = std::make_shared<OneCallerBlocksPrefetch>();
-  TestRefreshableProvider provider(StaleValueBehavior::STRICT, strategy);
+  TestRefreshableProvider provider(StaleValueBehavior::STRICT_, strategy);
   
   // Set expiration to within prefetch threshold
   int64_t nearFuture = static_cast<int64_t>(std::time(nullptr)) + 
@@ -156,7 +156,7 @@ TEST(RefreshableProviderTest, PrefetchThresholdTriggersAsyncRefresh) {
 }
 
 TEST(RefreshableProviderTest, RefreshFailureWithNoCacheThrows) {
-  TestRefreshableProvider provider(StaleValueBehavior::STRICT);
+  TestRefreshableProvider provider(StaleValueBehavior::STRICT_);
   provider.setShouldFail(true);
   
   EXPECT_THROW({
@@ -165,7 +165,7 @@ TEST(RefreshableProviderTest, RefreshFailureWithNoCacheThrows) {
 }
 
 TEST(RefreshableProviderTest, RefreshFailureWithValidCacheReturnsCache) {
-  TestRefreshableProvider provider(StaleValueBehavior::STRICT);
+  TestRefreshableProvider provider(StaleValueBehavior::STRICT_);
   
   // First get credential successfully
   auto credential1 = provider.getCredential();
@@ -180,7 +180,7 @@ TEST(RefreshableProviderTest, RefreshFailureWithValidCacheReturnsCache) {
 }
 
 TEST(RefreshableProviderTest, StrictBehaviorWithExpiredCacheThrows) {
-  TestRefreshableProvider provider(StaleValueBehavior::STRICT);
+  TestRefreshableProvider provider(StaleValueBehavior::STRICT_);
   
   // Get initial credential with short expiration
   int64_t shortExpiration = static_cast<int64_t>(std::time(nullptr)) + 1;
@@ -200,7 +200,7 @@ TEST(RefreshableProviderTest, StrictBehaviorWithExpiredCacheThrows) {
 }
 
 TEST(RefreshableProviderTest, AllowBehaviorWithExpiredCacheReturnsStale) {
-  TestRefreshableProvider provider(StaleValueBehavior::ALLOW);
+  TestRefreshableProvider provider(StaleValueBehavior::ALLOW_);
   
   // Get initial credential with short expiration
   int64_t shortExpiration = static_cast<int64_t>(std::time(nullptr)) + 1;

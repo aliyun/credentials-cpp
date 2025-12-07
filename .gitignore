@@ -235,6 +235,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-
+.vs
 
 # End of https://www.gitignore.io/api/osx,c++,vim,linux,emacs,windows,sublimetext,visualstudiocode,cmake
