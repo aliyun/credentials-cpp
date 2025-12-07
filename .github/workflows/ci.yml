@@ -41,6 +41,7 @@ jobs:
           libssl-dev \
           libcurl4-openssl-dev \
           nlohmann-json3-dev \
+          uuid-dev \
           lcov
     
     # ============ macOS 依赖安装 ============

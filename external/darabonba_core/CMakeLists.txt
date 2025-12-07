@@ -13,7 +13,29 @@ else()
     CMAKE_ARGS
       -DENABLE_UNIT_TESTS:BOOL="0")
 
+  set(ENABLE_UNIT_TESTS OFF)
   FetchContent_MakeAvailable(_darabonba_core)
+
+  if(UNIX AND NOT APPLE)
+      find_package(PkgConfig QUIET)
+      if(PkgConfig_FOUND)
+          pkg_check_modules(UUID uuid)
+          if(UUID_FOUND AND TARGET darabonba_core)
+              target_link_libraries(darabonba_core PRIVATE ${UUID_LIBRARIES})
+              target_include_directories(darabonba_core PRIVATE ${UUID_INCLUDE_DIRS})
+          else()
+               # Fallback if PkgConfig fails to find uuid
+               if(TARGET darabonba_core)
+                   target_link_libraries(darabonba_core PRIVATE uuid)
+               endif()
+          endif()
+      else()
+           if(TARGET darabonba_core)
+               target_link_libraries(darabonba_core PRIVATE uuid)
+           endif()
+      endif()
+  endif()
+
   message(STATUS "Added darabonba_core source : ${_darabonba_core_SOURCE_DIR}")
   message(STATUS "Added darabonba_core binary : ${_darabonba_core_BINARY_DIR}")
 
