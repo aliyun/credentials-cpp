@@ -58,8 +58,8 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-        choco install openssl
-    
+        vcpkg install curl:x64-windows openssl:x64-windows nlohmann-json:x64-windows
+
     # ============ 设置编译器 (Linux) ============
     - name: Set up GCC (Linux)
       if: runner.os == 'Linux' && matrix.compiler == 'gcc'
@@ -78,9 +78,16 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: |
+        CMAKE_ARGS=""
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          VCPKG_ROOT=$(cygpath -u "$VCPKG_INSTALLATION_ROOT")
+          CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+        fi
+
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_UNIT_TESTS=ON
+          -DENABLE_UNIT_TESTS=ON \
+          $CMAKE_ARGS
 
     - name: Build
       shell: bash
