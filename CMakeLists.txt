@@ -129,6 +129,9 @@ elseif(APPLE)
 endif()
 
 if (ENABLE_UNIT_TESTS)
+    # Ensure GoogleTest uses the shared CRT (MD) to match the project
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
     enable_testing()
     
     # Get darabonba_core source directory
