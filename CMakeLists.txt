@@ -173,6 +173,13 @@ if (ENABLE_UNIT_TESTS)
     # Platform-specific test link libraries
     if(WIN32)
         target_link_libraries(tests_AlibabaCloud_credential PRIVATE ws2_32)
+        
+        # Copy darabonba_core.dll to the executable directory for Windows
+        add_custom_command(TARGET tests_AlibabaCloud_credential POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:darabonba_core>
+            $<TARGET_FILE_DIR:tests_AlibabaCloud_credential>
+            COMMENT "Copying darabonba_core.dll to output directory")
     elseif(UNIX AND NOT APPLE)
         target_link_libraries(tests_AlibabaCloud_credential PRIVATE pthread dl)
     endif()
