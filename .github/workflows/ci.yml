@@ -54,11 +54,38 @@ jobs:
           nlohmann-json
     
     # ============ Windows 依赖安装 ============
+    - name: Setup vcpkg (Windows)
+      if: runner.os == 'Windows'
+      id: setup-vcpkg
+      run: |
+        $vcpkgRoot = "$env:RUNNER_TEMP\vcpkg"
+        git clone https://github.com/Microsoft/vcpkg.git $vcpkgRoot
+        & "$vcpkgRoot\bootstrap-vcpkg.bat"
+        echo "VCPKG_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
+        echo "vcpkg-root=$vcpkgRoot" >> $env:GITHUB_OUTPUT
+
+    - name: Cache vcpkg
+      if: runner.os == 'Windows'
+      uses: actions/cache@v4
+      id: vcpkg-cache
+      with:
+        path: ${{ steps.setup-vcpkg.outputs.vcpkg-root }}/installed
+        key: ${{ runner.os }}-vcpkg-curl-openssl-json-x64-windows
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+
     - name: Install dependencies (Windows)
       if: runner.os == 'Windows'
       run: |
-        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-        vcpkg install curl:x64-windows openssl:x64-windows nlohmann-json:x64-windows
+        $vcpkgRoot = $env:VCPKG_ROOT
+        $cacheHit = "${{ steps.vcpkg-cache.outputs.cache-hit }}" -eq "true"
+        if (-not $cacheHit) {
+          Write-Host "Cache miss, installing vcpkg packages..."
+          & "$vcpkgRoot\vcpkg.exe" install curl:x64-windows openssl:x64-windows nlohmann-json:x64-windows
+        } else {
+          Write-Host "Cache hit! Using cached vcpkg packages."
+        }
+        echo "CMAKE_TOOLCHAIN_FILE=$vcpkgRoot/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
 
     # ============ 设置编译器 (Linux) ============
     - name: Set up GCC (Linux)
@@ -79,9 +106,11 @@ jobs:
       shell: bash
       run: |
         CMAKE_ARGS=""
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          VCPKG_ROOT=$(cygpath -u "$VCPKG_INSTALLATION_ROOT")
-          CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+        if [ "$RUNNER_OS" == "Windows" ] && [ -n "$CMAKE_TOOLCHAIN_FILE" ]; then
+           # Convert Windows path to Unix path for Bash if needed, though CMake usually handles it.
+           # But to be safe and consistent with previous behavior:
+           TOOLCHAIN_PATH=$(cygpath -u "$CMAKE_TOOLCHAIN_FILE")
+           CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_PATH"
         fi
 
         cmake -B build \
