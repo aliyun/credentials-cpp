@@ -14,6 +14,14 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-DNOMINMAX)
+    # Force all targets to use dynamic runtime library (MD) to avoid linker conflicts
+    # This must be set before any targets are created
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    # Also set for C compiler
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MD")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 else()
     # GCC/Clang compiler settings (Linux/macOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
@@ -59,6 +67,15 @@ set(SOURCE_FILES
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
+# Ensure main library uses dynamic runtime library on Windows
+if(MSVC)
+    # MSVC_RUNTIME_LIBRARY property requires CMake 3.15+
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    endif()
+endif()
+
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -80,6 +97,11 @@ if(WIN32)
 endif()
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< External set up >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> #
+# Ensure GoogleTest uses the shared CRT (MD) to match the project
+# This must be set BEFORE googletest is configured
+if(MSVC AND ENABLE_UNIT_TESTS)
+    set(gtest_force_shared_crt ON CACHE BOOL "Force GoogleTest to use shared CRT" FORCE)
+endif()
 add_subdirectory(external)
 
 # Find OpenSSL with platform-specific hints
@@ -129,9 +151,6 @@ elseif(APPLE)
 endif()
 
 if (ENABLE_UNIT_TESTS)
-    # Ensure GoogleTest uses the shared CRT (MD) to match the project
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    
     enable_testing()
     
     # Get darabonba_core source directory
@@ -158,6 +177,15 @@ if (ENABLE_UNIT_TESTS)
         tests/test_env_priority.cpp)
     
     add_executable(tests_AlibabaCloud_credential ${TEST_SOURCE_FILES})
+    
+    # Ensure test executable uses dynamic runtime library on Windows
+    if(MSVC)
+        # MSVC_RUNTIME_LIBRARY property requires CMake 3.15+
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+            set_target_properties(tests_AlibabaCloud_credential PROPERTIES
+                MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+        endif()
+    endif()
     
     target_include_directories(tests_AlibabaCloud_credential
             PRIVATE

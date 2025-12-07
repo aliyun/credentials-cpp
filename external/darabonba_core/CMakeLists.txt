@@ -6,15 +6,35 @@ else()
   message(STATUS "darabonba_core could not be located, Building darabonba_core instead.")
   include(FetchContent)
 
+  # Prepare CMAKE_ARGS for darabonba_core
+  set(_darabonba_core_CMAKE_ARGS
+    -DENABLE_UNIT_TESTS:BOOL="0")
+  
+  # Ensure darabonba_core uses dynamic runtime library on Windows
+  if(MSVC)
+    # Pass runtime library setting via CMAKE_ARGS if CMake version supports it
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+      list(APPEND _darabonba_core_CMAKE_ARGS
+        -DCMAKE_MSVC_RUNTIME_LIBRARY:STRING="MultiThreadedDLL")
+    endif()
+  endif()
+
   FetchContent_Declare(
     _darabonba_core
     GIT_REPOSITORY https://github.com/CodeSpaceiiii/tea-cpp.git
     GIT_TAG fix-cpp
-    CMAKE_ARGS
-      -DENABLE_UNIT_TESTS:BOOL="0")
+    CMAKE_ARGS ${_darabonba_core_CMAKE_ARGS})
 
   set(ENABLE_UNIT_TESTS OFF)
   FetchContent_MakeAvailable(_darabonba_core)
+  
+  # Try to set runtime library on darabonba_core target if it exists
+  if(MSVC AND TARGET darabonba_core)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+      set_target_properties(darabonba_core PROPERTIES
+        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+    endif()
+  endif()
 
   if(UNIX AND NOT APPLE)
       # Set CMP0079 to NEW to allow linking libraries to targets defined in other directories

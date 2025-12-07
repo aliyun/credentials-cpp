@@ -30,13 +30,21 @@ if(NOT googletest_POPULATED)
     ${googletest_BINARY_DIR}
     )
 
-  # Silence std::tr1 warning on MSVC
+  # Silence std::tr1 warning on MSVC and ensure runtime library consistency
   if(MSVC)
     foreach(_tgt gtest gtest_main gmock gmock_main)
-      target_compile_definitions(${_tgt}
-        PRIVATE
-          "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
-        )
+      if(TARGET ${_tgt})
+        target_compile_definitions(${_tgt}
+          PRIVATE
+            "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING"
+          )
+        # Explicitly set runtime library to match project settings
+        # MSVC_RUNTIME_LIBRARY property requires CMake 3.15+
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+          set_target_properties(${_tgt} PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+        endif()
+      endif()
     endforeach()
   endif()
 endif()
