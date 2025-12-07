@@ -76,16 +76,19 @@ jobs:
     
     # ============ 配置和构建 ============
     - name: Configure CMake
+      shell: bash
       run: |
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_UNIT_TESTS=ON
-    
+
     - name: Build
+      shell: bash
       run: cmake --build build --config Release -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-    
+
     # ============ 运行测试 ============
     - name: Run tests
+      shell: bash
       run: |
         cd build
         ctest --output-on-failure --verbose
