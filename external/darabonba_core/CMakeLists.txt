@@ -17,6 +17,9 @@ else()
   FetchContent_MakeAvailable(_darabonba_core)
 
   if(UNIX AND NOT APPLE)
+      # Set CMP0079 to NEW to allow linking libraries to targets defined in other directories
+      cmake_policy(SET CMP0079 NEW)
+      
       find_package(PkgConfig QUIET)
       if(PkgConfig_FOUND)
           pkg_check_modules(UUID uuid)
