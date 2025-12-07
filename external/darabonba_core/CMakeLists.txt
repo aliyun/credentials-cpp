@@ -34,6 +34,23 @@ else()
       set_target_properties(darabonba_core PROPERTIES
         MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     endif()
+    
+    # Explicitly exclude static C++ runtime libraries to prevent conflicts
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
+      target_link_options(darabonba_core PRIVATE
+        "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
+        "$<$<CONFIG:MinSizeRel>:/NODEFAULTLIB:libcpmt>"
+        "$<$<CONFIG:RelWithDebInfo>:/NODEFAULTLIB:libcpmt>"
+        "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcpmtd>")
+    else()
+      # For older CMake versions, use LINK_FLAGS
+      get_target_property(_current_link_flags darabonba_core LINK_FLAGS)
+      if(NOT _current_link_flags)
+        set(_current_link_flags "")
+      endif()
+      set_target_properties(darabonba_core PROPERTIES
+        LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
+    endif()
   endif()
 
   if(UNIX AND NOT APPLE)

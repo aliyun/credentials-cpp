@@ -74,6 +74,23 @@ if(MSVC)
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     endif()
+    
+    # Explicitly exclude static C++ runtime libraries to prevent conflicts
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
+        target_link_options(${PROJECT_NAME} PRIVATE
+            "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
+            "$<$<CONFIG:MinSizeRel>:/NODEFAULTLIB:libcpmt>"
+            "$<$<CONFIG:RelWithDebInfo>:/NODEFAULTLIB:libcpmt>"
+            "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcpmtd>")
+    else()
+        # For older CMake versions, use LINK_FLAGS
+        get_target_property(_current_link_flags ${PROJECT_NAME} LINK_FLAGS)
+        if(NOT _current_link_flags)
+            set(_current_link_flags "")
+        endif()
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
+    endif()
 endif()
 
 target_include_directories(${PROJECT_NAME}
@@ -184,6 +201,25 @@ if (ENABLE_UNIT_TESTS)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
             set_target_properties(tests_AlibabaCloud_credential PROPERTIES
                 MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+        endif()
+        
+        # Explicitly exclude static C++ runtime libraries to prevent conflicts
+        # libcpmt.lib = static C++ runtime (Release)
+        # libcpmtd.lib = static C++ runtime (Debug)
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
+            target_link_options(tests_AlibabaCloud_credential PRIVATE
+                "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
+                "$<$<CONFIG:MinSizeRel>:/NODEFAULTLIB:libcpmt>"
+                "$<$<CONFIG:RelWithDebInfo>:/NODEFAULTLIB:libcpmt>"
+                "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcpmtd>")
+        else()
+            # For older CMake versions, use LINK_FLAGS
+            get_target_property(_current_link_flags tests_AlibabaCloud_credential LINK_FLAGS)
+            if(NOT _current_link_flags)
+                set(_current_link_flags "")
+            endif()
+            set_target_properties(tests_AlibabaCloud_credential PROPERTIES
+                LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
         endif()
     endif()
     
