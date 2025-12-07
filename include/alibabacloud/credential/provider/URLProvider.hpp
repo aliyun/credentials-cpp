@@ -21,6 +21,9 @@ public:
   }
 
   URLProvider(const std::string &url) : url_(url) {
+    if (url.empty()) {
+      throw Darabonba::Exception("URL cannot be empty");
+    }
     credential_.setType(Constant::URL_STS);
   }
 

@@ -66,7 +66,7 @@ public:
   std::string getBearerToken() {
     return provider_->getCredential().bearerToken();
   }
-  std::string getType() { return provider_->getCredential().type(); }
+  std::string getType() { return provider_->getProviderName(); }
 
   /**
    * @note Return a copy to avoid inconsistencies
