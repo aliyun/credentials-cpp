@@ -1,5 +1,5 @@
-#include <alibabacloud/credential/Model.hpp>
 #include <alibabacloud/credential/AuthUtil.hpp>
+#include <alibabacloud/credential/Model.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {

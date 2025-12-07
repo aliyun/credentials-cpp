@@ -86,12 +86,12 @@ protected:
 
   /**
    * @brief Calculate prefetch_time (corresponds to Python _get_prefetch_time)
-   * 
+   *
    * Python logic:
    * - If expiration < 0: return now + 5 minutes
    * - Otherwise: return now + 60 minutes
    */
-  int64_t getPrefetchTime(int64_t expiration) const;
+  static int64_t getPrefetchTime(int64_t expiration);
 
 private:
   /**

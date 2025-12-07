@@ -1,5 +1,4 @@
 #include <chrono>
-#include <mutex>
 #include <sstream>
 
 #include <darabonba/Env.hpp>
@@ -18,20 +17,19 @@ bool AuthUtil::setClientType(const std::string &clientType) {
   return true;
 }
 
-std::string AuthUtil::clientType() {
-  return clientType_;
-}
+std::string AuthUtil::clientType() { return clientType_; }
 
 std::string AuthUtil::generateSessionName() {
-  auto now = std::chrono::system_clock::now();
-  auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-      now.time_since_epoch()).count();
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                             now.time_since_epoch())
+                             .count();
   return "credentials-cpp-" + std::to_string(timestamp);
 }
 
 /**
  * @brief Get SDK version from CMake project version
- * 
+ *
  * Returns version string, default "0.1.0" (from CMakeLists.txt)
  */
 std::string AuthUtil::getSDKVersion() {
@@ -42,7 +40,7 @@ std::string AuthUtil::getSDKVersion() {
 
 /**
  * @brief Get operating system name
- * 
+ *
  * Platform detection based on preprocessor macros
  */
 std::string AuthUtil::getOSName() {
@@ -61,7 +59,7 @@ std::string AuthUtil::getOSName() {
 
 /**
  * @brief Get machine architecture name
- * 
+ *
  * Corresponds to Python's platform.machine()
  * Returns architecture like x86_64, arm64, etc.
  */
@@ -81,7 +79,7 @@ std::string AuthUtil::getMachineName() {
 
 /**
  * @brief Get C++ standard version
- * 
+ *
  * Corresponds to Python's platform.python_version()
  * Returns C++ version like "11", "14", "17", "20"
  */
@@ -101,63 +99,65 @@ std::string AuthUtil::getCppVersion() {
 
 /**
  * @brief Get User-Agent string
- * 
+ *
  * Corresponds to Python SDK's get_user_agent() in parameter_helper.py
- * Python format: 
- *   AlibabaCloud ({platform.system()}; {platform.machine()}) 
- *   Python/{platform.python_version()} 
- *   Credentials/{alibabacloud_credentials.__version__} 
+ * Python format:
+ *   AlibabaCloud ({platform.system()}; {platform.machine()})
+ *   Python/{platform.python_version()}
+ *   Credentials/{alibabacloud_credentials.__version__}
  *   TeaDSL/2
- * 
+ *
  * C++ format:
- *   AlibabaCloud ({os}; {machine}) 
- *   C++/{cpp_version} 
- *   Credentials/{credentials_version} 
+ *   AlibabaCloud ({os}; {machine})
+ *   C++/{cpp_version}
+ *   Credentials/{credentials_version}
  *   TeaDSL/2 {custom_ua}
- * 
+ *
  * @param customUserAgent Custom user agent suffix (optional)
  * @return Complete User-Agent string
  */
-std::string AuthUtil::getUserAgent(const std::string& customUserAgent) {
+std::string AuthUtil::getUserAgent(const std::string &customUserAgent) {
   std::ostringstream oss;
-  
-  // Format: AlibabaCloud ({os}; {machine}) C++/{version} Credentials/{credentials_version} TeaDSL/2
+
+  // Format: AlibabaCloud ({os}; {machine}) C++/{version}
+  // Credentials/{credentials_version} TeaDSL/2
   oss << "AlibabaCloud (" << getOSName() << "; " << getMachineName() << ") "
       << "C++/" << getCppVersion() << " "
       << "Credentials/" << getSDKVersion() << " "
       << "TeaDSL/2";
-  
+
   // Append custom user agent if provided
   if (!customUserAgent.empty()) {
     oss << " " << customUserAgent;
   }
-  
+
   return oss.str();
 }
 
 /**
  * @brief Create a new HTTP request with User-Agent header
- * 
+ *
  * Corresponds to Python SDK's getNewRequest() helper function
  * Used by providers like EcsRamRoleProvider, RsaKeyPairProvider
- * 
+ *
  * Python implementation:
  * def getNewRequest(url, custom_ua=None):
  *     req = HTTPRequest(url, method='GET')
  *     req.headers['User-Agent'] = get_user_agent(custom_ua)
  *     return req
- * 
+ *
  * @param url Request URL
  * @param customUserAgent Custom user agent suffix (optional)
  * @return HTTP Request object with User-Agent header set
  */
-Darabonba::Http::Request AuthUtil::getNewRequest(const std::string& url,
-                                                   const std::string& customUserAgent) {
+Darabonba::Http::Request
+AuthUtil::getNewRequest(const std::string &url,
+                        const std::string &customUserAgent) {
   Darabonba::Http::Request req(url);
-  
+
   // Set User-Agent header
   req.headers()["User-Agent"] = getUserAgent(customUserAgent);
-  
+
   return req;
 }
 
