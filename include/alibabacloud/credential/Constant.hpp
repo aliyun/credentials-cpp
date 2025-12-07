@@ -2,10 +2,11 @@
 #define ALIBABACLOUD_CREDENTIAL_CONSTANT_HPP_
 
 #include <string>
+#include <alibabacloud/credential/Export.hpp>
 
 namespace AlibabaCloud {
 namespace Credential {
-class Constant {
+class ALIBABACLOUD_CREDENTIAL_EXPORT Constant {
 public:
   // Ini
   static const std::string INI_ACCESS_KEY_ID;
