@@ -106,7 +106,7 @@ public:
   // Constants
   static constexpr int64_t STALE_TIME_WINDOW = 15 * 60;      // 15 minutes stale window
   static constexpr int64_t PREFETCH_THRESHOLD = 180;          // 180 seconds prefetch threshold
-  static const std::chrono::milliseconds REFRESH_BLOCKING_MAX_WAIT;         // Max wait 5 seconds
+  static constexpr int64_t REFRESH_BLOCKING_MAX_WAIT_MS = 10000;  // Max wait 10 seconds (in milliseconds)
 
   /**
    * @brief 构造函数
@@ -268,8 +268,8 @@ private:
   void refreshCache() const {
     std::unique_lock<std::timed_mutex> lock(refreshMutex_, std::defer_lock);
     
-    // Try to acquire lock, wait max REFRESH_BLOCKING_MAX_WAIT seconds
-    if (!lock.try_lock_for(REFRESH_BLOCKING_MAX_WAIT)) {
+    // Try to acquire lock, wait max REFRESH_BLOCKING_MAX_WAIT_MS milliseconds
+    if (!lock.try_lock_for(std::chrono::milliseconds(REFRESH_BLOCKING_MAX_WAIT_MS))) {
       // Lock timeout, return using existing cache
       return;
     }
