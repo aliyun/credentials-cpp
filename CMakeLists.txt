@@ -85,7 +85,7 @@ if(MSVC)
     else()
         # For older CMake versions, use LINK_FLAGS
         get_target_property(_current_link_flags ${PROJECT_NAME} LINK_FLAGS)
-        if(NOT _current_link_flags)
+        if(NOT _current_link_flags OR _current_link_flags STREQUAL "NOTFOUND")
             set(_current_link_flags "")
         endif()
         set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -240,7 +240,7 @@ if (ENABLE_UNIT_TESTS)
         else()
             # For older CMake versions, use LINK_FLAGS
             get_target_property(_current_link_flags tests_AlibabaCloud_credential LINK_FLAGS)
-            if(NOT _current_link_flags)
+            if(NOT _current_link_flags OR _current_link_flags STREQUAL "NOTFOUND")
                 set(_current_link_flags "")
             endif()
             set_target_properties(tests_AlibabaCloud_credential PROPERTIES

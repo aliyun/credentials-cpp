@@ -42,8 +42,18 @@ else()
     endif()
     
     # Force /MD flag on darabonba_core to ensure it uses dynamic runtime
+    # First, get existing compile options and remove any /MT flags
+    get_target_property(_existing_compile_opts darabonba_core COMPILE_OPTIONS)
+    if(_existing_compile_opts)
+      # Remove /MT and /MTd flags
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MT")
+      # Remove any existing /MD flags to avoid duplicates
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MD")
+    endif()
+    
     # Add /MD flags using generator expressions
     target_compile_options(darabonba_core PRIVATE
+      ${_existing_compile_opts}
       "$<$<CONFIG:Release>:/MD>"
       "$<$<CONFIG:MinSizeRel>:/MD>"
       "$<$<CONFIG:RelWithDebInfo>:/MD>"
@@ -60,7 +70,7 @@ else()
     else()
       # For older CMake versions, use LINK_FLAGS
       get_target_property(_current_link_flags darabonba_core LINK_FLAGS)
-      if(NOT _current_link_flags)
+      if(NOT _current_link_flags OR _current_link_flags STREQUAL "NOTFOUND")
         set(_current_link_flags "")
       endif()
       set_target_properties(darabonba_core PROPERTIES
