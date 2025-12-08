@@ -8,6 +8,11 @@
 namespace AlibabaCloud {
 namespace Credential {
 
+// Define the static constants
+const int EcsRamRoleProvider::DEFAULT_READ_TIMEOUT;
+const int EcsRamRoleProvider::DEFAULT_CONNECT_TIMEOUT;
+const int EcsRamRoleProvider::DEFAULT_METADATA_TOKEN_DURATION;
+
 // 常量定义（对应 Python SDK）
 const std::string EcsRamRoleProvider::URL_IN_ECS_META_DATA =
     "/latest/meta-data/ram/security-credentials/";

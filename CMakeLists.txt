@@ -55,6 +55,7 @@ set(SOURCE_FILES
         src/AuthUtil.cpp
         src/Constant.cpp
         src/Model.cpp
+        src/provider/RefreshableProvider.cpp
         src/provider/DefaultProvider.cpp
         src/provider/EcsRamRoleProvider.cpp
         src/provider/EnvironmentVariableProvider.cpp
