@@ -27,8 +27,8 @@ else()
 
   FetchContent_Declare(
     _darabonba_core
-    GIT_REPOSITORY https://github.com/CodeSpaceiiii/tea-cpp.git
-    GIT_TAG fix-cpp
+    GIT_REPOSITORY https://github.com/aliyun/tea-cpp.git
+    GIT_TAG master
     CMAKE_ARGS ${_darabonba_core_CMAKE_ARGS})
 
   set(ENABLE_UNIT_TESTS OFF)
