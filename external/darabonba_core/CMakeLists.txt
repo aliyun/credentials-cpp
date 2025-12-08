@@ -34,24 +34,28 @@ else()
   set(ENABLE_UNIT_TESTS OFF)
   FetchContent_MakeAvailable(_darabonba_core)
   
-  # Try to set runtime library on darabonba_core target if it exists
-  if(MSVC AND TARGET darabonba_core)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
-      set_target_properties(darabonba_core PROPERTIES
-        MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    endif()
-    
-    # Force /MD flag on darabonba_core to ensure it uses dynamic runtime
-    # First, get existing compile options and remove any /MT flags
+    # Try to set runtime library on darabonba_core target if it exists
+    if(MSVC AND TARGET darabonba_core)
+      if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+        set_target_properties(darabonba_core PROPERTIES
+          MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+      endif()
+      
+    # First, get existing compile options (may be "NOTFOUND")
     get_target_property(_existing_compile_opts darabonba_core COMPILE_OPTIONS)
-    if(_existing_compile_opts)
-      # Remove /MT and /MTd flags
-      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MT")
-      # Remove any existing /MD flags to avoid duplicates
-      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MD")
+
+    # If property not found, set to empty list to avoid passing "NOTFOUND"
+    if(_existing_compile_opts STREQUAL "NOTFOUND")
+      set(_existing_compile_opts)
     endif()
-    
-    # Add /MD flags using generator expressions
+
+    # If there are items, filter out /MT and /MD variants safely
+    if(_existing_compile_opts)
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "^/MT")
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "^/MD")
+    endif()
+
+    # Add /MD flags using generator expressions (existing options will be inserted only if valid)
     target_compile_options(darabonba_core PRIVATE
       ${_existing_compile_opts}
       "$<$<CONFIG:Release>:/MD>"
