@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.10)
 
 project(alibabacloud_credential VERSION "0.1.0")
@@ -75,12 +74,12 @@ if(MSVC)
             MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     endif()
     
-    # Explicitly exclude static C++ runtime libraries to prevent conflicts
+    # Explicitly exclude static C and C++ runtime libraries to prevent conflicts
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
         target_link_options(${PROJECT_NAME} PRIVATE
-            "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
-            "$<$<CONFIG:MinSizeRel>:/NODEFAULTLIB:libcpmt>"
-            "$<$<CONFIG:RelWithDebInfo>:/NODEFAULTLIB:libcpmt>"
+            /NODEFAULTLIB:libcmt
+            /NODEFAULTLIB:libcpmt
+            "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcmtd>"
             "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcpmtd>")
     else()
         # For older CMake versions, use LINK_FLAGS
@@ -89,7 +88,7 @@ if(MSVC)
             set(_current_link_flags "")
         endif()
         set_target_properties(${PROJECT_NAME} PROPERTIES
-            LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
+            LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcmt /NODEFAULTLIB:libcpmt")
     endif()
 endif()
 
@@ -117,7 +116,16 @@ endif()
 # Ensure GoogleTest uses the shared CRT (MD) to match the project
 # This must be set BEFORE googletest is configured
 if(MSVC AND ENABLE_UNIT_TESTS)
+    # Force GoogleTest to use shared CRT - must be set before add_subdirectory
     set(gtest_force_shared_crt ON CACHE BOOL "Force GoogleTest to use shared CRT" FORCE)
+    
+    # Ensure this propagates to subdirectories
+    set(CMAKE_POLICY_DEFAULT_CMP0091 NEW)
+    
+    # Set global MSVC runtime library for all targets in subdirectories
+    if(POLICY CMP0091)
+        cmake_policy(SET CMP0091 NEW)
+    endif()
 endif()
 add_subdirectory(external)
 
@@ -229,13 +237,15 @@ if (ENABLE_UNIT_TESTS)
         endif()
         
         # Explicitly exclude static C++ runtime libraries to prevent conflicts
+        # libcmt.lib = static C runtime (Release)
         # libcpmt.lib = static C++ runtime (Release)
+        # libcmtd.lib = static C runtime (Debug)
         # libcpmtd.lib = static C++ runtime (Debug)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
             target_link_options(tests_AlibabaCloud_credential PRIVATE
-                "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
-                "$<$<CONFIG:MinSizeRel>:/NODEFAULTLIB:libcpmt>"
-                "$<$<CONFIG:RelWithDebInfo>:/NODEFAULTLIB:libcpmt>"
+                /NODEFAULTLIB:libcmt
+                /NODEFAULTLIB:libcpmt
+                "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcmtd>"
                 "$<$<CONFIG:Debug>:/NODEFAULTLIB:libcpmtd>")
         else()
             # For older CMake versions, use LINK_FLAGS
@@ -244,7 +254,7 @@ if (ENABLE_UNIT_TESTS)
                 set(_current_link_flags "")
             endif()
             set_target_properties(tests_AlibabaCloud_credential PROPERTIES
-                LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
+                LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcmt /NODEFAULTLIB:libcpmt")
         endif()
     endif()
     

@@ -110,7 +110,7 @@ jobs:
            # Convert Windows path to Unix path for Bash if needed, though CMake usually handles it.
            # But to be safe and consistent with previous behavior:
            TOOLCHAIN_PATH=$(cygpath -u "$CMAKE_TOOLCHAIN_FILE")
-           CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_PATH"
+           CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_PATH -Dgtest_force_shared_crt=ON -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
         fi
 
         cmake -B build \
