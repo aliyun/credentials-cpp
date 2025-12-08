@@ -44,24 +44,31 @@ else()
     # First, get existing compile options (may be "NOTFOUND")
     get_target_property(_existing_compile_opts darabonba_core COMPILE_OPTIONS)
 
-    # If property not found, set to empty list to avoid passing "NOTFOUND"
-    if(_existing_compile_opts STREQUAL "NOTFOUND")
-      set(_existing_compile_opts)
-    endif()
-
-    # If there are items, filter out /MT and /MD variants safely
-    if(_existing_compile_opts)
+    # If property not found or is NOTFOUND, set to empty string
+    if(NOT _existing_compile_opts OR _existing_compile_opts STREQUAL "NOTFOUND")
+      set(_existing_compile_opts "")
+    else()
+      # If there are items, filter out /MT and /MD variants safely
       list(FILTER _existing_compile_opts EXCLUDE REGEX "^/MT")
       list(FILTER _existing_compile_opts EXCLUDE REGEX "^/MD")
     endif()
 
-    # Add /MD flags using generator expressions (existing options will be inserted only if valid)
-    target_compile_options(darabonba_core PRIVATE
-      ${_existing_compile_opts}
-      "$<$<CONFIG:Release>:/MD>"
-      "$<$<CONFIG:MinSizeRel>:/MD>"
-      "$<$<CONFIG:RelWithDebInfo>:/MD>"
-      "$<$<CONFIG:Debug>:/MDd>")
+    # Add /MD flags using generator expressions
+    # Only include existing opts if they exist
+    if(_existing_compile_opts)
+      target_compile_options(darabonba_core PRIVATE
+        ${_existing_compile_opts}
+        "$<$<CONFIG:Release>:/MD>"
+        "$<$<CONFIG:MinSizeRel>:/MD>"
+        "$<$<CONFIG:RelWithDebInfo>:/MD>"
+        "$<$<CONFIG:Debug>:/MDd>")
+    else()
+      target_compile_options(darabonba_core PRIVATE
+        "$<$<CONFIG:Release>:/MD>"
+        "$<$<CONFIG:MinSizeRel>:/MD>"
+        "$<$<CONFIG:RelWithDebInfo>:/MD>"
+        "$<$<CONFIG:Debug>:/MDd>")
+    endif()
     
     # Explicitly exclude static C++ runtime libraries to prevent conflicts
     # But ensure dynamic C++ runtime (msvcprt.lib) is linked
@@ -74,7 +81,7 @@ else()
     else()
       # For older CMake versions, use LINK_FLAGS
       get_target_property(_current_link_flags darabonba_core LINK_FLAGS)
-      if(NOT _current_link_flags)
+      if(NOT _current_link_flags OR _current_link_flags STREQUAL "NOTFOUND")
         set(_current_link_flags "")
       endif()
       set_target_properties(darabonba_core PROPERTIES
