@@ -17,6 +17,12 @@ else()
       list(APPEND _darabonba_core_CMAKE_ARGS
         -DCMAKE_MSVC_RUNTIME_LIBRARY:STRING="MultiThreadedDLL")
     endif()
+    # Also pass compiler flags to force /MD
+    list(APPEND _darabonba_core_CMAKE_ARGS
+      -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MD"
+      -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MDd"
+      -DCMAKE_C_FLAGS_RELEASE:STRING="/MD"
+      -DCMAKE_C_FLAGS_DEBUG:STRING="/MDd")
   endif()
 
   FetchContent_Declare(
@@ -35,7 +41,26 @@ else()
         MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     endif()
     
+    # Force /MD flag on darabonba_core to ensure it uses dynamic runtime
+    # First, get existing compile options and remove any /MT flags
+    get_target_property(_existing_compile_opts darabonba_core COMPILE_OPTIONS)
+    if(_existing_compile_opts)
+      # Remove /MT and /MTd flags
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MT")
+      # Remove any existing /MD flags to avoid duplicates
+      list(FILTER _existing_compile_opts EXCLUDE REGEX "/MD")
+    endif()
+    
+    # Add /MD flags using generator expressions
+    target_compile_options(darabonba_core PRIVATE
+      ${_existing_compile_opts}
+      "$<$<CONFIG:Release>:/MD>"
+      "$<$<CONFIG:MinSizeRel>:/MD>"
+      "$<$<CONFIG:RelWithDebInfo>:/MD>"
+      "$<$<CONFIG:Debug>:/MDd>")
+    
     # Explicitly exclude static C++ runtime libraries to prevent conflicts
+    # But ensure dynamic C++ runtime (msvcprt.lib) is linked
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.13")
       target_link_options(darabonba_core PRIVATE
         "$<$<CONFIG:Release>:/NODEFAULTLIB:libcpmt>"
@@ -51,6 +76,10 @@ else()
       set_target_properties(darabonba_core PROPERTIES
         LINK_FLAGS "${_current_link_flags} /NODEFAULTLIB:libcpmt$<$<CONFIG:Debug>:d>")
     endif()
+    
+    # Note: msvcprt.lib should be automatically linked when using /MD
+    # If it's not being linked, the issue is likely that darabonba_core
+    # was built with /MT. The compile options above should fix this.
   endif()
 
   if(UNIX AND NOT APPLE)
