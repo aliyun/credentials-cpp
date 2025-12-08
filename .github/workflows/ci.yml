@@ -101,39 +101,25 @@ jobs:
         echo "CC=clang" >> $GITHUB_ENV
         echo "CXX=clang++" >> $GITHUB_ENV
     
-    # ============ Windows: 安装 Ninja 构建工具 ============
-    - name: Install Ninja (Windows)
+    # ============ Windows: 设置 MSVC 环境 ============
+    - name: Setup MSVC Environment (Windows)
       if: runner.os == 'Windows'
-      run: choco install ninja
+      uses: ilammy/msvc-dev-cmd@v1
 
     # ============ 配置和构建 ============
-    - name: Configure CMake
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%CMAKE_TOOLCHAIN_FILE% -DENABLE_UNIT_TESTS=ON -Dgtest_force_shared_crt=ON -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+
+    - name: Configure CMake (Linux/macOS)
+      if: runner.os != 'Windows'
       shell: bash
       run: |
-        CMAKE_ARGS=""
-        if [ "$RUNNER_OS" == "Windows" ] && [ -n "$CMAKE_TOOLCHAIN_FILE" ]; then
-           # Convert Windows path to Unix path for Bash if needed, though CMake usually handles it.
-           # But to be safe and consistent with previous behavior:
-           TOOLCHAIN_PATH=$(cygpath -u "$CMAKE_TOOLCHAIN_FILE")
-           # Use Ninja generator to avoid multi-config issues with Visual Studio generator
-           # Explicitly set all runtime library related flags
-           CMAKE_ARGS="-G Ninja \
-             -DCMAKE_C_COMPILER=cl \
-             -DCMAKE_CXX_COMPILER=cl \
-             -DCMAKE_BUILD_TYPE=Release \
-             -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_PATH \
-             -Dgtest_force_shared_crt=ON \
-             -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL \
-             -DCMAKE_POLICY_DEFAULT_CMP0091=NEW"
-        fi
-
-        # Clean any existing CMake cache to ensure fresh configuration
-        rm -rf build/CMakeCache.txt build/CMakeFiles
-
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_UNIT_TESTS=ON \
-          $CMAKE_ARGS
+          -DENABLE_UNIT_TESTS=ON
 
     - name: Build
       shell: bash
