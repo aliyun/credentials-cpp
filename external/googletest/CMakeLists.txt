@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.10.0
+  GIT_TAG        v1.14.0
 )
 FetchContent_GetProperties(googletest)
 
@@ -59,20 +59,9 @@ if(NOT googletest_POPULATED)
             MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
         endif()
         
-        # First, get and clean existing compile options to remove any /MT flags
-        get_target_property(_existing_opts ${_tgt} COMPILE_OPTIONS)
-        if(_existing_opts)
-          # Remove /MT and /MTd flags from existing options
-          list(FILTER _existing_opts EXCLUDE REGEX "/MT")
-          # Remove any existing /MD flags to avoid duplicates
-          list(FILTER _existing_opts EXCLUDE REGEX "/MD")
-        endif()
-        
         # Force /MD flag directly on the target using generator expressions
         # This ensures both Release and Debug builds use the correct runtime
-        # Add /MD after cleaning existing options to ensure it takes precedence
         target_compile_options(${_tgt} PRIVATE
-          ${_existing_opts}
           "$<$<CONFIG:Release>:/MD>"
           "$<$<CONFIG:MinSizeRel>:/MD>"
           "$<$<CONFIG:RelWithDebInfo>:/MD>"

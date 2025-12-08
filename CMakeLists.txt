@@ -159,6 +159,31 @@ endif()
 if(WIN32)
     # Windows: link against ws2_32 and other system libraries if needed
     target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32)
+    
+    # Copy vcpkg DLLs to output directory for runtime
+    if(DEFINED VCPKG_INSTALLED_DIR)
+        set(_vcpkg_bin_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
+        if(EXISTS "${_vcpkg_bin_dir}")
+            # Copy dependency DLLs to the same directory as the built library
+            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_vcpkg_bin_dir}/libcurl.dll"
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>
+                COMMENT "Copying libcurl.dll to output directory")
+            
+            # Copy OpenSSL DLLs
+            file(GLOB _ssl_dlls 
+                "${_vcpkg_bin_dir}/libcrypto*.dll"
+                "${_vcpkg_bin_dir}/libssl*.dll")
+            foreach(_dll ${_ssl_dlls})
+                add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${_dll}"
+                    $<TARGET_FILE_DIR:${PROJECT_NAME}>
+                    COMMENT "Copying SSL DLL to output directory")
+            endforeach()
+        endif()
+    endif()
 elseif(UNIX AND NOT APPLE)
     # Linux: link against pthread and dl
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread dl)
@@ -247,6 +272,28 @@ if (ENABLE_UNIT_TESTS)
             $<TARGET_FILE:darabonba_core>
             $<TARGET_FILE_DIR:tests_AlibabaCloud_credential>
             COMMENT "Copying darabonba_core.dll to output directory")
+        
+        # Copy vcpkg DLLs (libcurl, OpenSSL, etc.) to output directory
+        if(DEFINED VCPKG_INSTALLED_DIR)
+            set(_vcpkg_bin_dir "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin")
+            if(EXISTS "${_vcpkg_bin_dir}")
+                file(GLOB _vcpkg_dlls 
+                    "${_vcpkg_bin_dir}/libcurl*.dll"
+                    "${_vcpkg_bin_dir}/libcrypto*.dll"
+                    "${_vcpkg_bin_dir}/libssl*.dll"
+                    "${_vcpkg_bin_dir}/zlib*.dll"
+                    "${_vcpkg_bin_dir}/nghttp2*.dll"
+                    "${_vcpkg_bin_dir}/brotli*.dll"
+                    "${_vcpkg_bin_dir}/zstd*.dll")
+                foreach(_dll ${_vcpkg_dlls})
+                    add_custom_command(TARGET tests_AlibabaCloud_credential POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${_dll}"
+                        $<TARGET_FILE_DIR:tests_AlibabaCloud_credential>
+                        COMMENT "Copying ${_dll} to output directory")
+                endforeach()
+            endif()
+        endif()
     elseif(UNIX AND NOT APPLE)
         target_link_libraries(tests_AlibabaCloud_credential PRIVATE pthread dl)
     endif()
