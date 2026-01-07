@@ -27,8 +27,8 @@ TEST(CredentialModelTest, SetAndGetAccessKey) {
   
   EXPECT_TRUE(model.hasAccessKeyId());
   EXPECT_TRUE(model.hasAccessKeySecret());
-  EXPECT_EQ("test_ak_id", model.accessKeyId());
-  EXPECT_EQ("test_ak_secret", model.accessKeySecret());
+  EXPECT_EQ("test_ak_id", model.getAccessKeyId());
+  EXPECT_EQ("test_ak_secret", model.getAccessKeySecret());
   EXPECT_FALSE(model.empty());
 }
 
@@ -37,7 +37,7 @@ TEST(CredentialModelTest, SetAndGetBearerToken) {
   model.setBearerToken("test_bearer_token");
   
   EXPECT_TRUE(model.hasBearerToken());
-  EXPECT_EQ("test_bearer_token", model.bearerToken());
+  EXPECT_EQ("test_bearer_token", model.getBearerToken());
   EXPECT_FALSE(model.empty());
 }
 
@@ -46,7 +46,7 @@ TEST(CredentialModelTest, SetAndGetSecurityToken) {
   model.setSecurityToken("test_security_token");
   
   EXPECT_TRUE(model.hasSecurityToken());
-  EXPECT_EQ("test_security_token", model.securityToken());
+  EXPECT_EQ("test_security_token", model.getSecurityToken());
   EXPECT_FALSE(model.empty());
 }
 
@@ -55,7 +55,7 @@ TEST(CredentialModelTest, SetAndGetType) {
   model.setType("access_key");
   
   EXPECT_TRUE(model.hasType());
-  EXPECT_EQ("access_key", model.type());
+  EXPECT_EQ("access_key", model.getType());
 }
 
 TEST(CredentialModelTest, SetAndGetProviderName) {
@@ -63,7 +63,7 @@ TEST(CredentialModelTest, SetAndGetProviderName) {
   model.setProviderName("test_provider");
   
   EXPECT_TRUE(model.hasProviderName());
-  EXPECT_EQ("test_provider", model.providerName());
+  EXPECT_EQ("test_provider", model.getProviderName());
 }
 
 TEST(CredentialModelTest, RValueSet) {
@@ -74,8 +74,8 @@ TEST(CredentialModelTest, RValueSet) {
   model.setAccessKeyId(std::move(akId));
   model.setAccessKeySecret(std::move(akSecret));
   
-  EXPECT_EQ("rvalue_ak_id", model.accessKeyId());
-  EXPECT_EQ("rvalue_ak_secret", model.accessKeySecret());
+  EXPECT_EQ("rvalue_ak_id", model.getAccessKeyId());
+  EXPECT_EQ("rvalue_ak_secret", model.getAccessKeySecret());
 }
 
 TEST(CredentialModelTest, ToMapAndFromMap) {
@@ -89,9 +89,9 @@ TEST(CredentialModelTest, ToMapAndFromMap) {
   Models::CredentialModel newModel;
   newModel.fromMap(json);
   
-  EXPECT_EQ("test_id", newModel.accessKeyId());
-  EXPECT_EQ("test_secret", newModel.accessKeySecret());
-  EXPECT_EQ("test_type", newModel.type());
+  EXPECT_EQ("test_id", newModel.getAccessKeyId());
+  EXPECT_EQ("test_secret", newModel.getAccessKeySecret());
+  EXPECT_EQ("test_type", newModel.getType());
 }
 
 // ==================== Config Tests ====================
@@ -99,10 +99,10 @@ TEST(CredentialModelTest, ToMapAndFromMap) {
 TEST(ConfigTest, DefaultConstructor) {
   Models::Config config;
   EXPECT_FALSE(config.empty());
-  EXPECT_EQ(3600, config.durationSeconds());
-  EXPECT_EQ("cn-hangzhou", config.regionId());
-  EXPECT_EQ("defaultSessionName", config.roleSessionName());
-  EXPECT_EQ("sts.aliyuncs.com", config.stsEndpoint());
+  EXPECT_EQ(3600, config.getDurationSeconds());
+  EXPECT_EQ("cn-hangzhou", config.getRegionId());
+  EXPECT_EQ("defaultSessionName", config.getRoleSessionName());
+  EXPECT_EQ("sts.aliyuncs.com", config.getStsEndpoint());
 }
 
 TEST(ConfigTest, SetAndGetAccessKey) {
@@ -112,8 +112,8 @@ TEST(ConfigTest, SetAndGetAccessKey) {
   
   EXPECT_TRUE(config.hasAccessKeyId());
   EXPECT_TRUE(config.hasAccessKeySecret());
-  EXPECT_EQ("config_ak_id", config.accessKeyId());
-  EXPECT_EQ("config_ak_secret", config.accessKeySecret());
+  EXPECT_EQ("config_ak_id", config.getAccessKeyId());
+  EXPECT_EQ("config_ak_secret", config.getAccessKeySecret());
 }
 
 TEST(ConfigTest, SetAndGetType) {
@@ -121,7 +121,7 @@ TEST(ConfigTest, SetAndGetType) {
   config.setType("access_key");
   
   EXPECT_TRUE(config.hasType());
-  EXPECT_EQ("access_key", config.type());
+  EXPECT_EQ("access_key", config.getType());
 }
 
 TEST(ConfigTest, SetAndGetBearerToken) {
@@ -129,7 +129,7 @@ TEST(ConfigTest, SetAndGetBearerToken) {
   config.setBearerToken("bearer_token_value");
   
   EXPECT_TRUE(config.hasBearerToken());
-  EXPECT_EQ("bearer_token_value", config.bearerToken());
+  EXPECT_EQ("bearer_token_value", config.getBearerToken());
 }
 
 TEST(ConfigTest, SetAndGetSecurityToken) {
@@ -137,7 +137,7 @@ TEST(ConfigTest, SetAndGetSecurityToken) {
   config.setSecurityToken("security_token_value");
   
   EXPECT_TRUE(config.hasSecurityToken());
-  EXPECT_EQ("security_token_value", config.securityToken());
+  EXPECT_EQ("security_token_value", config.getSecurityToken());
 }
 
 TEST(ConfigTest, SetAndGetRoleArn) {
@@ -145,7 +145,7 @@ TEST(ConfigTest, SetAndGetRoleArn) {
   config.setRoleArn("acs:ram::123456:role/testrole");
   
   EXPECT_TRUE(config.hasRoleArn());
-  EXPECT_EQ("acs:ram::123456:role/testrole", config.roleArn());
+  EXPECT_EQ("acs:ram::123456:role/testrole", config.getRoleArn());
 }
 
 TEST(ConfigTest, SetAndGetRoleName) {
@@ -153,14 +153,14 @@ TEST(ConfigTest, SetAndGetRoleName) {
   config.setRoleName("test_role_name");
   
   EXPECT_TRUE(config.hasRoleName());
-  EXPECT_EQ("test_role_name", config.roleName());
+  EXPECT_EQ("test_role_name", config.getRoleName());
 }
 
 TEST(ConfigTest, SetAndGetRoleSessionName) {
   Models::Config config;
   config.setRoleSessionName("custom_session_name");
   
-  EXPECT_EQ("custom_session_name", config.roleSessionName());
+  EXPECT_EQ("custom_session_name", config.getRoleSessionName());
 }
 
 TEST(ConfigTest, SetAndGetDurationSeconds) {
@@ -168,7 +168,7 @@ TEST(ConfigTest, SetAndGetDurationSeconds) {
   config.setDurationSeconds(7200);
   
   EXPECT_TRUE(config.hasDurationSeconds());
-  EXPECT_EQ(7200, config.durationSeconds());
+  EXPECT_EQ(7200, config.getDurationSeconds());
 }
 
 TEST(ConfigTest, SetAndGetPolicy) {
@@ -176,7 +176,7 @@ TEST(ConfigTest, SetAndGetPolicy) {
   config.setPolicy("{\"Version\":\"1\"}");
   
   EXPECT_TRUE(config.hasPolicy());
-  EXPECT_EQ("{\"Version\":\"1\"}", config.policy());
+  EXPECT_EQ("{\"Version\":\"1\"}", config.getPolicy());
 }
 
 TEST(ConfigTest, SetAndGetPublicKeyId) {
@@ -184,7 +184,7 @@ TEST(ConfigTest, SetAndGetPublicKeyId) {
   config.setPublicKeyId("public_key_id_123");
   
   EXPECT_TRUE(config.hasPublicKeyId());
-  EXPECT_EQ("public_key_id_123", config.publicKeyId());
+  EXPECT_EQ("public_key_id_123", config.getPublicKeyId());
 }
 
 TEST(ConfigTest, SetAndGetPrivateKeyFile) {
@@ -192,7 +192,7 @@ TEST(ConfigTest, SetAndGetPrivateKeyFile) {
   config.setPrivateKeyFile("/path/to/private_key.pem");
   
   EXPECT_TRUE(config.hasPrivateKeyFile());
-  EXPECT_EQ("/path/to/private_key.pem", config.privateKeyFile());
+  EXPECT_EQ("/path/to/private_key.pem", config.getPrivateKeyFile());
 }
 
 TEST(ConfigTest, SetAndGetRegionId) {
@@ -200,7 +200,7 @@ TEST(ConfigTest, SetAndGetRegionId) {
   config.setRegionId("cn-beijing");
   
   EXPECT_TRUE(config.hasRegionId());
-  EXPECT_EQ("cn-beijing", config.regionId());
+  EXPECT_EQ("cn-beijing", config.getRegionId());
 }
 
 TEST(ConfigTest, SetAndGetHost) {
@@ -208,7 +208,7 @@ TEST(ConfigTest, SetAndGetHost) {
   config.setHost("ecs.aliyuncs.com");
   
   EXPECT_TRUE(config.hasHost());
-  EXPECT_EQ("ecs.aliyuncs.com", config.host());
+  EXPECT_EQ("ecs.aliyuncs.com", config.getHost());
 }
 
 TEST(ConfigTest, SetAndGetProxy) {
@@ -216,7 +216,7 @@ TEST(ConfigTest, SetAndGetProxy) {
   config.setProxy("http://proxy.example.com:8080");
   
   EXPECT_TRUE(config.hasProxy());
-  EXPECT_EQ("http://proxy.example.com:8080", config.proxy());
+  EXPECT_EQ("http://proxy.example.com:8080", config.getProxy());
 }
 
 TEST(ConfigTest, SetAndGetStsEndpoint) {
@@ -224,7 +224,7 @@ TEST(ConfigTest, SetAndGetStsEndpoint) {
   config.setStsEndpoint("sts.cn-beijing.aliyuncs.com");
   
   EXPECT_TRUE(config.hasStsEndpoint());
-  EXPECT_EQ("sts.cn-beijing.aliyuncs.com", config.stsEndpoint());
+  EXPECT_EQ("sts.cn-beijing.aliyuncs.com", config.getStsEndpoint());
 }
 
 TEST(ConfigTest, SetAndGetOidcProviderArn) {
@@ -232,7 +232,7 @@ TEST(ConfigTest, SetAndGetOidcProviderArn) {
   config.setOidcProviderArn("acs:ram::123456:oidc-provider/test");
   
   EXPECT_TRUE(config.hasOidcProviderArn());
-  EXPECT_EQ("acs:ram::123456:oidc-provider/test", config.oidcProviderArn());
+  EXPECT_EQ("acs:ram::123456:oidc-provider/test", config.getOidcProviderArn());
 }
 
 TEST(ConfigTest, SetAndGetOidcTokenFilePath) {
@@ -240,7 +240,7 @@ TEST(ConfigTest, SetAndGetOidcTokenFilePath) {
   config.setOidcTokenFilePath("/path/to/oidc/token");
   
   EXPECT_TRUE(config.hasOidcTokenFilePath());
-  EXPECT_EQ("/path/to/oidc/token", config.oidcTokenFilePath());
+  EXPECT_EQ("/path/to/oidc/token", config.getOidcTokenFilePath());
 }
 
 TEST(ConfigTest, SetAndGetCredentialsURL) {
@@ -248,7 +248,7 @@ TEST(ConfigTest, SetAndGetCredentialsURL) {
   config.setCredentialsURL("http://credentials.example.com");
   
   EXPECT_TRUE(config.hasCredentialsURL());
-  EXPECT_EQ("http://credentials.example.com", config.credentialsURL());
+  EXPECT_EQ("http://credentials.example.com", config.getCredentialsURL());
 }
 
 TEST(ConfigTest, SetAndGetExternalId) {
@@ -256,7 +256,7 @@ TEST(ConfigTest, SetAndGetExternalId) {
   config.setExternalId("external_id_123");
   
   EXPECT_TRUE(config.hasExternalId());
-  EXPECT_EQ("external_id_123", config.externalId());
+  EXPECT_EQ("external_id_123", config.getExternalId());
 }
 
 TEST(ConfigTest, SetAndGetRoleSessionExpiration) {
@@ -264,7 +264,7 @@ TEST(ConfigTest, SetAndGetRoleSessionExpiration) {
   config.setRoleSessionExpiration(7200);
   
   EXPECT_TRUE(config.hasRoleSessionExpiration());
-  EXPECT_EQ(7200, config.roleSessionExpiration());
+  EXPECT_EQ(7200, config.getRoleSessionExpiration());
 }
 
 TEST(ConfigTest, CopyConstructor) {
@@ -274,8 +274,8 @@ TEST(ConfigTest, CopyConstructor) {
   
   Models::Config config2(config1);
   
-  EXPECT_EQ("copy_test_id", config2.accessKeyId());
-  EXPECT_EQ("copy_test_secret", config2.accessKeySecret());
+  EXPECT_EQ("copy_test_id", config2.getAccessKeyId());
+  EXPECT_EQ("copy_test_secret", config2.getAccessKeySecret());
 }
 
 TEST(ConfigTest, MoveConstructor) {
@@ -285,8 +285,8 @@ TEST(ConfigTest, MoveConstructor) {
   
   Models::Config config2(std::move(config1));
   
-  EXPECT_EQ("move_test_id", config2.accessKeyId());
-  EXPECT_EQ("move_test_secret", config2.accessKeySecret());
+  EXPECT_EQ("move_test_id", config2.getAccessKeyId());
+  EXPECT_EQ("move_test_secret", config2.getAccessKeySecret());
 }
 
 TEST(ConfigTest, ToMapAndFromMap) {
@@ -301,10 +301,10 @@ TEST(ConfigTest, ToMapAndFromMap) {
   Models::Config newConfig;
   newConfig.fromMap(json);
   
-  EXPECT_EQ("json_test_id", newConfig.accessKeyId());
-  EXPECT_EQ("json_test_secret", newConfig.accessKeySecret());
-  EXPECT_EQ("access_key", newConfig.type());
-  EXPECT_EQ(5400, newConfig.durationSeconds());
+  EXPECT_EQ("json_test_id", newConfig.getAccessKeyId());
+  EXPECT_EQ("json_test_secret", newConfig.getAccessKeySecret());
+  EXPECT_EQ("access_key", newConfig.getType());
+  EXPECT_EQ(5400, newConfig.getDurationSeconds());
 }
 
 // ==================== Provider Tests ====================
@@ -317,26 +317,26 @@ TEST(AccessKeyProviderTest, ConstructorWithConfig) {
   AccessKeyProvider provider(config);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("test_ak_id", credential.accessKeyId());
-  EXPECT_EQ("test_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("test_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("test_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 TEST(AccessKeyProviderTest, ConstructorWithParameters) {
   AccessKeyProvider provider("param_ak_id", "param_ak_secret");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("param_ak_id", credential.accessKeyId());
-  EXPECT_EQ("param_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("param_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("param_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 TEST(AccessKeyProviderTest, GetCredentialConst) {
   const AccessKeyProvider provider("const_ak_id", "const_ak_secret");
   const auto &credential = provider.getCredential();
   
-  EXPECT_EQ("const_ak_id", credential.accessKeyId());
-  EXPECT_EQ("const_ak_secret", credential.accessKeySecret());
+  EXPECT_EQ("const_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("const_ak_secret", credential.getAccessKeySecret());
 }
 
 TEST(BearerTokenProviderTest, ConstructorWithConfig) {
@@ -346,16 +346,16 @@ TEST(BearerTokenProviderTest, ConstructorWithConfig) {
   BearerTokenProvider provider(config);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("test_bearer_token", credential.bearerToken());
-  EXPECT_EQ(Constant::BEARER, credential.type());
+  EXPECT_EQ("test_bearer_token", credential.getBearerToken());
+  EXPECT_EQ(Constant::BEARER, credential.getType());
 }
 
 TEST(BearerTokenProviderTest, ConstructorWithParameter) {
   BearerTokenProvider provider("param_bearer_token");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("param_bearer_token", credential.bearerToken());
-  EXPECT_EQ(Constant::BEARER, credential.type());
+  EXPECT_EQ("param_bearer_token", credential.getBearerToken());
+  EXPECT_EQ(Constant::BEARER, credential.getType());
 }
 
 TEST(StsProviderTest, ConstructorWithConfig) {
@@ -367,20 +367,20 @@ TEST(StsProviderTest, ConstructorWithConfig) {
   StsProvider provider(config);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("sts_ak_id", credential.accessKeyId());
-  EXPECT_EQ("sts_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ("sts_token", credential.securityToken());
-  EXPECT_EQ(Constant::STS, credential.type());
+  EXPECT_EQ("sts_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("sts_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ("sts_token", credential.getSecurityToken());
+  EXPECT_EQ(Constant::STS, credential.getType());
 }
 
 TEST(StsProviderTest, ConstructorWithParameters) {
   StsProvider provider("param_sts_ak", "param_sts_secret", "param_sts_token");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("param_sts_ak", credential.accessKeyId());
-  EXPECT_EQ("param_sts_secret", credential.accessKeySecret());
-  EXPECT_EQ("param_sts_token", credential.securityToken());
-  EXPECT_EQ(Constant::STS, credential.type());
+  EXPECT_EQ("param_sts_ak", credential.getAccessKeyId());
+  EXPECT_EQ("param_sts_secret", credential.getAccessKeySecret());
+  EXPECT_EQ("param_sts_token", credential.getSecurityToken());
+  EXPECT_EQ(Constant::STS, credential.getType());
 }
 
 // ==================== Client Tests ====================
@@ -461,9 +461,9 @@ TEST(ClientTest, GetCredential) {
   Client client(config);
   auto credential = client.getCredential();
   
-  EXPECT_EQ("cred_ak_id", credential.accessKeyId());
-  EXPECT_EQ("cred_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("cred_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("cred_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 // ==================== Constant Tests ====================

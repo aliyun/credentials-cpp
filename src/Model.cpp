@@ -5,7 +5,7 @@ namespace AlibabaCloud {
 namespace Credential {
 namespace Models {
 
-std::string Config::roleSessionName() const {
+std::string Config::getRoleSessionName() const {
   if (roleSessionName_ != nullptr) {
     return *roleSessionName_;
   }

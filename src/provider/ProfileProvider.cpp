@@ -98,7 +98,7 @@ std::unique_ptr<Provider> ProfileProvider::createProvider() {
         section.get(Constant::INI_OIDC_TOKEN_FILE_PATH));
   }
 
-  auto configType = config->type();
+  auto configType = config->getType();
   if (configType.empty()) {
     throw Darabonba::Exception("The configured client type is empty");
   }
@@ -114,8 +114,8 @@ std::unique_ptr<Provider> ProfileProvider::createProvider() {
   if (configType == Constant::OIDC_ROLE_ARN) {
     return std::unique_ptr<Provider>(new OIDCRoleArnProvider(config));
   }
-  const auto &accessKeyId = config->accessKeyId(),
-             &accessKeySecret = config->accessKeySecret();
+  const auto &accessKeyId = config->getAccessKeyId(),
+             &accessKeySecret = config->getAccessKeySecret();
   if (accessKeyId.empty() || accessKeySecret.empty()) {
     return nullptr;
   }

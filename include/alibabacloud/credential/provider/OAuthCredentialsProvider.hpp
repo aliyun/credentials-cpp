@@ -17,18 +17,18 @@ class OAuthCredentialsProvider : public NeedFreshProvider,
                                   std::enable_shared_from_this<OAuthCredentialsProvider> {
 public:
   OAuthCredentialsProvider(std::shared_ptr<Models::Config> config)
-      : clientId_(config->hasAccessKeyId() && !config->accessKeyId().empty()
-                      ? config->accessKeyId()
+      : clientId_(config->hasAccessKeyId() && !config->getAccessKeyId().empty()
+                      ? config->getAccessKeyId()
                       : Darabonba::Env::getEnv(Constant::ENV_OAUTH_CLIENT_ID)),
-        clientSecret_(config->hasAccessKeySecret() && !config->accessKeySecret().empty()
-                          ? config->accessKeySecret()
+        clientSecret_(config->hasAccessKeySecret() && !config->getAccessKeySecret().empty()
+                          ? config->getAccessKeySecret()
                           : Darabonba::Env::getEnv(Constant::ENV_OAUTH_CLIENT_SECRET)),
-        tokenEndpoint_(config->hasStsEndpoint() && !config->stsEndpoint().empty()
-                           ? config->stsEndpoint()
+        tokenEndpoint_(config->hasStsEndpoint() && !config->getSTSEndpoint().empty()
+                           ? config->getSTSEndpoint()
                            : Darabonba::Env::getEnv(Constant::ENV_OAUTH_TOKEN_ENDPOINT)),
-        regionId_(config->regionId()),
-        connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
-        readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
+        regionId_(config->getRegionId()),
+        connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+        readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
     credential_.setType(Constant::OAUTH);
   }
 

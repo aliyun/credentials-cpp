@@ -64,9 +64,9 @@ TEST(IntegrationTest, ProviderToClientWorkflow) {
   
   // Create config from credential
   Models::Config config;
-  config.setType(credential.type())
-        .setAccessKeyId(credential.accessKeyId())
-        .setAccessKeySecret(credential.accessKeySecret());
+  config.setType(credential.getType())
+        .setAccessKeyId(credential.getAccessKeyId())
+        .setAccessKeySecret(credential.getAccessKeySecret());
   
   // Create client from config
   Client client(config);
@@ -87,7 +87,7 @@ TEST(IntegrationTest, MultipleProvidersSequentialAccess) {
   
   for (int i = 0; i < 10; ++i) {
     auto credential = providers[i]->getCredential();
-    EXPECT_EQ("ak_" + std::to_string(i), credential.accessKeyId());
+    EXPECT_EQ("ak_" + std::to_string(i), credential.getAccessKeyId());
   }
   
   // Cleanup
@@ -105,7 +105,7 @@ TEST(IntegrationTest, ConcurrentProviderAccess) {
     threads.emplace_back([&provider, &successCount]() {
       try {
         auto credential = provider.getCredential();
-        if (credential.accessKeyId() == "concurrent_ak") {
+        if (credential.getAccessKeyId() == "concurrent_ak") {
           successCount++;
         }
       } catch (...) {
@@ -130,14 +130,14 @@ TEST(IntegrationTest, CredentialChaining) {
   
   // Pass credential data through multiple transformations
   Models::CredentialModel cred2;
-  cred2.setAccessKeyId(cred1.accessKeyId())
-       .setAccessKeySecret(cred1.accessKeySecret())
-       .setType(cred1.type())
+  cred2.setAccessKeyId(cred1.getAccessKeyId())
+       .setAccessKeySecret(cred1.getAccessKeySecret())
+       .setType(cred1.getType())
        .setProviderName("ChainedProvider");
   
-  EXPECT_EQ(cred1.accessKeyId(), cred2.accessKeyId());
-  EXPECT_EQ(cred1.accessKeySecret(), cred2.accessKeySecret());
-  EXPECT_EQ("ChainedProvider", cred2.providerName());
+  EXPECT_EQ(cred1.getAccessKeyId(), cred2.getAccessKeyId());
+  EXPECT_EQ(cred1.getAccessKeySecret(), cred2.getAccessKeySecret());
+  EXPECT_EQ("ChainedProvider", cred2.getProviderName());
 }
 
 TEST(IntegrationTest, ConfigCloning) {
@@ -156,9 +156,9 @@ TEST(IntegrationTest, ConfigCloning) {
   
   // Verify all clones have same values
   for (const auto& clone : clones) {
-    EXPECT_EQ(original.accessKeyId(), clone.accessKeyId());
-    EXPECT_EQ(original.timeout(), clone.timeout());
-    EXPECT_EQ(original.disableIMDSv1(), clone.disableIMDSv1());
+    EXPECT_EQ(original.getAccessKeyId(), clone.getAccessKeyId());
+    EXPECT_EQ(original.getTimeout(), clone.getTimeout());
+    EXPECT_EQ(original.getDisableIMDSv1(), clone.getDisableIMDSv1());
   }
 }
 
@@ -177,7 +177,7 @@ TEST(IntegrationTest, CredentialRotation) {
     );
     
     auto credential = provider.getCredential();
-    EXPECT_EQ(credentials[currentVersion], credential.accessKeyId());
+    EXPECT_EQ(credentials[currentVersion], credential.getAccessKeyId());
     
     // Rotate every 3 iterations
     if ((i + 1) % 3 == 0 && currentVersion < 3) {
@@ -195,19 +195,19 @@ TEST(IntegrationTest, TypeConversion) {
         .setAccessKeyId("ak")
         .setAccessKeySecret("secret");
   
-  EXPECT_EQ(Constant::ACCESS_KEY, config.type());
+  EXPECT_EQ(Constant::ACCESS_KEY, config.getType());
   
   // Convert to STS
   config.setType(Constant::STS)
         .setSecurityToken("token");
   
-  EXPECT_EQ(Constant::STS, config.type());
+  EXPECT_EQ(Constant::STS, config.getType());
   
   // Convert to BEARER
   config.setType(Constant::BEARER)
         .setBearerToken("bearer");
   
-  EXPECT_EQ(Constant::BEARER, config.type());
+  EXPECT_EQ(Constant::BEARER, config.getType());
 }
 
 TEST(IntegrationTest, PartialConfigUpdate) {
@@ -220,9 +220,9 @@ TEST(IntegrationTest, PartialConfigUpdate) {
   config.setAccessKeyId("updated_ak")
         .setTimeout(8000);
   
-  EXPECT_EQ("updated_ak", config.accessKeyId());
-  EXPECT_EQ("initial_secret", config.accessKeySecret());
-  EXPECT_EQ(8000, config.timeout());
+  EXPECT_EQ("updated_ak", config.getAccessKeyId());
+  EXPECT_EQ("initial_secret", config.getAccessKeySecret());
+  EXPECT_EQ(8000, config.getTimeout());
 }
 
 TEST(IntegrationTest, JsonSerializationWorkflow) {
@@ -245,11 +245,11 @@ TEST(IntegrationTest, JsonSerializationWorkflow) {
   config2.fromMap(transferredJson);
   
   // Verify all fields preserved
-  EXPECT_EQ(config1.accessKeyId(), config2.accessKeyId());
-  EXPECT_EQ(config1.accessKeySecret(), config2.accessKeySecret());
-  EXPECT_EQ(config1.type(), config2.type());
-  EXPECT_EQ(config1.timeout(), config2.timeout());
-  EXPECT_EQ(config1.disableIMDSv1(), config2.disableIMDSv1());
+  EXPECT_EQ(config1.getAccessKeyId(), config2.getAccessKeyId());
+  EXPECT_EQ(config1.getAccessKeySecret(), config2.getAccessKeySecret());
+  EXPECT_EQ(config1.getType(), config2.getType());
+  EXPECT_EQ(config1.getTimeout(), config2.getTimeout());
+  EXPECT_EQ(config1.getDisableIMDSv1(), config2.getDisableIMDSv1());
 }
 
 TEST(IntegrationTest, ProviderChainFallback) {
@@ -265,7 +265,7 @@ TEST(IntegrationTest, ProviderChainFallback) {
   for (size_t i = 0; i < providers.size(); ++i) {
     auto credential = providers[i]->getCredential();
     EXPECT_FALSE(credential.empty());
-    EXPECT_FALSE(credential.type().empty());
+    EXPECT_FALSE(credential.getType().empty());
   }
   
   // Cleanup
@@ -291,7 +291,7 @@ TEST(IntegrationTest, ClientLifecycle) {
     // Get credential multiple times
     for (int i = 0; i < 5; ++i) {
       auto credential = client.getCredential();
-      EXPECT_EQ("lifecycle_ak", credential.accessKeyId());
+      EXPECT_EQ("lifecycle_ak", credential.getAccessKeyId());
     }
   }
   // Client destroyed, no leaks
@@ -301,12 +301,12 @@ TEST(IntegrationTest, ConfigDefaultValues) {
   Models::Config config;
   
   // Verify default values are set correctly
-  EXPECT_EQ(5000, config.timeout());
-  EXPECT_EQ(10000, config.connectTimeout());
-  EXPECT_FALSE(config.disableIMDSv1());
-  EXPECT_EQ(3600, config.durationSeconds());
-  EXPECT_EQ("cn-hangzhou", config.regionId());
-  EXPECT_EQ("sts.aliyuncs.com", config.stsEndpoint());
+  EXPECT_EQ(5000, config.getTimeout());
+  EXPECT_EQ(10000, config.getConnectTimeout());
+  EXPECT_FALSE(config.getDisableIMDSv1());
+  EXPECT_EQ(3600, config.getDurationSeconds());
+  EXPECT_EQ("cn-hangzhou", config.getRegionId());
+  EXPECT_EQ("sts.aliyuncs.com", config.getStsEndpoint());
 }
 
 TEST(IntegrationTest, ConfigDefaultValuesPreservedAfterPartialUpdate) {
@@ -316,9 +316,9 @@ TEST(IntegrationTest, ConfigDefaultValuesPreservedAfterPartialUpdate) {
   config.setAccessKeyId("test_ak");
   
   // Default values should still be there
-  EXPECT_EQ(5000, config.timeout());
-  EXPECT_EQ(10000, config.connectTimeout());
-  EXPECT_EQ(3600, config.durationSeconds());
+  EXPECT_EQ(5000, config.getTimeout());
+  EXPECT_EQ(10000, config.getConnectTimeout());
+  EXPECT_EQ(3600, config.getDurationSeconds());
 }
 
 TEST(IntegrationTest, MultipleCredentialTypesInSequence) {
@@ -328,21 +328,21 @@ TEST(IntegrationTest, MultipleCredentialTypesInSequence) {
   {
     AccessKeyProvider provider("ak1", "secret1");
     auto cred = provider.getCredential();
-    EXPECT_EQ(Constant::ACCESS_KEY, cred.type());
+    EXPECT_EQ(Constant::ACCESS_KEY, cred.getType());
   }
   
   // 2. Bearer Token
   {
     BearerTokenProvider provider("token1");
     auto cred = provider.getCredential();
-    EXPECT_EQ(Constant::BEARER, cred.type());
+    EXPECT_EQ(Constant::BEARER, cred.getType());
   }
   
   // 3. STS
   {
     StsProvider provider("sts_ak", "sts_secret", "sts_token");
     auto cred = provider.getCredential();
-    EXPECT_EQ(Constant::STS, cred.type());
+    EXPECT_EQ(Constant::STS, cred.getType());
   }
 }
 
@@ -411,8 +411,8 @@ TEST(IntegrationTest, ConfigChainedSetters) {
                        .setDurationSeconds(7200);
   
   // Result should be the same object
-  EXPECT_EQ("chain_ak", result.accessKeyId());
-  EXPECT_EQ(8000, result.timeout());
+  EXPECT_EQ("chain_ak", result.getAccessKeyId());
+  EXPECT_EQ(8000, result.getTimeout());
 }
 
 TEST(IntegrationTest, CredentialModelChainedSetters) {
@@ -425,6 +425,6 @@ TEST(IntegrationTest, CredentialModelChainedSetters) {
                       .setBearerToken("model_token")
                       .setSecurityToken("model_sec_token");
   
-  EXPECT_EQ("model_ak", result.accessKeyId());
-  EXPECT_EQ("model_provider", result.providerName());
+  EXPECT_EQ("model_ak", result.getAccessKeyId());
+  EXPECT_EQ("model_provider", result.getProviderName());
 }

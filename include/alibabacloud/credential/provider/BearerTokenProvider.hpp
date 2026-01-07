@@ -13,7 +13,7 @@ namespace Credential {
 class BearerTokenProvider : public Provider {
 public:
   BearerTokenProvider(std::shared_ptr<Models::Config> config) {
-    credential_.setBearerToken(config->bearerToken()).setType(Constant::BEARER);
+    credential_.setBearerToken(config->getBearerToken()).setType(Constant::BEARER);
   }
   BearerTokenProvider(const std::string &bearToken) {
     credential_.setBearerToken(bearToken).setType(Constant::BEARER);

@@ -26,9 +26,9 @@ TEST(ChainProviderTest, SingleProviderChain) {
   ChainProvider provider(providers);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("chain_ak", credential.accessKeyId());
-  EXPECT_EQ("chain_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("chain_ak", credential.getAccessKeyId());
+  EXPECT_EQ("chain_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 TEST(ChainProviderTest, MultipleProvidersChain) {
@@ -42,8 +42,8 @@ TEST(ChainProviderTest, MultipleProvidersChain) {
   auto credential = provider.getCredential();
   
   // Should get credential from first provider
-  EXPECT_EQ("first_ak", credential.accessKeyId());
-  EXPECT_EQ("first_secret", credential.accessKeySecret());
+  EXPECT_EQ("first_ak", credential.getAccessKeyId());
+  EXPECT_EQ("first_secret", credential.getAccessKeySecret());
 }
 
 TEST(ChainProviderTest, FallbackToSecondProvider) {
@@ -60,8 +60,8 @@ TEST(ChainProviderTest, FallbackToSecondProvider) {
   ChainProvider provider(providers);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("fallback_ak", credential.accessKeyId());
-  EXPECT_EQ("fallback_secret", credential.accessKeySecret());
+  EXPECT_EQ("fallback_ak", credential.getAccessKeyId());
+  EXPECT_EQ("fallback_secret", credential.getAccessKeySecret());
 }
 
 TEST(ChainProviderTest, ConstructorWithMoveSemantics) {
@@ -71,7 +71,7 @@ TEST(ChainProviderTest, ConstructorWithMoveSemantics) {
   ChainProvider provider(std::move(providers));
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("move_ak", credential.accessKeyId());
+  EXPECT_EQ("move_ak", credential.getAccessKeyId());
 }
 
 TEST(ChainProviderTest, ChainWithDifferentProviderTypes) {
@@ -96,8 +96,8 @@ TEST(ChainProviderTest, ConstGetCredential) {
   const ChainProvider provider(providers);
   const auto &credential = provider.getCredential();
   
-  EXPECT_EQ("const_ak", credential.accessKeyId());
-  EXPECT_EQ("const_secret", credential.accessKeySecret());
+  EXPECT_EQ("const_ak", credential.getAccessKeyId());
+  EXPECT_EQ("const_secret", credential.getAccessKeySecret());
 }
 
 // Test chain priority - earlier providers should be tried first
@@ -113,8 +113,8 @@ TEST(ChainProviderTest, PriorityOrder) {
   auto credential = provider.getCredential();
   
   // Should always get from first provider
-  EXPECT_EQ("first_provider", credential.accessKeyId());
-  EXPECT_EQ("secret1", credential.accessKeySecret());
+  EXPECT_EQ("first_provider", credential.getAccessKeyId());
+  EXPECT_EQ("secret1", credential.getAccessKeySecret());
 }
 
 // Test that chain stops at first successful provider
@@ -128,6 +128,6 @@ TEST(ChainProviderTest, StopsAtFirstSuccess) {
   auto credential = provider.getCredential();
   
   // Should get AccessKey credential, not Bearer
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
   EXPECT_FALSE(credential.hasBearerToken());
 }

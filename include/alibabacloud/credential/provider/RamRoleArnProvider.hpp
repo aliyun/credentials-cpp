@@ -16,25 +16,25 @@ class RamRoleArnProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<RamRoleArnProvider> {
 public:
   RamRoleArnProvider(std::shared_ptr<Models::Config> config)
-      : roleArn_(config->roleArn()),
-        roleSessionName_(config->roleSessionName()),
+      : roleArn_(config->getRoleArn()),
+        roleSessionName_(config->getRoleSessionName()),
         policy_(config->hasPolicy()
-                    ? std::make_shared<std::string>(config->policy())
+                    ? std::make_shared<std::string>(config->getPolicy())
                     : nullptr),
-        durationSeconds_(config->durationSeconds()), 
-        regionId_(config->hasStsRegionId() && !config->stsRegionId().empty() 
-                      ? config->stsRegionId()
+        durationSeconds_(config->getDurationSeconds()), 
+        regionId_(config->hasStsRegionId() && !config->getStsRegionId().empty() 
+                      ? config->getStsRegionId()
                       : (Darabonba::Env::getEnv(Constant::ENV_STS_REGION).empty()
-                             ? config->regionId()
+                             ? config->getRegionId()
                              : Darabonba::Env::getEnv(Constant::ENV_STS_REGION))),
-        stsEndpoint_(config->stsEndpoint()),
+        stsEndpoint_(config->getSTSEndpoint()),
         enableVpc_(config->hasEnableVpc()
-                       ? config->enableVpc()
+                       ? config->getEnableVpc()
                        : (Darabonba::Env::getEnv(Constant::ENV_VPC_ENDPOINT_ENABLED) == "true")),
-        connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
-        readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
-    credential_.setAccessKeyId(config->accessKeyId())
-        .setAccessKeySecret(config->accessKeySecret())
+        connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+        readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
+    credential_.setAccessKeyId(config->getAccessKeyId())
+        .setAccessKeySecret(config->getAccessKeySecret())
         .setType(Constant::RAM_ROLE_ARN);
   }
 

@@ -44,7 +44,7 @@ Client::makeProvider(std::shared_ptr<Models::Config> config) {
     return std::make_shared<DefaultProvider>();
   }
 
-  const auto type = config->type();
+  const auto type = config->getType();
 
   if (type == Constant::ACCESS_KEY) {
     const auto p = new AccessKeyProvider(config);

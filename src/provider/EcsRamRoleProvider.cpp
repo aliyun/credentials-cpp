@@ -30,13 +30,13 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     std::shared_ptr<Models::Config> config, bool asyncUpdateEnabled,
     StaleValueBehavior behavior, std::shared_ptr<PrefetchStrategy> strategy)
     : RefreshableProvider(behavior, strategy),
-      roleName_(config->hasRoleName() ? config->roleName() : ""),
-      disableIMDSv1_(config->hasDisableIMDSv1() ? config->disableIMDSv1()
+      roleName_(config->hasRoleName() ? config->getRoleName() : ""),
+      disableIMDSv1_(config->hasDisableIMDSv1() ? config->getDisableIMDSv1()
                                                 : false),
       shouldRefresh_(false), asyncUpdateEnabled_(asyncUpdateEnabled),
-      connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout()
+      connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout()
                                                   : DEFAULT_CONNECT_TIMEOUT),
-      readTimeout_(config->hasTimeout() ? config->timeout()
+      readTimeout_(config->hasTimeout() ? config->getTimeout()
                                         : DEFAULT_READ_TIMEOUT) {
 
   // 检查是否禁用了 IMDS（对应 Python 的 environment_ecs_metadata_disabled

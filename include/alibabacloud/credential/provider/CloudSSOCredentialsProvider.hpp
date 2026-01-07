@@ -17,12 +17,12 @@ class CloudSSOCredentialsProvider : public NeedFreshProvider,
                                      std::enable_shared_from_this<CloudSSOCredentialsProvider> {
 public:
   CloudSSOCredentialsProvider(std::shared_ptr<Models::Config> config)
-      : roleName_(config->hasRoleName() && !config->roleName().empty()
-                      ? config->roleName()
+      : roleName_(config->hasRoleName() && !config->getRoleName().empty()
+                      ? config->getRoleName()
                       : Darabonba::Env::getEnv(Constant::ENV_CLOUD_SSO_ROLE_NAME)),
-        regionId_(config->regionId()),
-        connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
-        readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
+        regionId_(config->getRegionId()),
+        connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+        readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
     credential_.setType(Constant::CLOUD_SSO);
   }
 

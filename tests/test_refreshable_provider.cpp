@@ -100,9 +100,9 @@ TEST(RefreshableProviderTest, FirstGetCredentialTriggersRefresh) {
   auto credential = provider.getCredential();
   
   EXPECT_EQ(1, provider.getRefreshCount());
-  EXPECT_EQ("test_ak_1", credential.accessKeyId());
-  EXPECT_EQ("test_secret_1", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("test_ak_1", credential.getAccessKeyId());
+  EXPECT_EQ("test_secret_1", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 TEST(RefreshableProviderTest, SecondGetCredentialUsesCache) {
@@ -113,7 +113,7 @@ TEST(RefreshableProviderTest, SecondGetCredentialUsesCache) {
   
   // Should only refresh once
   EXPECT_EQ(1, provider.getRefreshCount());
-  EXPECT_EQ(credential1.accessKeyId(), credential2.accessKeyId());
+  EXPECT_EQ(credential1.getAccessKeyId(), credential2.getAccessKeyId());
 }
 
 TEST(RefreshableProviderTest, ExpiredCredentialTriggersRefresh) {
@@ -176,7 +176,7 @@ TEST(RefreshableProviderTest, RefreshFailureWithValidCacheReturnsCache) {
   
   // Get again - should return cached credential
   auto credential2 = provider.getCredential();
-  EXPECT_EQ(credential1.accessKeyId(), credential2.accessKeyId());
+  EXPECT_EQ(credential1.getAccessKeyId(), credential2.getAccessKeyId());
 }
 
 TEST(RefreshableProviderTest, StrictBehaviorWithExpiredCacheThrows) {
@@ -216,7 +216,7 @@ TEST(RefreshableProviderTest, AllowBehaviorWithExpiredCacheReturnsStale) {
   // Allow mode should return stale value
   EXPECT_NO_THROW({
     auto credential2 = provider.getCredential();
-    EXPECT_EQ(credential1.accessKeyId(), credential2.accessKeyId());
+    EXPECT_EQ(credential1.getAccessKeyId(), credential2.getAccessKeyId());
   });
 }
 
@@ -225,7 +225,7 @@ TEST(RefreshableProviderTest, ConstGetCredential) {
   
   EXPECT_NO_THROW({
     const auto& credential = provider.getCredential();
-    EXPECT_FALSE(credential.accessKeyId().empty());
+    EXPECT_FALSE(credential.getAccessKeyId().empty());
   });
 }
 
@@ -239,7 +239,7 @@ TEST(RefreshableProviderTest, ConcurrentAccess) {
       for (int j = 0; j < 5; ++j) {
         EXPECT_NO_THROW({
           auto credential = provider.getCredential();
-          EXPECT_FALSE(credential.accessKeyId().empty());
+          EXPECT_FALSE(credential.getAccessKeyId().empty());
         });
       }
     });
@@ -318,7 +318,7 @@ TEST(RefreshableProviderTest, RefreshResultStructure) {
   int64_t now = static_cast<int64_t>(std::time(nullptr));
   RefreshResult result(credential, now + 3600, now + 3420);
   
-  EXPECT_EQ("test_ak", result.credential.accessKeyId());
+  EXPECT_EQ("test_ak", result.credential.getAccessKeyId());
   EXPECT_EQ(now + 3600, result.staleTime);
   EXPECT_EQ(now + 3420, result.prefetchTime);
 }

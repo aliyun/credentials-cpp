@@ -14,8 +14,8 @@ namespace Credential {
 class AccessKeyProvider : public Provider {
 public:
   AccessKeyProvider(std::shared_ptr<Models::Config> config) {
-    credential_.setAccessKeyId(config->accessKeyId())
-        .setAccessKeySecret(config->accessKeySecret())
+    credential_.setAccessKeyId(config->getAccessKeyId())
+        .setAccessKeySecret(config->getAccessKeySecret())
         .setType(Constant::ACCESS_KEY);
   }
   AccessKeyProvider(const std::string &accessKeyId,

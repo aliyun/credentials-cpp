@@ -14,7 +14,7 @@ bool RsaKeyPairProvider::refreshCredential() const {
       {"Format", "JSON"},
       {"Version", "2015-04-01"},
       {"DurationSeconds", std::to_string(durationSeconds_)},
-      {"AccessKeyId", credential_.accessKeyId()},
+      {"AccessKeyId", credential_.getAccessKeyId()},
       {"RegionId", regionId_},
       {"SignatureMethod", "HMAC-SHA1"},
       {"SignatureVersion", "1.0"},
@@ -26,7 +26,7 @@ bool RsaKeyPairProvider::refreshCredential() const {
   std::string stringToSign = "GET&%2F&" + std::string(query);
   std::string signature = Darabonba::Encode::Encoder::toString(
       Darabonba::Signature::Signer::HmacSHA1Sign(
-          stringToSign, credential_.accessKeySecret()));
+          stringToSign, credential_.getAccessKeySecret()));
   query.emplace("Signature", signature);
 
   // 使用 getNewRequest 创建带 User-Agent 的请求（对应 Python SDK 的

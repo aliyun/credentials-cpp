@@ -82,9 +82,9 @@ TEST(ClientTest, GetCredential) {
   Client client(config);
   auto credential = client.getCredential();
   
-  EXPECT_EQ("cred_ak_id", credential.accessKeyId());
-  EXPECT_EQ("cred_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("cred_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("cred_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 // Test ECS RAM Role client
@@ -272,8 +272,8 @@ TEST(ClientTest, GetCredentialReturnsACopy) {
   auto credential1 = client.getCredential();
   auto credential2 = client.getCredential();
   
-  EXPECT_EQ(credential1.accessKeyId(), credential2.accessKeyId());
-  EXPECT_EQ(credential1.accessKeySecret(), credential2.accessKeySecret());
+  EXPECT_EQ(credential1.getAccessKeyId(), credential2.getAccessKeyId());
+  EXPECT_EQ(credential1.getAccessKeySecret(), credential2.getAccessKeySecret());
 }
 
 // Test unknown type defaults to DefaultProvider

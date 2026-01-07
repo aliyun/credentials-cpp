@@ -11,13 +11,13 @@ TEST(ConfigTest, SetAndGetTimeout) {
   config.setTimeout(10000);
   
   EXPECT_TRUE(config.hasTimeout());
-  EXPECT_EQ(10000, config.timeout());
+  EXPECT_EQ(10000, config.getTimeout());
 }
 
 TEST(ConfigTest, DefaultTimeout) {
   Models::Config config;
   // Default timeout should be 5000ms
-  EXPECT_EQ(5000, config.timeout());
+  EXPECT_EQ(5000, config.getTimeout());
 }
 
 TEST(ConfigTest, SetAndGetConnectTimeout) {
@@ -25,13 +25,13 @@ TEST(ConfigTest, SetAndGetConnectTimeout) {
   config.setConnectTimeout(15000);
   
   EXPECT_TRUE(config.hasConnectTimeout());
-  EXPECT_EQ(15000, config.connectTimeout());
+  EXPECT_EQ(15000, config.getConnectTimeout());
 }
 
 TEST(ConfigTest, DefaultConnectTimeout) {
   Models::Config config;
   // Default connect timeout should be 10000ms
-  EXPECT_EQ(10000, config.connectTimeout());
+  EXPECT_EQ(10000, config.getConnectTimeout());
 }
 
 TEST(ConfigTest, SetAndGetDisableIMDSv1) {
@@ -39,13 +39,13 @@ TEST(ConfigTest, SetAndGetDisableIMDSv1) {
   config.setDisableIMDSv1(true);
   
   EXPECT_TRUE(config.hasDisableIMDSv1());
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_TRUE(config.getDisableIMDSv1());
 }
 
 TEST(ConfigTest, DefaultDisableIMDSv1) {
   Models::Config config;
   // Default should be false (IMDSv1 enabled)
-  EXPECT_FALSE(config.disableIMDSv1());
+  EXPECT_FALSE(config.getDisableIMDSv1());
 }
 
 TEST(ConfigTest, SetDisableIMDSv1False) {
@@ -53,7 +53,7 @@ TEST(ConfigTest, SetDisableIMDSv1False) {
   config.setDisableIMDSv1(false);
   
   EXPECT_TRUE(config.hasDisableIMDSv1());
-  EXPECT_FALSE(config.disableIMDSv1());
+  EXPECT_FALSE(config.getDisableIMDSv1());
 }
 
 TEST(ConfigTest, AllNewFieldsInToMap) {
@@ -85,11 +85,11 @@ TEST(ConfigTest, AllNewFieldsFromMap) {
   Models::Config config;
   config.fromMap(json);
   
-  EXPECT_EQ(7000, config.timeout());
-  EXPECT_EQ(14000, config.connectTimeout());
-  EXPECT_TRUE(config.disableIMDSv1());
-  EXPECT_EQ("from_json_ak", config.accessKeyId());
-  EXPECT_EQ("from_json_type", config.type());
+  EXPECT_EQ(7000, config.getTimeout());
+  EXPECT_EQ(14000, config.getConnectTimeout());
+  EXPECT_TRUE(config.getDisableIMDSv1());
+  EXPECT_EQ("from_json_ak", config.getAccessKeyId());
+  EXPECT_EQ("from_json_type", config.getType());
 }
 
 TEST(ConfigTest, EmptyCheckWithNewFields) {
@@ -138,12 +138,12 @@ TEST(CredentialModelTest, ChainedSetter) {
        .setType("chain_type")
        .setProviderName("chain_provider");
   
-  EXPECT_EQ("chain_ak", model.accessKeyId());
-  EXPECT_EQ("chain_secret", model.accessKeySecret());
-  EXPECT_EQ("chain_token", model.securityToken());
-  EXPECT_EQ("chain_bearer", model.bearerToken());
-  EXPECT_EQ("chain_type", model.type());
-  EXPECT_EQ("chain_provider", model.providerName());
+  EXPECT_EQ("chain_ak", model.getAccessKeyId());
+  EXPECT_EQ("chain_secret", model.getAccessKeySecret());
+  EXPECT_EQ("chain_token", model.getSecurityToken());
+  EXPECT_EQ("chain_bearer", model.getBearerToken());
+  EXPECT_EQ("chain_type", model.getType());
+  EXPECT_EQ("chain_provider", model.getProviderName());
 }
 
 TEST(CredentialModelTest, CopyConstructor) {
@@ -153,8 +153,8 @@ TEST(CredentialModelTest, CopyConstructor) {
   
   Models::CredentialModel model2(model1);
   
-  EXPECT_EQ("copy_ak", model2.accessKeyId());
-  EXPECT_EQ("copy_secret", model2.accessKeySecret());
+  EXPECT_EQ("copy_ak", model2.getAccessKeyId());
+  EXPECT_EQ("copy_secret", model2.getAccessKeySecret());
 }
 
 TEST(CredentialModelTest, MoveConstructor) {
@@ -164,8 +164,8 @@ TEST(CredentialModelTest, MoveConstructor) {
   
   Models::CredentialModel model2(std::move(model1));
   
-  EXPECT_EQ("move_ak", model2.accessKeyId());
-  EXPECT_EQ("move_secret", model2.accessKeySecret());
+  EXPECT_EQ("move_ak", model2.getAccessKeyId());
+  EXPECT_EQ("move_secret", model2.getAccessKeySecret());
 }
 
 TEST(CredentialModelTest, ConstructorFromJson) {
@@ -176,9 +176,9 @@ TEST(CredentialModelTest, ConstructorFromJson) {
   
   Models::CredentialModel model(json);
   
-  EXPECT_EQ("json_ak", model.accessKeyId());
-  EXPECT_EQ("json_secret", model.accessKeySecret());
-  EXPECT_EQ("json_type", model.type());
+  EXPECT_EQ("json_ak", model.getAccessKeyId());
+  EXPECT_EQ("json_secret", model.getAccessKeySecret());
+  EXPECT_EQ("json_type", model.getType());
 }
 
 TEST(CredentialModelTest, ValidateMethod) {
@@ -250,30 +250,30 @@ TEST(ConfigTest, AllFieldsChainedSetter) {
         .setConnectTimeout(11000)
         .setDisableIMDSv1(true);
   
-  EXPECT_EQ("full_ak", config.accessKeyId());
-  EXPECT_EQ("full_secret", config.accessKeySecret());
-  EXPECT_EQ("full_bearer", config.bearerToken());
-  EXPECT_EQ("full_token", config.securityToken());
-  EXPECT_EQ("full_type", config.type());
-  EXPECT_EQ("acs:ram::123:role/test", config.roleArn());
-  EXPECT_EQ("full_role", config.roleName());
-  EXPECT_EQ("full_session", config.roleSessionName());
-  EXPECT_EQ(7200, config.durationSeconds());
-  EXPECT_EQ("{}", config.policy());
-  EXPECT_EQ("cn-beijing", config.regionId());
-  EXPECT_EQ("sts.cn-beijing.aliyuncs.com", config.stsEndpoint());
-  EXPECT_EQ("full_public", config.publicKeyId());
-  EXPECT_EQ("/path/to/key", config.privateKeyFile());
-  EXPECT_EQ("acs:ram::123:oidc", config.oidcProviderArn());
-  EXPECT_EQ("/path/to/token", config.oidcTokenFilePath());
-  EXPECT_EQ("http://example.com", config.credentialsURL());
-  EXPECT_EQ("ext_id", config.externalId());
-  EXPECT_EQ("host.example.com", config.host());
-  EXPECT_EQ("http://proxy:8080", config.proxy());
-  EXPECT_EQ(3600, config.roleSessionExpiration());
-  EXPECT_EQ(6000, config.timeout());
-  EXPECT_EQ(11000, config.connectTimeout());
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_EQ("full_ak", config.getAccessKeyId());
+  EXPECT_EQ("full_secret", config.getAccessKeySecret());
+  EXPECT_EQ("full_bearer", config.getBearerToken());
+  EXPECT_EQ("full_token", config.getSecurityToken());
+  EXPECT_EQ("full_type", config.getType());
+  EXPECT_EQ("acs:ram::123:role/test", config.getRoleArn());
+  EXPECT_EQ("full_role", config.getRoleName());
+  EXPECT_EQ("full_session", config.getRoleSessionName());
+  EXPECT_EQ(7200, config.getDurationSeconds());
+  EXPECT_EQ("{}", config.getPolicy());
+  EXPECT_EQ("cn-beijing", config.getRegionId());
+  EXPECT_EQ("sts.cn-beijing.aliyuncs.com", config.getStsEndpoint());
+  EXPECT_EQ("full_public", config.getPublicKeyId());
+  EXPECT_EQ("/path/to/key", config.getPrivateKeyFile());
+  EXPECT_EQ("acs:ram::123:oidc", config.getOidcProviderArn());
+  EXPECT_EQ("/path/to/token", config.getOidcTokenFilePath());
+  EXPECT_EQ("http://example.com", config.getCredentialsURL());
+  EXPECT_EQ("ext_id", config.getExternalId());
+  EXPECT_EQ("host.example.com", config.getHost());
+  EXPECT_EQ("http://proxy:8080", config.getProxy());
+  EXPECT_EQ(3600, config.getRoleSessionExpiration());
+  EXPECT_EQ(6000, config.getTimeout());
+  EXPECT_EQ(11000, config.getConnectTimeout());
+  EXPECT_TRUE(config.getDisableIMDSv1());
 }
 
 TEST(ConfigTest, CopyAssignment) {
@@ -284,8 +284,8 @@ TEST(ConfigTest, CopyAssignment) {
   Models::Config config2;
   config2 = config1;
   
-  EXPECT_EQ("assign_ak", config2.accessKeyId());
-  EXPECT_EQ("assign_secret", config2.accessKeySecret());
+  EXPECT_EQ("assign_ak", config2.getAccessKeyId());
+  EXPECT_EQ("assign_secret", config2.getAccessKeySecret());
 }
 
 TEST(ConfigTest, MoveAssignment) {
@@ -296,8 +296,8 @@ TEST(ConfigTest, MoveAssignment) {
   Models::Config config2;
   config2 = std::move(config1);
   
-  EXPECT_EQ("move_assign_ak", config2.accessKeyId());
-  EXPECT_EQ("move_assign_secret", config2.accessKeySecret());
+  EXPECT_EQ("move_assign_ak", config2.getAccessKeyId());
+  EXPECT_EQ("move_assign_secret", config2.getAccessKeySecret());
 }
 
 TEST(ConfigTest, RValueSetters) {
@@ -310,7 +310,7 @@ TEST(ConfigTest, RValueSetters) {
         .setAccessKeySecret(std::move(secret))
         .setType(std::move(type));
   
-  EXPECT_EQ("rvalue_ak", config.accessKeyId());
-  EXPECT_EQ("rvalue_secret", config.accessKeySecret());
-  EXPECT_EQ("rvalue_type", config.type());
+  EXPECT_EQ("rvalue_ak", config.getAccessKeyId());
+  EXPECT_EQ("rvalue_secret", config.getAccessKeySecret());
+  EXPECT_EQ("rvalue_type", config.getType());
 }

@@ -55,16 +55,16 @@ public:
 
   // Deprecated: use getCredentials() to avoid AK/SK misalignment due to refresh
   std::string getAccessKeyId() {
-    return provider_->getCredential().accessKeyId();
+    return provider_->getCredential().getAccessKeyId();
   };
   std::string getAccessKeySecret() {
-    return provider_->getCredential().accessKeySecret();
+    return provider_->getCredential().getAccessKeySecret();
   }
   std::string getSecurityToken() {
-    return provider_->getCredential().securityToken();
+    return provider_->getCredential().getSecurityToken();
   }
   std::string getBearerToken() {
-    return provider_->getCredential().bearerToken();
+    return provider_->getCredential().getBearerToken();
   }
   std::string getType() { return provider_->getProviderName(); }
 

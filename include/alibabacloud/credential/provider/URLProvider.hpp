@@ -15,9 +15,9 @@ class URLProvider : public NeedFreshProvider,
                     std::enable_shared_from_this<URLProvider> {
 public:
 
-  URLProvider(std::shared_ptr<Models::Config> config) : url_(config->credentialsURL()),
-      connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
-      readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
+  URLProvider(std::shared_ptr<Models::Config> config) : url_(config->getCredentialsURL()),
+      connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+      readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
     credential_.setType(Constant::URL_STS);
   }
 

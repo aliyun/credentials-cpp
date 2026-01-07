@@ -4,7 +4,9 @@ runtime/
 # Google Test-generated files
 DartConfiguration.tcl
 *.pc
-
+*.bak
+*.bak2
+*.bak3
 # Created by https://www.gitignore.io/api/osx,c++,vim,linux,emacs,windows,sublimetext,visualstudiocode,cmake
 
 ### C++ ###

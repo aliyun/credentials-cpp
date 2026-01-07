@@ -14,10 +14,10 @@ class RsaKeyPairProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<RsaKeyPairProvider> {
 public:
   RsaKeyPairProvider(std::shared_ptr<Models::Config> config)
-      : durationSeconds_(config->durationSeconds()),
-        regionId_(config->regionId()), stsEndpoint_(config->stsEndpoint()) {
-    credential_.setAccessKeyId(config->accessKeyId())
-        .setAccessKeySecret(config->accessKeySecret())
+      : durationSeconds_(config->getDurationSeconds()),
+        regionId_(config->getRegionId()), stsEndpoint_(config->getSTSEndpoint()) {
+    credential_.setAccessKeyId(config->getAccessKeyId())
+        .setAccessKeySecret(config->getAccessKeySecret())
         .setType(Constant::RSA_KEY_PAIR);
   }
   RsaKeyPairProvider(const std::string &accessKeyId,

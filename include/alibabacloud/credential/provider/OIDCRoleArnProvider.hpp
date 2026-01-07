@@ -15,35 +15,35 @@ class OIDCRoleArnProvider : public NeedFreshProvider,
                            std::enable_shared_from_this<OIDCRoleArnProvider>{
 public:
   OIDCRoleArnProvider(std::shared_ptr<Models::Config> config)
-      : roleArn_(config->hasRoleArn() && !config->roleArn().empty()
-                     ? config->roleArn()
+      : roleArn_(config->hasRoleArn() && !config->getRoleArn().empty()
+                     ? config->getRoleArn()
                      : Darabonba::Env::getEnv(Constant::ENV_ROLE_ARN)),
-        oidcProviderArn_(config->hasOidcProviderArn() && !config->oidcProviderArn().empty()
-                             ? config->oidcProviderArn()
+        oidcProviderArn_(config->hasOidcProviderArn() && !config->getOidcProviderArn().empty()
+                             ? config->getOidcProviderArn()
                              : Darabonba::Env::getEnv(Constant::ENV_OIDC_PROVIDER_ARN)),
-        oidcTokenFilePath_(config->hasOidcTokenFilePath() && !config->oidcTokenFilePath().empty()
-                               ? config->oidcTokenFilePath()
+        oidcTokenFilePath_(config->hasOidcTokenFilePath() && !config->getOidcTokenFilePath().empty()
+                               ? config->getOidcTokenFilePath()
                                : Darabonba::Env::getEnv(Constant::ENV_OIDC_TOKEN_FILE)),
-        roleSessionName_(config->hasRoleSessionName() && !config->roleSessionName().empty()
-                             ? config->roleSessionName()
+        roleSessionName_(config->hasRoleSessionName() && !config->getRoleSessionName().empty()
+                             ? config->getRoleSessionName()
                              : (Darabonba::Env::getEnv(Constant::ENV_ROLE_SESSION_NAME).empty()
                                     ? "defaultSessionName"
                                     : Darabonba::Env::getEnv(Constant::ENV_ROLE_SESSION_NAME))),
         policy_(config->hasPolicy()
-                    ? std::make_shared<std::string>(config->policy())
+                    ? std::make_shared<std::string>(config->getPolicy())
                     : nullptr),
-        durationSeconds_(config->durationSeconds()),
-        regionId_(config->hasStsRegionId() && !config->stsRegionId().empty()
-                      ? config->stsRegionId()
+        durationSeconds_(config->getDurationSeconds()),
+        regionId_(config->hasStsRegionId() && !config->getStsRegionId().empty()
+                      ? config->getStsRegionId()
                       : (Darabonba::Env::getEnv(Constant::ENV_STS_REGION).empty()
-                             ? config->regionId()
+                             ? config->getRegionId()
                              : Darabonba::Env::getEnv(Constant::ENV_STS_REGION))),
-        stsEndpoint_(config->stsEndpoint()),
+        stsEndpoint_(config->getSTSEndpoint()),
         enableVpc_(config->hasEnableVpc()
-                       ? config->enableVpc()
+                       ? config->getEnableVpc()
                        : (Darabonba::Env::getEnv(Constant::ENV_VPC_ENDPOINT_ENABLED) == "true")),
-        connectTimeout_(config->hasConnectTimeout() ? config->connectTimeout() : 10000),
-        readTimeout_(config->hasTimeout() ? config->timeout() : 5000) {
+        connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+        readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
     credential_.setType(Constant::OIDC_ROLE_ARN);
   }
 

@@ -78,9 +78,9 @@ TEST_F(EnvironmentVariableProviderTest, AccessKeyFromEnvironment) {
   EnvironmentVariableProvider provider;
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("env_ak_id", credential.accessKeyId());
-  EXPECT_EQ("env_ak_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("env_ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("env_ak_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
   EXPECT_FALSE(credential.hasSecurityToken());
 }
 
@@ -92,10 +92,10 @@ TEST_F(EnvironmentVariableProviderTest, StsFromEnvironment) {
   EnvironmentVariableProvider provider;
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("env_sts_ak", credential.accessKeyId());
-  EXPECT_EQ("env_sts_secret", credential.accessKeySecret());
-  EXPECT_EQ("env_sts_token", credential.securityToken());
-  EXPECT_EQ(Constant::STS, credential.type());
+  EXPECT_EQ("env_sts_ak", credential.getAccessKeyId());
+  EXPECT_EQ("env_sts_secret", credential.getAccessKeySecret());
+  EXPECT_EQ("env_sts_token", credential.getSecurityToken());
+  EXPECT_EQ(Constant::STS, credential.getType());
 }
 
 TEST_F(EnvironmentVariableProviderTest, MissingAccessKeyId) {
@@ -151,7 +151,7 @@ TEST_F(EnvironmentVariableProviderTest, SecurityTokenOptional) {
   auto credential = provider.getCredential();
   
   // Empty security token should result in AccessKey type
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 // ==================== DefaultProvider Tests ====================
@@ -229,9 +229,9 @@ TEST_F(DefaultProviderTest, UsesEnvironmentVariableProvider) {
   DefaultProvider provider;
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("default_env_ak", credential.accessKeyId());
-  EXPECT_EQ("default_env_secret", credential.accessKeySecret());
-  EXPECT_EQ(Constant::ACCESS_KEY, credential.type());
+  EXPECT_EQ("default_env_ak", credential.getAccessKeyId());
+  EXPECT_EQ("default_env_secret", credential.getAccessKeySecret());
+  EXPECT_EQ(Constant::ACCESS_KEY, credential.getType());
 }
 
 TEST_F(DefaultProviderTest, EcsMetadataDisabled) {
@@ -249,7 +249,7 @@ TEST_F(DefaultProviderTest, EcsMetadataDisabled) {
   auto credential = provider.getCredential();
   
   // Should get credential from env, not ECS
-  EXPECT_EQ("fallback_ak", credential.accessKeyId());
+  EXPECT_EQ("fallback_ak", credential.getAccessKeyId());
 }
 
 TEST_F(DefaultProviderTest, EcsMetadataNotDisabledByDefault) {
@@ -273,7 +273,7 @@ TEST_F(DefaultProviderTest, EcsMetadataDisabledCaseInsensitive) {
   DefaultProvider provider;
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("test_ak", credential.accessKeyId());
+  EXPECT_EQ("test_ak", credential.getAccessKeyId());
   
   // Test "TRUE" variant
   set_env("ALIBABA_CLOUD_ECS_METADATA_DISABLED", "TRUE");
@@ -281,7 +281,7 @@ TEST_F(DefaultProviderTest, EcsMetadataDisabledCaseInsensitive) {
   DefaultProvider provider2;
   auto credential2 = provider2.getCredential();
   
-  EXPECT_EQ("test_ak", credential2.accessKeyId());
+  EXPECT_EQ("test_ak", credential2.getAccessKeyId());
 }
 
 TEST_F(DefaultProviderTest, NoValidProvider) {
@@ -308,8 +308,8 @@ TEST_F(DefaultProviderTest, ProviderChainOrder) {
   auto credential = provider.getCredential();
   
   // Should get from environment (first provider)
-  EXPECT_EQ("env_ak", credential.accessKeyId());
-  EXPECT_EQ("env_secret", credential.accessKeySecret());
+  EXPECT_EQ("env_ak", credential.getAccessKeyId());
+  EXPECT_EQ("env_secret", credential.getAccessKeySecret());
 }
 
 TEST_F(DefaultProviderTest, ConstGetCredential) {
@@ -319,6 +319,6 @@ TEST_F(DefaultProviderTest, ConstGetCredential) {
   const DefaultProvider provider;
   const auto &credential = provider.getCredential();
   
-  EXPECT_EQ("const_ak", credential.accessKeyId());
-  EXPECT_EQ("const_secret", credential.accessKeySecret());
+  EXPECT_EQ("const_ak", credential.getAccessKeyId());
+  EXPECT_EQ("const_secret", credential.getAccessKeySecret());
 }

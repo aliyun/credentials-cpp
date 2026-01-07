@@ -18,8 +18,8 @@ TEST(EdgeCasesTest, EmptyAccessKeyId) {
   AccessKeyProvider provider(config);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("", credential.accessKeyId());
-  EXPECT_EQ("secret", credential.accessKeySecret());
+  EXPECT_EQ("", credential.getAccessKeyId());
+  EXPECT_EQ("secret", credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, EmptyAccessKeySecret) {
@@ -30,8 +30,8 @@ TEST(EdgeCasesTest, EmptyAccessKeySecret) {
   AccessKeyProvider provider(config);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("ak_id", credential.accessKeyId());
-  EXPECT_EQ("", credential.accessKeySecret());
+  EXPECT_EQ("ak_id", credential.getAccessKeyId());
+  EXPECT_EQ("", credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, VeryLongAccessKeyId) {
@@ -40,8 +40,8 @@ TEST(EdgeCasesTest, VeryLongAccessKeyId) {
   AccessKeyProvider provider(longAk, "secret");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(longAk, credential.accessKeyId());
-  EXPECT_EQ(10000, credential.accessKeyId().length());
+  EXPECT_EQ(longAk, credential.getAccessKeyId());
+  EXPECT_EQ(10000, credential.getAccessKeyId().length());
 }
 
 TEST(EdgeCasesTest, VeryLongAccessKeySecret) {
@@ -50,7 +50,7 @@ TEST(EdgeCasesTest, VeryLongAccessKeySecret) {
   AccessKeyProvider provider("ak_id", longSecret);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(longSecret, credential.accessKeySecret());
+  EXPECT_EQ(longSecret, credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, SpecialCharactersInAccessKey) {
@@ -60,8 +60,8 @@ TEST(EdgeCasesTest, SpecialCharactersInAccessKey) {
   AccessKeyProvider provider(specialAk, specialSecret);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(specialAk, credential.accessKeyId());
-  EXPECT_EQ(specialSecret, credential.accessKeySecret());
+  EXPECT_EQ(specialAk, credential.getAccessKeyId());
+  EXPECT_EQ(specialSecret, credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, UnicodeInCredentials) {
@@ -71,8 +71,8 @@ TEST(EdgeCasesTest, UnicodeInCredentials) {
   AccessKeyProvider provider(unicodeAk, unicodeSecret);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(unicodeAk, credential.accessKeyId());
-  EXPECT_EQ(unicodeSecret, credential.accessKeySecret());
+  EXPECT_EQ(unicodeAk, credential.getAccessKeyId());
+  EXPECT_EQ(unicodeSecret, credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, WhitespaceInCredentials) {
@@ -83,8 +83,8 @@ TEST(EdgeCasesTest, WhitespaceInCredentials) {
   auto credential = provider.getCredential();
   
   // Should preserve whitespace
-  EXPECT_EQ(akWithSpaces, credential.accessKeyId());
-  EXPECT_EQ(secretWithSpaces, credential.accessKeySecret());
+  EXPECT_EQ(akWithSpaces, credential.getAccessKeyId());
+  EXPECT_EQ(secretWithSpaces, credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, NewlineInCredentials) {
@@ -94,16 +94,16 @@ TEST(EdgeCasesTest, NewlineInCredentials) {
   AccessKeyProvider provider(akWithNewline, secretWithNewline);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(akWithNewline, credential.accessKeyId());
-  EXPECT_EQ(secretWithNewline, credential.accessKeySecret());
+  EXPECT_EQ(akWithNewline, credential.getAccessKeyId());
+  EXPECT_EQ(secretWithNewline, credential.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, EmptyBearerToken) {
   BearerTokenProvider provider("");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("", credential.bearerToken());
-  EXPECT_EQ(Constant::BEARER, credential.type());
+  EXPECT_EQ("", credential.getBearerToken());
+  EXPECT_EQ(Constant::BEARER, credential.getType());
 }
 
 TEST(EdgeCasesTest, VeryLongBearerToken) {
@@ -112,24 +112,24 @@ TEST(EdgeCasesTest, VeryLongBearerToken) {
   BearerTokenProvider provider(longToken);
   auto credential = provider.getCredential();
   
-  EXPECT_EQ(longToken, credential.bearerToken());
+  EXPECT_EQ(longToken, credential.getBearerToken());
 }
 
 TEST(EdgeCasesTest, EmptySecurityToken) {
   StsProvider provider("ak", "secret", "");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("", credential.securityToken());
-  EXPECT_EQ(Constant::STS, credential.type());
+  EXPECT_EQ("", credential.getSecurityToken());
+  EXPECT_EQ(Constant::STS, credential.getType());
 }
 
 TEST(EdgeCasesTest, AllEmptyStsCredentials) {
   StsProvider provider("", "", "");
   auto credential = provider.getCredential();
   
-  EXPECT_EQ("", credential.accessKeyId());
-  EXPECT_EQ("", credential.accessKeySecret());
-  EXPECT_EQ("", credential.securityToken());
+  EXPECT_EQ("", credential.getAccessKeyId());
+  EXPECT_EQ("", credential.getAccessKeySecret());
+  EXPECT_EQ("", credential.getSecurityToken());
 }
 
 TEST(EdgeCasesTest, ConfigWithAllFieldsSet) {
@@ -160,9 +160,9 @@ TEST(EdgeCasesTest, ConfigWithAllFieldsSet) {
         .setDisableIMDSv1(true);
   
   EXPECT_FALSE(config.empty());
-  EXPECT_EQ("ak", config.accessKeyId());
-  EXPECT_EQ("secret", config.accessKeySecret());
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_EQ("ak", config.getAccessKeyId());
+  EXPECT_EQ("secret", config.getAccessKeySecret());
+  EXPECT_TRUE(config.getDisableIMDSv1());
 }
 
 TEST(EdgeCasesTest, CredentialModelCopyPreservesAllFields) {
@@ -176,12 +176,12 @@ TEST(EdgeCasesTest, CredentialModelCopyPreservesAllFields) {
   
   Models::CredentialModel model2(model1);
   
-  EXPECT_EQ(model1.accessKeyId(), model2.accessKeyId());
-  EXPECT_EQ(model1.accessKeySecret(), model2.accessKeySecret());
-  EXPECT_EQ(model1.bearerToken(), model2.bearerToken());
-  EXPECT_EQ(model1.securityToken(), model2.securityToken());
-  EXPECT_EQ(model1.type(), model2.type());
-  EXPECT_EQ(model1.providerName(), model2.providerName());
+  EXPECT_EQ(model1.getAccessKeyId(), model2.getAccessKeyId());
+  EXPECT_EQ(model1.getAccessKeySecret(), model2.getAccessKeySecret());
+  EXPECT_EQ(model1.getBearerToken(), model2.getBearerToken());
+  EXPECT_EQ(model1.getSecurityToken(), model2.getSecurityToken());
+  EXPECT_EQ(model1.getType(), model2.getType());
+  EXPECT_EQ(model1.getProviderName(), model2.getProviderName());
 }
 
 TEST(EdgeCasesTest, CredentialModelMovePreservesAllFields) {
@@ -190,15 +190,15 @@ TEST(EdgeCasesTest, CredentialModelMovePreservesAllFields) {
         .setAccessKeySecret("secret")
         .setBearerToken("bearer");
   
-  std::string expectedAk = model1.accessKeyId();
-  std::string expectedSecret = model1.accessKeySecret();
-  std::string expectedBearer = model1.bearerToken();
+  std::string expectedAk = model1.getAccessKeyId();
+  std::string expectedSecret = model1.getAccessKeySecret();
+  std::string expectedBearer = model1.getBearerToken();
   
   Models::CredentialModel model2(std::move(model1));
   
-  EXPECT_EQ(expectedAk, model2.accessKeyId());
-  EXPECT_EQ(expectedSecret, model2.accessKeySecret());
-  EXPECT_EQ(expectedBearer, model2.bearerToken());
+  EXPECT_EQ(expectedAk, model2.getAccessKeyId());
+  EXPECT_EQ(expectedSecret, model2.getAccessKeySecret());
+  EXPECT_EQ(expectedBearer, model2.getBearerToken());
 }
 
 TEST(EdgeCasesTest, ConfigCopyPreservesAllFields) {
@@ -210,10 +210,10 @@ TEST(EdgeCasesTest, ConfigCopyPreservesAllFields) {
   
   Models::Config config2(config1);
   
-  EXPECT_EQ(config1.accessKeyId(), config2.accessKeyId());
-  EXPECT_EQ(config1.accessKeySecret(), config2.accessKeySecret());
-  EXPECT_EQ(config1.timeout(), config2.timeout());
-  EXPECT_EQ(config1.disableIMDSv1(), config2.disableIMDSv1());
+  EXPECT_EQ(config1.getAccessKeyId(), config2.getAccessKeyId());
+  EXPECT_EQ(config1.getAccessKeySecret(), config2.getAccessKeySecret());
+  EXPECT_EQ(config1.getTimeout(), config2.getTimeout());
+  EXPECT_EQ(config1.getDisableIMDSv1(), config2.getDisableIMDSv1());
 }
 
 TEST(EdgeCasesTest, ConfigMovePreservesAllFields) {
@@ -222,57 +222,57 @@ TEST(EdgeCasesTest, ConfigMovePreservesAllFields) {
         .setAccessKeySecret("secret")
         .setTimeout(8000);
   
-  std::string expectedAk = config1.accessKeyId();
-  std::string expectedSecret = config1.accessKeySecret();
-  int64_t expectedTimeout = config1.timeout();
+  std::string expectedAk = config1.getAccessKeyId();
+  std::string expectedSecret = config1.getAccessKeySecret();
+  int64_t expectedTimeout = config1.getTimeout();
   
   Models::Config config2(std::move(config1));
   
-  EXPECT_EQ(expectedAk, config2.accessKeyId());
-  EXPECT_EQ(expectedSecret, config2.accessKeySecret());
-  EXPECT_EQ(expectedTimeout, config2.timeout());
+  EXPECT_EQ(expectedAk, config2.getAccessKeyId());
+  EXPECT_EQ(expectedSecret, config2.getAccessKeySecret());
+  EXPECT_EQ(expectedTimeout, config2.getTimeout());
 }
 
 TEST(EdgeCasesTest, ZeroDurationSeconds) {
   Models::Config config;
   config.setDurationSeconds(0);
   
-  EXPECT_EQ(0, config.durationSeconds());
+  EXPECT_EQ(0, config.getDurationSeconds());
 }
 
 TEST(EdgeCasesTest, NegativeDurationSeconds) {
   Models::Config config;
   config.setDurationSeconds(-100);
   
-  EXPECT_EQ(-100, config.durationSeconds());
+  EXPECT_EQ(-100, config.getDurationSeconds());
 }
 
 TEST(EdgeCasesTest, VeryLargeDurationSeconds) {
   Models::Config config;
   config.setDurationSeconds(999999999);
   
-  EXPECT_EQ(999999999, config.durationSeconds());
+  EXPECT_EQ(999999999, config.getDurationSeconds());
 }
 
 TEST(EdgeCasesTest, ZeroTimeout) {
   Models::Config config;
   config.setTimeout(0);
   
-  EXPECT_EQ(0, config.timeout());
+  EXPECT_EQ(0, config.getTimeout());
 }
 
 TEST(EdgeCasesTest, ZeroConnectTimeout) {
   Models::Config config;
   config.setConnectTimeout(0);
   
-  EXPECT_EQ(0, config.connectTimeout());
+  EXPECT_EQ(0, config.getConnectTimeout());
 }
 
 TEST(EdgeCasesTest, VeryLargeTimeout) {
   Models::Config config;
   config.setTimeout(999999999);
   
-  EXPECT_EQ(999999999, config.timeout());
+  EXPECT_EQ(999999999, config.getTimeout());
 }
 
 TEST(EdgeCasesTest, ClientWithEmptyConfig) {
@@ -297,8 +297,8 @@ TEST(EdgeCasesTest, MultipleProviderSameConfig) {
   auto cred1 = provider1.getCredential();
   auto cred2 = provider2.getCredential();
   
-  EXPECT_EQ(cred1.accessKeyId(), cred2.accessKeyId());
-  EXPECT_EQ(cred1.accessKeySecret(), cred2.accessKeySecret());
+  EXPECT_EQ(cred1.getAccessKeyId(), cred2.getAccessKeyId());
+  EXPECT_EQ(cred1.getAccessKeySecret(), cred2.getAccessKeySecret());
 }
 
 TEST(EdgeCasesTest, ProviderAfterConfigModification) {
@@ -315,7 +315,7 @@ TEST(EdgeCasesTest, ProviderAfterConfigModification) {
   
   // Provider should use the current config values
   // (Behavior depends on implementation - may use original or modified)
-  EXPECT_FALSE(credential.accessKeyId().empty());
+  EXPECT_FALSE(credential.getAccessKeyId().empty());
 }
 
 TEST(EdgeCasesTest, ToMapAndFromMapRoundTrip) {
@@ -331,11 +331,11 @@ TEST(EdgeCasesTest, ToMapAndFromMapRoundTrip) {
   Models::Config config2;
   config2.fromMap(json);
   
-  EXPECT_EQ(config1.accessKeyId(), config2.accessKeyId());
-  EXPECT_EQ(config1.accessKeySecret(), config2.accessKeySecret());
-  EXPECT_EQ(config1.timeout(), config2.timeout());
-  EXPECT_EQ(config1.disableIMDSv1(), config2.disableIMDSv1());
-  EXPECT_EQ(config1.durationSeconds(), config2.durationSeconds());
+  EXPECT_EQ(config1.getAccessKeyId(), config2.getAccessKeyId());
+  EXPECT_EQ(config1.getAccessKeySecret(), config2.getAccessKeySecret());
+  EXPECT_EQ(config1.getTimeout(), config2.getTimeout());
+  EXPECT_EQ(config1.getDisableIMDSv1(), config2.getDisableIMDSv1());
+  EXPECT_EQ(config1.getDurationSeconds(), config2.getDurationSeconds());
 }
 
 TEST(EdgeCasesTest, CredentialModelToMapAndFromMapRoundTrip) {
@@ -350,10 +350,10 @@ TEST(EdgeCasesTest, CredentialModelToMapAndFromMapRoundTrip) {
   Models::CredentialModel model2;
   model2.fromMap(json);
   
-  EXPECT_EQ(model1.accessKeyId(), model2.accessKeyId());
-  EXPECT_EQ(model1.accessKeySecret(), model2.accessKeySecret());
-  EXPECT_EQ(model1.type(), model2.type());
-  EXPECT_EQ(model1.providerName(), model2.providerName());
+  EXPECT_EQ(model1.getAccessKeyId(), model2.getAccessKeyId());
+  EXPECT_EQ(model1.getAccessKeySecret(), model2.getAccessKeySecret());
+  EXPECT_EQ(model1.getType(), model2.getType());
+  EXPECT_EQ(model1.getProviderName(), model2.getProviderName());
 }
 
 TEST(EdgeCasesTest, NullPointerInSharedPtrConfig) {
@@ -375,16 +375,16 @@ TEST(EdgeCasesTest, NullPointerInSharedPtrConfig) {
 TEST(EdgeCasesTest, BooleanFieldToggle) {
   Models::Config config;
   
-  EXPECT_FALSE(config.disableIMDSv1());
+  EXPECT_FALSE(config.getDisableIMDSv1());
   
   config.setDisableIMDSv1(true);
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_TRUE(config.getDisableIMDSv1());
   
   config.setDisableIMDSv1(false);
-  EXPECT_FALSE(config.disableIMDSv1());
+  EXPECT_FALSE(config.getDisableIMDSv1());
   
   config.setDisableIMDSv1(true);
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_TRUE(config.getDisableIMDSv1());
 }
 
 TEST(EdgeCasesTest, HasMethodsWithoutSetting) {

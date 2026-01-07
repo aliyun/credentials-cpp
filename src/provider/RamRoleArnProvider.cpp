@@ -71,11 +71,11 @@ bool RamRoleArnProvider::refreshCredential() const {
   // Calculate signature
   std::string signature = Darabonba::Encode::Encoder::hexEncode(
       Darabonba::Signature::Signer::HmacSHA256Sign(
-          stringToSign, credential_.accessKeySecret()));
+          stringToSign, credential_.getAccessKeySecret()));
 
   // Build Authorization Header
   std::string authorization =
-      "ACS3-HMAC-SHA256 Credential=" + credential_.accessKeyId() +
+      "ACS3-HMAC-SHA256 Credential=" + credential_.getAccessKeyId() +
       ",SignedHeaders=" + signedHeaders + ",Signature=" + signature;
   req.header()["Authorization"] = authorization;
 

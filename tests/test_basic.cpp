@@ -18,21 +18,21 @@ TEST(BasicConstantTest, OAuthType) {
 
 TEST(BasicModelTest, TimeoutDefaults) {
   Models::Config config;
-  EXPECT_EQ(5000, config.timeout());
-  EXPECT_EQ(10000, config.connectTimeout());
-  EXPECT_FALSE(config.disableIMDSv1());
+  EXPECT_EQ(5000, config.getTimeout());
+  EXPECT_EQ(10000, config.getConnectTimeout());
+  EXPECT_FALSE(config.getDisableIMDSv1());
 }
 
 TEST(BasicModelTest, SetTimeout) {
   Models::Config config;
   config.setTimeout(8000);
-  EXPECT_EQ(8000, config.timeout());
+  EXPECT_EQ(8000, config.getTimeout());
 }
 
 TEST(BasicModelTest, SetDisableIMDSv1) {
   Models::Config config;
   config.setDisableIMDSv1(true);
-  EXPECT_TRUE(config.disableIMDSv1());
+  EXPECT_TRUE(config.getDisableIMDSv1());
 }
 
 TEST(BasicModelTest, ConfigToMap) {

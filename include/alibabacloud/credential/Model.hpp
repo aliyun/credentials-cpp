@@ -1,10 +1,9 @@
 #ifndef ALIBABACLOUD_CREDENTIAL_MODEL_HPP_
 #define ALIBABACLOUD_CREDENTIAL_MODEL_HPP_
 
-#include <memory>
-
 #include <darabonba/Model.hpp>
-
+#include <memory>
+using namespace std;
 // Forward declaration to avoid circular dependency
 namespace AlibabaCloud {
 namespace Credential {
@@ -127,6 +126,7 @@ protected:
   // provider name
   shared_ptr<string> providerName_{};
 };
+
 /**
  * Model for initing credential
  */
@@ -146,9 +146,22 @@ public:
     DARABONBA_PTR_TO_JSON(privateKeyFile, privateKeyFile_);
     DARABONBA_PTR_TO_JSON(roleName, roleName_);
     DARABONBA_PTR_TO_JSON(credentialsUri, credentialsUri_);
+    DARABONBA_PTR_TO_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_TO_JSON(type, type_);
     DARABONBA_PTR_TO_JSON(STSEndpoint, STSEndpoint_);
+    DARABONBA_PTR_TO_JSON(stsEndpoint, stsEndpoint_);
+    DARABONBA_PTR_TO_JSON(stsRegionId, stsRegionId_);
     DARABONBA_PTR_TO_JSON(externalId, externalId_);
+    DARABONBA_PTR_TO_JSON(regionId, regionId_);
+    DARABONBA_PTR_TO_JSON(host, host_);
+    DARABONBA_PTR_TO_JSON(oidcProviderArn, oidcProviderArn_);
+    DARABONBA_PTR_TO_JSON(oidcTokenFilePath, oidcTokenFilePath_);
+    DARABONBA_PTR_TO_JSON(proxy, proxy_);
+    DARABONBA_PTR_TO_JSON(enableVpc, enableVpc_);
+    DARABONBA_PTR_TO_JSON(timeout, timeout_);
+    DARABONBA_PTR_TO_JSON(connectTimeout, connectTimeout_);
+    DARABONBA_PTR_TO_JSON(disableIMDSv1, disableIMDSv1_);
+    DARABONBA_PTR_TO_JSON(reuseLastProviderEnabled, reuseLastProviderEnabled_);
   };
   friend void from_json(const Darabonba::Json &j, Config &obj) {
     DARABONBA_PTR_FROM_JSON(accessKeyId, accessKeyId_);
@@ -164,9 +177,23 @@ public:
     DARABONBA_PTR_FROM_JSON(privateKeyFile, privateKeyFile_);
     DARABONBA_PTR_FROM_JSON(roleName, roleName_);
     DARABONBA_PTR_FROM_JSON(credentialsUri, credentialsUri_);
+    DARABONBA_PTR_FROM_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_FROM_JSON(type, type_);
     DARABONBA_PTR_FROM_JSON(STSEndpoint, STSEndpoint_);
+    DARABONBA_PTR_FROM_JSON(stsEndpoint, stsEndpoint_);
+    DARABONBA_PTR_FROM_JSON(stsRegionId, stsRegionId_);
     DARABONBA_PTR_FROM_JSON(externalId, externalId_);
+    DARABONBA_PTR_FROM_JSON(regionId, regionId_);
+    DARABONBA_PTR_FROM_JSON(host, host_);
+    DARABONBA_PTR_FROM_JSON(oidcProviderArn, oidcProviderArn_);
+    DARABONBA_PTR_FROM_JSON(oidcTokenFilePath, oidcTokenFilePath_);
+    DARABONBA_PTR_FROM_JSON(proxy, proxy_);
+    DARABONBA_PTR_FROM_JSON(enableVpc, enableVpc_);
+    DARABONBA_PTR_FROM_JSON(timeout, timeout_);
+    DARABONBA_PTR_FROM_JSON(connectTimeout, connectTimeout_);
+    DARABONBA_PTR_FROM_JSON(disableIMDSv1, disableIMDSv1_);
+    DARABONBA_PTR_FROM_JSON(reuseLastProviderEnabled,
+                            reuseLastProviderEnabled_);
   };
   Config() = default;
   Config(const Config &) = default;
@@ -193,8 +220,17 @@ public:
            this->roleSessionExpiration_ == nullptr &&
            this->roleSessionName_ == nullptr && this->publicKeyId_ == nullptr &&
            this->privateKeyFile_ == nullptr && this->roleName_ == nullptr &&
-           this->credentialsUri_ == nullptr && this->type_ == nullptr &&
-           this->STSEndpoint_ == nullptr && this->externalId_ == nullptr;
+           this->credentialsUri_ == nullptr &&
+           this->credentialsURL_ == nullptr && this->type_ == nullptr &&
+           this->STSEndpoint_ == nullptr && this->stsEndpoint_ == nullptr &&
+           this->stsRegionId_ == nullptr && this->externalId_ == nullptr &&
+           this->regionId_ == nullptr && this->host_ == nullptr &&
+           this->oidcProviderArn_ == nullptr &&
+           this->oidcTokenFilePath_ == nullptr && this->proxy_ == nullptr &&
+           this->enableVpc_ == nullptr && this->timeout_ == nullptr &&
+           this->connectTimeout_ == nullptr &&
+           this->disableIMDSv1_ == nullptr &&
+           this->reuseLastProviderEnabled_ == nullptr;
   };
   // accessKeyId Field Functions
   bool hasAccessKeyId() const { return this->accessKeyId_ != nullptr; };
@@ -279,9 +315,7 @@ public:
   // roleSessionName Field Functions
   bool hasRoleSessionName() const { return this->roleSessionName_ != nullptr; };
   void deleteRoleSessionName() { this->roleSessionName_ = nullptr; };
-  inline string getRoleSessionName() const {
-    DARABONBA_PTR_GET_DEFAULT(roleSessionName_, "")
-  };
+  std::string getRoleSessionName() const;  // Implemented in Model.cpp with dynamic default
   inline Config &setRoleSessionName(string roleSessionName) {
     DARABONBA_PTR_SET_VALUE(roleSessionName_, roleSessionName)
   };
@@ -326,6 +360,16 @@ public:
     DARABONBA_PTR_SET_VALUE(credentialsUri_, credentialsUri)
   };
 
+  // credentialsURL Field Functions
+  bool hasCredentialsURL() const { return this->credentialsURL_ != nullptr; };
+  void deleteCredentialsURL() { this->credentialsURL_ = nullptr; };
+  inline string getCredentialsURL() const {
+    DARABONBA_PTR_GET_DEFAULT(credentialsURL_, "")
+  };
+  inline Config &setCredentialsURL(string credentialsURL) {
+    DARABONBA_PTR_SET_VALUE(credentialsURL_, credentialsURL)
+  };
+
   // type Field Functions
   bool hasType() const { return this->type_ != nullptr; };
   void deleteType() { this->type_ = nullptr; };
@@ -342,6 +386,26 @@ public:
     DARABONBA_PTR_SET_VALUE(STSEndpoint_, STSEndpoint)
   };
 
+  // stsEndpoint Field Functions
+  bool hasStsEndpoint() const { return this->stsEndpoint_ != nullptr; };
+  void deleteStsEndpoint() { this->stsEndpoint_ = nullptr; };
+  inline string getStsEndpoint() const {
+    DARABONBA_PTR_GET_DEFAULT(stsEndpoint_, "")
+  };
+  inline Config &setStsEndpoint(string stsEndpoint) {
+    DARABONBA_PTR_SET_VALUE(stsEndpoint_, stsEndpoint)
+  };
+
+  // stsRegionId Field Functions
+  bool hasStsRegionId() const { return this->stsRegionId_ != nullptr; };
+  void deleteStsRegionId() { this->stsRegionId_ = nullptr; };
+  inline string getStsRegionId() const {
+    DARABONBA_PTR_GET_DEFAULT(stsRegionId_, "")
+  };
+  inline Config &setStsRegionId(string stsRegionId) {
+    DARABONBA_PTR_SET_VALUE(stsRegionId_, stsRegionId)
+  };
+
   // externalId Field Functions
   bool hasExternalId() const { return this->externalId_ != nullptr; };
   void deleteExternalId() { this->externalId_ = nullptr; };
@@ -350,6 +414,104 @@ public:
   };
   inline Config &setExternalId(string externalId) {
     DARABONBA_PTR_SET_VALUE(externalId_, externalId)
+  };
+
+  // regionId Field Functions
+  bool hasRegionId() const { return this->regionId_ != nullptr; };
+  void deleteRegionId() { this->regionId_ = nullptr; };
+  inline string getRegionId() const {
+    DARABONBA_PTR_GET_DEFAULT(regionId_, "")
+  };
+  inline Config &setRegionId(string regionId) {
+    DARABONBA_PTR_SET_VALUE(regionId_, regionId)
+  };
+
+  // host Field Functions
+  bool hasHost() const { return this->host_ != nullptr; };
+  void deleteHost() { this->host_ = nullptr; };
+  inline string getHost() const { DARABONBA_PTR_GET_DEFAULT(host_, "") };
+  inline Config &setHost(string host) { DARABONBA_PTR_SET_VALUE(host_, host) };
+
+  // oidcProviderArn Field Functions
+  bool hasOidcProviderArn() const { return this->oidcProviderArn_ != nullptr; };
+  void deleteOidcProviderArn() { this->oidcProviderArn_ = nullptr; };
+  inline string getOidcProviderArn() const {
+    DARABONBA_PTR_GET_DEFAULT(oidcProviderArn_, "")
+  };
+  inline Config &setOidcProviderArn(string oidcProviderArn) {
+    DARABONBA_PTR_SET_VALUE(oidcProviderArn_, oidcProviderArn)
+  };
+
+  // oidcTokenFilePath Field Functions
+  bool hasOidcTokenFilePath() const {
+    return this->oidcTokenFilePath_ != nullptr;
+  };
+  void deleteOidcTokenFilePath() { this->oidcTokenFilePath_ = nullptr; };
+  inline string getOidcTokenFilePath() const {
+    DARABONBA_PTR_GET_DEFAULT(oidcTokenFilePath_, "")
+  };
+  inline Config &setOidcTokenFilePath(string oidcTokenFilePath) {
+    DARABONBA_PTR_SET_VALUE(oidcTokenFilePath_, oidcTokenFilePath)
+  };
+
+  // proxy Field Functions
+  bool hasProxy() const { return this->proxy_ != nullptr; };
+  void deleteProxy() { this->proxy_ = nullptr; };
+  inline string getProxy() const { DARABONBA_PTR_GET_DEFAULT(proxy_, "") };
+  inline Config &setProxy(string proxy) {
+    DARABONBA_PTR_SET_VALUE(proxy_, proxy)
+  };
+
+  // enableVpc Field Functions
+  bool hasEnableVpc() const { return this->enableVpc_ != nullptr; };
+  void deleteEnableVpc() { this->enableVpc_ = nullptr; };
+  inline bool getEnableVpc() const {
+    DARABONBA_PTR_GET_DEFAULT(enableVpc_, false)
+  };
+  inline Config &setEnableVpc(bool enableVpc) {
+    DARABONBA_PTR_SET_VALUE(enableVpc_, enableVpc)
+  };
+
+  // timeout Field Functions
+  bool hasTimeout() const { return this->timeout_ != nullptr; };
+  void deleteTimeout() { this->timeout_ = nullptr; };
+  inline int64_t getTimeout() const { DARABONBA_PTR_GET_DEFAULT(timeout_, 0) };
+  inline Config &setTimeout(int64_t timeout) {
+    DARABONBA_PTR_SET_VALUE(timeout_, timeout)
+  };
+
+  // connectTimeout Field Functions
+  bool hasConnectTimeout() const { return this->connectTimeout_ != nullptr; };
+  void deleteConnectTimeout() { this->connectTimeout_ = nullptr; };
+  inline int64_t getConnectTimeout() const {
+    DARABONBA_PTR_GET_DEFAULT(connectTimeout_, 0)
+  };
+  inline Config &setConnectTimeout(int64_t connectTimeout) {
+    DARABONBA_PTR_SET_VALUE(connectTimeout_, connectTimeout)
+  };
+
+  // disableIMDSv1 Field Functions
+  bool hasDisableIMDSv1() const { return this->disableIMDSv1_ != nullptr; };
+  void deleteDisableIMDSv1() { this->disableIMDSv1_ = nullptr; };
+  inline bool getDisableIMDSv1() const {
+    DARABONBA_PTR_GET_DEFAULT(disableIMDSv1_, false)
+  };
+  inline Config &setDisableIMDSv1(bool disableIMDSv1) {
+    DARABONBA_PTR_SET_VALUE(disableIMDSv1_, disableIMDSv1)
+  };
+
+  // reuseLastProviderEnabled Field Functions
+  bool hasReuseLastProviderEnabled() const {
+    return this->reuseLastProviderEnabled_ != nullptr;
+  };
+  void deleteReuseLastProviderEnabled() {
+    this->reuseLastProviderEnabled_ = nullptr;
+  };
+  inline bool getReuseLastProviderEnabled() const {
+    DARABONBA_PTR_GET_DEFAULT(reuseLastProviderEnabled_, false)
+  };
+  inline Config &setReuseLastProviderEnabled(bool reuseLastProviderEnabled) {
+    DARABONBA_PTR_SET_VALUE(reuseLastProviderEnabled_, reuseLastProviderEnabled)
   };
 
 protected:
@@ -379,12 +541,38 @@ protected:
   shared_ptr<string> roleName_{};
   // credentials uri
   shared_ptr<string> credentialsUri_{};
+  // credentials url
+  shared_ptr<string> credentialsURL_{};
   // credential type
   shared_ptr<string> type_{};
   // sts endpoint
   shared_ptr<string> STSEndpoint_{};
+  // sts endpoint
+  shared_ptr<string> stsEndpoint_{};
+  // sts region id
+  shared_ptr<string> stsRegionId_{};
   // external id for ram role arn
   shared_ptr<string> externalId_{};
+  // regionId
+  shared_ptr<string> regionId_{};
+  // host
+  shared_ptr<string> host_{};
+  // oidc provider arn
+  shared_ptr<string> oidcProviderArn_{};
+  // oidc token file path
+  shared_ptr<string> oidcTokenFilePath_{};
+  // proxy
+  shared_ptr<string> proxy_{};
+  // enable vpc
+  shared_ptr<bool> enableVpc_{};
+  // timeout
+  shared_ptr<int64_t> timeout_{};
+  // connect timeout
+  shared_ptr<int64_t> connectTimeout_{};
+  // disable IMDSv1
+  shared_ptr<bool> disableIMDSv1_{};
+  // reuse last provider enabled
+  shared_ptr<bool> reuseLastProviderEnabled_{};
 };
 
 } // namespace Models

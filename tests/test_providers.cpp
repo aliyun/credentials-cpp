@@ -263,7 +263,7 @@ TEST(NeedFreshProviderTest, DefaultConstructor) {
   TestNeedFreshProvider provider;
   EXPECT_NO_THROW({
     auto credential = provider.getCredential();
-    EXPECT_EQ("test_type", credential.type());
+    EXPECT_EQ("test_type", credential.getType());
   });
 }
 
@@ -307,8 +307,8 @@ TEST(NeedFreshProviderTest, AutoRefresh) {
   auto credential = provider.getCredential();
   
   // After refresh, credential should be updated
-  EXPECT_EQ("refreshed_ak", credential.accessKeyId());
-  EXPECT_EQ("refreshed_secret", credential.accessKeySecret());
+  EXPECT_EQ("refreshed_ak", credential.getAccessKeyId());
+  EXPECT_EQ("refreshed_secret", credential.getAccessKeySecret());
 }
 
 // Note: strtotime and gmt_datetime are protected methods,

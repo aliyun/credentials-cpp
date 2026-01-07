@@ -45,7 +45,7 @@ DefaultProvider::DefaultProvider() {
 }
 
 DefaultProvider::DefaultProvider(std::shared_ptr<Models::Config> config)
-    : reuseLastProviderEnabled_(config->reuseLastProviderEnabled()) {
+    : reuseLastProviderEnabled_(config->getReuseLastProviderEnabled()) {
 
   providers_.emplace_back(new EnvironmentVariableProvider());
 

@@ -356,7 +356,7 @@ std::unique_ptr<Provider> CLIProfileProvider::createProvider() const {
   }
 
   // 根据类型创建对应的 Provider
-  auto configType = config->type();
+  auto configType = config->getType();
   if (configType.empty()) {
     throw Darabonba::Exception("The configured client type is empty");
   }
@@ -372,8 +372,8 @@ std::unique_ptr<Provider> CLIProfileProvider::createProvider() const {
   }
 
   // 默认使用 AccessKey
-  const auto &accessKeyId = config->accessKeyId();
-  const auto &accessKeySecret = config->accessKeySecret();
+  const auto &accessKeyId = config->getAccessKeyId();
+  const auto &accessKeySecret = config->getAccessKeySecret();
   if (accessKeyId.empty() || accessKeySecret.empty()) {
     throw Darabonba::Exception("AccessKeyId and AccessKeySecret are required");
   }

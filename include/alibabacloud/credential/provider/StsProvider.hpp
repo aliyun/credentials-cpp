@@ -13,9 +13,9 @@ namespace Credential {
 class StsProvider : public Provider {
 public:
   StsProvider(std::shared_ptr<Models::Config> config) {
-    credential_.setAccessKeyId(config->accessKeyId())
-        .setAccessKeySecret(config->accessKeySecret())
-        .setSecurityToken(config->securityToken())
+    credential_.setAccessKeyId(config->getAccessKeyId())
+        .setAccessKeySecret(config->getAccessKeySecret())
+        .setSecurityToken(config->getSecurityToken())
         .setType(Constant::STS);
   }
   StsProvider(const std::string &accessKeyId,
