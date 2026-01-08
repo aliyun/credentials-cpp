@@ -148,7 +148,6 @@ public:
     DARABONBA_PTR_TO_JSON(credentialsUri, credentialsUri_);
     DARABONBA_PTR_TO_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_TO_JSON(type, type_);
-    DARABONBA_PTR_TO_JSON(STSEndpoint, STSEndpoint_);
     DARABONBA_PTR_TO_JSON(stsEndpoint, stsEndpoint_);
     DARABONBA_PTR_TO_JSON(stsRegionId, stsRegionId_);
     DARABONBA_PTR_TO_JSON(externalId, externalId_);
@@ -179,7 +178,6 @@ public:
     DARABONBA_PTR_FROM_JSON(credentialsUri, credentialsUri_);
     DARABONBA_PTR_FROM_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_FROM_JSON(type, type_);
-    DARABONBA_PTR_FROM_JSON(STSEndpoint, STSEndpoint_);
     DARABONBA_PTR_FROM_JSON(stsEndpoint, stsEndpoint_);
     DARABONBA_PTR_FROM_JSON(stsRegionId, stsRegionId_);
     DARABONBA_PTR_FROM_JSON(externalId, externalId_);
@@ -222,7 +220,7 @@ public:
            this->privateKeyFile_ == nullptr && this->roleName_ == nullptr &&
            this->credentialsUri_ == nullptr &&
            this->credentialsURL_ == nullptr && this->type_ == nullptr &&
-           this->STSEndpoint_ == nullptr && this->stsEndpoint_ == nullptr &&
+           this->stsEndpoint_ == nullptr &&
            this->stsRegionId_ == nullptr && this->externalId_ == nullptr &&
            this->regionId_ == nullptr && this->host_ == nullptr &&
            this->oidcProviderArn_ == nullptr &&
@@ -376,16 +374,6 @@ public:
   inline string getType() const { DARABONBA_PTR_GET_DEFAULT(type_, "") };
   inline Config &setType(string type) { DARABONBA_PTR_SET_VALUE(type_, type) };
 
-  // STSEndpoint Field Functions
-  bool hasSTSEndpoint() const { return this->STSEndpoint_ != nullptr; };
-  void deleteSTSEndpoint() { this->STSEndpoint_ = nullptr; };
-  inline string getSTSEndpoint() const {
-    DARABONBA_PTR_GET_DEFAULT(STSEndpoint_, "")
-  };
-  inline Config &setSTSEndpoint(string STSEndpoint) {
-    DARABONBA_PTR_SET_VALUE(STSEndpoint_, STSEndpoint)
-  };
-
   // stsEndpoint Field Functions
   bool hasStsEndpoint() const { return this->stsEndpoint_ != nullptr; };
   void deleteStsEndpoint() { this->stsEndpoint_ = nullptr; };
@@ -475,7 +463,7 @@ public:
   // timeout Field Functions
   bool hasTimeout() const { return this->timeout_ != nullptr; };
   void deleteTimeout() { this->timeout_ = nullptr; };
-  inline int64_t getTimeout() const { DARABONBA_PTR_GET_DEFAULT(timeout_, 0) };
+  inline int64_t getTimeout() const { DARABONBA_PTR_GET_DEFAULT(timeout_, 5000) };
   inline Config &setTimeout(int64_t timeout) {
     DARABONBA_PTR_SET_VALUE(timeout_, timeout)
   };
@@ -484,7 +472,7 @@ public:
   bool hasConnectTimeout() const { return this->connectTimeout_ != nullptr; };
   void deleteConnectTimeout() { this->connectTimeout_ = nullptr; };
   inline int64_t getConnectTimeout() const {
-    DARABONBA_PTR_GET_DEFAULT(connectTimeout_, 0)
+    DARABONBA_PTR_GET_DEFAULT(connectTimeout_, 10000)
   };
   inline Config &setConnectTimeout(int64_t connectTimeout) {
     DARABONBA_PTR_SET_VALUE(connectTimeout_, connectTimeout)
@@ -524,7 +512,7 @@ protected:
   // bearer token
   shared_ptr<string> bearerToken_{};
   // duration seconds
-  shared_ptr<int64_t> durationSeconds_{};
+  shared_ptr<int64_t> durationSeconds_ = make_shared<int64_t>(3600);
   // role arn
   shared_ptr<string> roleArn_{};
   // policy
@@ -546,15 +534,13 @@ protected:
   // credential type
   shared_ptr<string> type_{};
   // sts endpoint
-  shared_ptr<string> STSEndpoint_{};
-  // sts endpoint
-  shared_ptr<string> stsEndpoint_{};
+  shared_ptr<string> stsEndpoint_ = make_shared<std::string>("sts.aliyuncs.com");
   // sts region id
   shared_ptr<string> stsRegionId_{};
   // external id for ram role arn
   shared_ptr<string> externalId_{};
   // regionId
-  shared_ptr<string> regionId_{};
+  shared_ptr<string> regionId_ = make_shared<std::string>("cn-hangzhou");
   // host
   shared_ptr<string> host_{};
   // oidc provider arn
@@ -564,15 +550,15 @@ protected:
   // proxy
   shared_ptr<string> proxy_{};
   // enable vpc
-  shared_ptr<bool> enableVpc_{};
+  shared_ptr<bool> enableVpc_{} = make_shared<bool>(false);
   // timeout
-  shared_ptr<int64_t> timeout_{};
+  shared_ptr<int64_t> timeout_ = make_shared<int64_t>(5000);
   // connect timeout
-  shared_ptr<int64_t> connectTimeout_{};
+  shared_ptr<int64_t> connectTimeout_ = make_shared<int64_t>(10000);
   // disable IMDSv1
-  shared_ptr<bool> disableIMDSv1_{};
+  shared_ptr<bool> disableIMDSv1_ = make_shared<bool>(false);
   // reuse last provider enabled
-  shared_ptr<bool> reuseLastProviderEnabled_{};
+  shared_ptr<bool> reuseLastProviderEnabled_ = make_shared<bool>(false);
 };
 
 } // namespace Models

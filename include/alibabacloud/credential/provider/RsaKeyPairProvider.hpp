@@ -15,7 +15,7 @@ class RsaKeyPairProvider : public NeedFreshProvider,
 public:
   RsaKeyPairProvider(std::shared_ptr<Models::Config> config)
       : durationSeconds_(config->getDurationSeconds()),
-        regionId_(config->getRegionId()), stsEndpoint_(config->getSTSEndpoint()) {
+        regionId_(config->getRegionId()), stsEndpoint_(config->getStsEndpoint()) {
     credential_.setAccessKeyId(config->getAccessKeyId())
         .setAccessKeySecret(config->getAccessKeySecret())
         .setType(Constant::RSA_KEY_PAIR);

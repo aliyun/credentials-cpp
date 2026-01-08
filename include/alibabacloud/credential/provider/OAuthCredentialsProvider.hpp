@@ -23,8 +23,8 @@ public:
         clientSecret_(config->hasAccessKeySecret() && !config->getAccessKeySecret().empty()
                           ? config->getAccessKeySecret()
                           : Darabonba::Env::getEnv(Constant::ENV_OAUTH_CLIENT_SECRET)),
-        tokenEndpoint_(config->hasStsEndpoint() && !config->getSTSEndpoint().empty()
-                           ? config->getSTSEndpoint()
+        tokenEndpoint_(config->hasStsEndpoint() && !config->getStsEndpoint().empty()
+                           ? config->getStsEndpoint()
                            : Darabonba::Env::getEnv(Constant::ENV_OAUTH_TOKEN_ENDPOINT)),
         regionId_(config->getRegionId()),
         connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),

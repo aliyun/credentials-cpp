@@ -27,7 +27,7 @@ public:
                       : (Darabonba::Env::getEnv(Constant::ENV_STS_REGION).empty()
                              ? config->getRegionId()
                              : Darabonba::Env::getEnv(Constant::ENV_STS_REGION))),
-        stsEndpoint_(config->getSTSEndpoint()),
+        stsEndpoint_(config->getStsEndpoint()),
         enableVpc_(config->hasEnableVpc()
                        ? config->getEnableVpc()
                        : (Darabonba::Env::getEnv(Constant::ENV_VPC_ENDPOINT_ENABLED) == "true")),
