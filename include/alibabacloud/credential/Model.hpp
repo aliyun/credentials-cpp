@@ -550,7 +550,7 @@ protected:
   // proxy
   shared_ptr<string> proxy_{};
   // enable vpc
-  shared_ptr<bool> enableVpc_{} = make_shared<bool>(false);
+  shared_ptr<bool> enableVpc_ = make_shared<bool>(false);
   // timeout
   shared_ptr<int64_t> timeout_ = make_shared<int64_t>(5000);
   // connect timeout
