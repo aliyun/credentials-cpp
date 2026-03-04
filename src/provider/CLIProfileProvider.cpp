@@ -344,8 +344,9 @@ std::unique_ptr<Provider> CLIProfileProvider::createProvider() const {
 
   // 根据类型创建对应的 Provider
   auto configType = config->getType();
+  if (configType.empty()) {
     throw CredentialException(std::string("The configured client type is empty"));
-
+  }
   if (configType == Constant::ECS_RAM_ROLE) {
     return std::unique_ptr<Provider>(new EcsRamRoleProvider(config));
   } else if (configType == Constant::RSA_KEY_PAIR) {

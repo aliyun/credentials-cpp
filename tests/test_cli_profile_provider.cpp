@@ -141,3 +141,49 @@ TEST_F(CLIProfileProviderTest, SupportsMultipleGetCredentialCalls) {
     provider.getCredential();
   }, CredentialException);
 }
+
+// mode 字段缺失 -> type 为空 -> createProvider() 抛出 "The configured client type is empty"
+TEST_F(CLIProfileProviderTest, EmptyModeThrowsCredentialException) {
+  std::string tmpPath = "/tmp/test_cli_empty_mode.json";
+  {
+    std::ofstream f(tmpPath);
+    f << "{\"current\":\"default\",\"profiles\":["
+      << "{\"name\":\"default\",\"access_key_id\":\"test_id\",\"access_key_secret\":\"test_secret\"}"
+      << "]}";
+  }
+
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", tmpPath.c_str(), 1);
+  CLIProfileProvider provider;
+
+  try {
+    provider.getCredential();
+    FAIL() << "Expected CredentialException";
+  } catch (const CredentialException &e) {
+    EXPECT_NE(std::string(e.what()).find("type"), std::string::npos)
+        << "Expected error about empty type, got: " << e.what();
+  }
+
+  std::remove(tmpPath.c_str());
+}
+
+// mode=AK 且凭证齐全 -> 成功创建 AccessKeyProvider，getProviderName 不抛异常
+TEST_F(CLIProfileProviderTest, AkModeCreatesAccessKeyProvider) {
+  std::string tmpPath = "/tmp/test_cli_ak_mode.json";
+  {
+    std::ofstream f(tmpPath);
+    f << "{\"current\":\"default\",\"profiles\":["
+      << "{\"name\":\"default\",\"mode\":\"AK\","
+      << "\"access_key_id\":\"test_ak_id\",\"access_key_secret\":\"test_ak_secret\"}"
+      << "]}";
+  }
+
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", tmpPath.c_str(), 1);
+  CLIProfileProvider provider;
+
+  EXPECT_NO_THROW({
+    std::string name = provider.getProviderName();
+    EXPECT_FALSE(name.empty());
+  });
+
+  std::remove(tmpPath.c_str());
+}
