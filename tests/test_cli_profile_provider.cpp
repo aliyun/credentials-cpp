@@ -142,9 +142,23 @@ TEST_F(CLIProfileProviderTest, SupportsMultipleGetCredentialCalls) {
   }, CredentialException);
 }
 
+// 获取跨平台的临时目录路径
+static std::string getTempDir() {
+#if defined(_WIN32) || defined(_WIN64)
+  const char* temp = std::getenv("TEMP");
+  if (!temp) temp = std::getenv("TMP");
+  if (!temp) temp = "C:\\Windows\\Temp";
+  return std::string(temp);
+#else
+  const char* tmpdir = std::getenv("TMPDIR");
+  if (tmpdir) return std::string(tmpdir);
+  return "/tmp";
+#endif
+}
+
 // mode 字段缺失 -> type 为空 -> createProvider() 抛出 "The configured client type is empty"
 TEST_F(CLIProfileProviderTest, EmptyModeThrowsCredentialException) {
-  std::string tmpPath = "/tmp/test_cli_empty_mode.json";
+  std::string tmpPath = getTempDir() + "/test_cli_empty_mode.json";
   {
     std::ofstream f(tmpPath);
     f << "{\"current\":\"default\",\"profiles\":["
@@ -168,7 +182,7 @@ TEST_F(CLIProfileProviderTest, EmptyModeThrowsCredentialException) {
 
 // mode=AK 且凭证齐全 -> 成功创建 AccessKeyProvider，getProviderName 不抛异常
 TEST_F(CLIProfileProviderTest, AkModeCreatesAccessKeyProvider) {
-  std::string tmpPath = "/tmp/test_cli_ak_mode.json";
+  std::string tmpPath = getTempDir() + "/test_cli_ak_mode.json";
   {
     std::ofstream f(tmpPath);
     f << "{\"current\":\"default\",\"profiles\":["
