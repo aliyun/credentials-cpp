@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <random>
 #include <sstream>
 #include <thread>
 
@@ -19,6 +20,7 @@
 #endif
 
 #include <alibabacloud/credentials/provider/Provider.hpp>
+#include <darabonba/Logger.hpp>
 
 ALIBABACLOUD_CREDENTIALS_SUPPRESS_STL_WARNING_PUSH
 
@@ -131,8 +133,7 @@ public:
 
 /**
  * @brief Refreshable credential provider base class
- * 
- * Reference Python SDK's RefreshCachedSupplier implementation
+ *
  * Provides async background refresh mechanism with:
  * - 180 seconds prefetch refresh
  * - 15 minutes expiration time window
@@ -167,34 +168,44 @@ public:
 
   /**
    * @brief Get credential (thread safe)
+   * @note Returns a copy for safety. Uses copy-on-write pattern:
+   *       - Read: lock-free, just copy the cached shared_ptr
+   *       - Write: atomic replacement of the entire shared_ptr
    */
-  virtual Models::CredentialModel& getCredential() override {
-    return const_cast<Models::CredentialModel&>(
-        static_cast<const RefreshableProvider*>(this)->getCredential());
-  }
-
-  virtual const Models::CredentialModel& getCredential() const override {
-    std::lock_guard<std::mutex> lock(accessMutex_);
+  virtual Models::CredentialModel getCredential() const override {
+    // Fast path: check if we need to refresh (lock-free)
+    // Copy the shared_ptr first (atomic operation)
+    auto cached = cachedValue_;
     
-    if (cacheIsStale()) {
-      // Cache expired, synchronous refresh
-      refreshCache();
-    } else if (shouldInitiateCachePrefetch()) {
-      // About to expire, check if async refresh is enabled
-      if (isAsyncUpdateEnabled()) {
-        // Async prefetch refresh (only if enabled)
-        prefetchCache();
-      } else {
-        // Synchronous refresh (if async is disabled)
+    bool needsRefresh = !cached || cacheIsStale(*cached);
+    bool needsPrefetch = !cached || shouldInitiateCachePrefetch(*cached);
+    
+    if (needsRefresh || needsPrefetch) {
+      // Slow path: need to refresh, acquire lock
+      std::lock_guard<std::mutex> lock(accessMutex_);
+      
+      // Re-check after acquiring lock (double-checked locking)
+      cached = cachedValue_;
+      needsRefresh = !cached || cacheIsStale(*cached);
+      needsPrefetch = !cached || shouldInitiateCachePrefetch(*cached);
+      
+      if (needsRefresh) {
         refreshCache();
+      } else if (needsPrefetch) {
+        if (isAsyncUpdateEnabled()) {
+          prefetchCache();
+        } else {
+          refreshCache();
+        }
       }
+      cached = cachedValue_;
     }
     
-    if (!cachedValue_) {
+    if (!cached) {
       throw std::runtime_error("No cached credential available");
     }
     
-    return cachedValue_->credential;
+    return cached->credential;
   }
 
 protected:
@@ -286,23 +297,37 @@ protected:
 
 private:
   /**
-   * @brief Check if cache is stale
+   * @brief Check if cache is stale (with cached value)
+   */
+  bool cacheIsStale(const RefreshResult& cached) const {
+    return getCurrentTime() >= cached.staleTime;
+  }
+
+  /**
+   * @brief Check if cache is stale (from member)
    */
   bool cacheIsStale() const {
     if (!cachedValue_) {
       return true;
     }
-    return getCurrentTime() >= cachedValue_->staleTime;
+    return cacheIsStale(*cachedValue_);
   }
 
   /**
-   * @brief Check if prefetch should be initiated
+   * @brief Check if prefetch should be initiated (with cached value)
+   */
+  bool shouldInitiateCachePrefetch(const RefreshResult& cached) const {
+    return getCurrentTime() >= cached.prefetchTime;
+  }
+
+  /**
+   * @brief Check if prefetch should be initiated (from member)
    */
   bool shouldInitiateCachePrefetch() const {
     if (!cachedValue_) {
       return true;
     }
-    return getCurrentTime() >= cachedValue_->prefetchTime;
+    return shouldInitiateCachePrefetch(*cachedValue_);
   }
 
   /**
@@ -319,7 +344,7 @@ private:
    */
   void refreshCache() const {
     std::unique_lock<std::timed_mutex> lock(refreshMutex_, std::defer_lock);
-    
+
     // Try to acquire lock, wait max REFRESH_BLOCKING_MAX_WAIT_MS milliseconds
     if (!lock.try_lock_for(std::chrono::milliseconds(REFRESH_BLOCKING_MAX_WAIT_MS))) {
       // Lock timeout, return using existing cache
@@ -335,9 +360,11 @@ private:
       RefreshResult result = doRefresh();
       cachedValue_ = std::make_shared<RefreshResult>(
           handleFetchedSuccess(result));
-    } catch (const std::exception& ex) {
+    } catch (...) {
+      // Use std::rethrow_exception to preserve original exception type
+      std::exception_ptr eptr = std::current_exception();
       cachedValue_ = std::make_shared<RefreshResult>(
-          handleFetchedFailure(ex));
+          handleFetchedFailure(eptr));
     }
   }
 
@@ -374,44 +401,65 @@ private:
       return RefreshResult(cachedValue_->credential, now + 1, cachedValue_->prefetchTime);
     } else {
       // Allow mode: extend expiration time with random jitter
-      int64_t jitter = (rand() % 20000 + 50000) / 1000;  // 50-70 seconds
+      int64_t jitter = randomInt(50, 70);  // 50-70 seconds
       return RefreshResult(cachedValue_->credential, now + jitter, cachedValue_->prefetchTime);
     }
   }
 
   /**
    * @brief Handle refresh failure
+   * @param eptr Exception pointer to preserve original exception type
    */
-  RefreshResult handleFetchedFailure(const std::exception& ex) const {
+  RefreshResult handleFetchedFailure(std::exception_ptr eptr) const {
+    // Extract error message for logging
+    std::string errorMsg;
+    try {
+      std::rethrow_exception(eptr);
+    } catch (const std::exception& e) {
+      errorMsg = e.what();
+    } catch (...) {
+      errorMsg = "Unknown exception";
+    }
+
     if (!cachedValue_) {
-      throw ex;  // No cache, throw exception
+      Darabonba::Logger::warning(
+          "Refresh credentials failed, cached value is None, error: " + errorMsg);
+      std::rethrow_exception(eptr);  // No cache, rethrow original exception
     }
 
     int64_t now = getCurrentTime();
     if (now < cachedValue_->staleTime) {
+      Darabonba::Logger::warning(
+          "Refresh credentials failed, using cached value. error: " + errorMsg);
       return *cachedValue_;  // Cache not expired, return cache
     }
 
     consecutiveRefreshFailures_++;
 
     if (staleValueBehavior_ == StaleValueBehavior::STRICT_) {
-      throw ex;  // Strict mode: throw exception
+      Darabonba::Logger::warning(
+          "Refresh credentials failed, cached value is expired. error: " + errorMsg);
+      std::rethrow_exception(eptr);  // Strict mode: rethrow original exception
     } else {
       // Allow mode: extend expiration time with exponential backoff
-      int64_t backoffMillis = std::max(10000LL, (1LL << (consecutiveRefreshFailures_ - 1)) * 100);
-      int64_t jitter = (rand() % (backoffMillis / 2)) + backoffMillis;
-      int64_t newStaleTime = now + jitter / 1000;
-      
+      Darabonba::Logger::warning(
+          "Refresh credentials failed, using expired cached value with backoff. error: " + errorMsg);
+
+      // maxJitter: max(10000ms, 2^(n-1)*100ms)
+      int64_t maxJitterMillis = std::max(10000LL, (1LL << (consecutiveRefreshFailures_ - 1)) * 100);
+      // jitter: [1000ms, maxJitterMillis-1ms]
+      int64_t jitterMillis = randomInt(1000, maxJitterMillis - 1);
+      int64_t newStaleTime = now + jitterMillis / 1000;  // convert to seconds
+
       return RefreshResult(cachedValue_->credential, newStaleTime, cachedValue_->prefetchTime);
     }
   }
 
   /**
    * @brief Close and clean up resources
-   * 
+   *
    * This method should be called before the provider is destroyed
    * to ensure any background threads are properly stopped.
-   * Same as Java SDK's close() method.
    */
   void close() {
     if (prefetchStrategy_) {
@@ -422,13 +470,20 @@ private:
   }
 
 private:
+  // Thread-safe random number generator
+  static int64_t randomInt(int64_t min, int64_t max) {
+    static thread_local std::mt19937 gen(std::random_device{}());
+    std::uniform_int_distribution<int64_t> dist(min, max);
+    return dist(gen);
+  }
+
   // Member variables
   StaleValueBehavior staleValueBehavior_;
   std::shared_ptr<PrefetchStrategy> prefetchStrategy_;
-  
+
   mutable std::atomic<int> consecutiveRefreshFailures_;
   mutable std::shared_ptr<RefreshResult> cachedValue_;
-  
+
   mutable std::timed_mutex refreshMutex_;  // Refresh lock
   mutable std::mutex accessMutex_;   // Access lock
 };

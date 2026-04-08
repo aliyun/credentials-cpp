@@ -246,10 +246,10 @@ void urlCredentialExample() {
     
     Models::Config config;
     config.setType("credentials_uri")
-          .setCredentialsURL("<your-credentials-url>");
-    
+          .setCredentialsUri("<your-credentials-url>");
+
     std::cout << "  Config Type: " << config.getType() << std::endl;
-    std::cout << "  CredentialsURL: " << config.getCredentialsURL() << std::endl;
+    std::cout << "  CredentialsUri: " << config.getCredentialsUri() << std::endl;
     std::cout << std::endl;
     
     // Uncomment to actually create client (requires valid URL)

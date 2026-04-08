@@ -82,9 +82,11 @@ TEST_F(CLIProfileProviderTest, ConstructorWithSpecialProfileName) {
 }
 
 TEST_F(CLIProfileProviderTest, GetCredentialWithoutValidConfig) {
-  // Without valid config file, should throw
+  // Set to a non-existent path to ensure no config file is found
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", "/tmp/nonexistent_cli_config_12345.json", 1);
+
   CLIProfileProvider provider;
-  
+
   EXPECT_THROW({
     provider.getCredential();
   }, CredentialException);
@@ -99,8 +101,11 @@ TEST_F(CLIProfileProviderTest, MultipleProfileInstances) {
 }
 
 TEST_F(CLIProfileProviderTest, ConstGetCredential) {
+  // Set to a non-existent path to ensure no config file is found
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", "/tmp/nonexistent_cli_config_67890.json", 1);
+
   const CLIProfileProvider provider;
-  
+
   EXPECT_THROW({
     provider.getCredential();
   }, CredentialException);
@@ -130,13 +135,16 @@ TEST_F(CLIProfileProviderTest, UsesEnvironmentVariableForPath) {
 }
 
 TEST_F(CLIProfileProviderTest, SupportsMultipleGetCredentialCalls) {
+  // Set to a non-existent path to ensure no config file is found
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", "/tmp/nonexistent_cli_config_multi.json", 1);
+
   CLIProfileProvider provider;
-  
+
   // Multiple calls should behave consistently
   EXPECT_THROW({
     provider.getCredential();
   }, CredentialException);
-  
+
   EXPECT_THROW({
     provider.getCredential();
   }, CredentialException);

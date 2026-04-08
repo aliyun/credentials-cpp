@@ -402,7 +402,7 @@ using namespace AlibabaCloud::Credentials;
 int main() {
     Models::Config config;
     config.setType("credentials_uri")
-          .setCredentialsURL("<your-credentials-url>");
+          .setCredentialsUri("<your-credentials-url>");
     
     Client client(config);
     
@@ -501,7 +501,7 @@ int main() {
 | `oidcTokenFilePath` | string | OIDC Token 文件路径 |
 | `publicKeyId` | string | RSA 公钥 ID |
 | `privateKeyFile` | string | RSA 私钥文件路径 |
-| `credentialsURL` | string | 获取凭证的 URL |
+| `credentialsUri` | string | 获取凭证的 URL |
 | `stsEndpoint` | string | STS 服务端点，默认值：sts.aliyuncs.com |
 | `stsRegionId` | string | STS 地域 ID |
 | `regionId` | string | 地域 ID，默认值：cn-hangzhou |

@@ -7,66 +7,51 @@
 
 #include <alibabacloud/credentials/Constant.hpp>
 #include <alibabacloud/credentials/Model.hpp>
-#include <alibabacloud/credentials/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/credentials/provider/RefreshableProvider.hpp>
 
 ALIBABACLOUD_CREDENTIALS_SUPPRESS_STL_WARNING_PUSH
 
 namespace AlibabaCloud {
 namespace Credentials {
 
-class ALIBABACLOUD_CREDENTIALS_EXPORT RamRoleArnProvider : public NeedFreshProvider,
-                           std::enable_shared_from_this<RamRoleArnProvider> {
+class ALIBABACLOUD_CREDENTIALS_EXPORT RamRoleArnProvider : public RefreshableProvider {
 public:
-  RamRoleArnProvider(std::shared_ptr<Models::Config> config)
-      : roleArn_(config->getRoleArn()),
-        roleSessionName_(config->getRoleSessionName()),
-        policy_(config->hasPolicy()
-                    ? std::make_shared<std::string>(config->getPolicy())
-                    : nullptr),
-        durationSeconds_(config->getDurationSeconds()), 
-        regionId_(config->hasStsRegionId() && !config->getStsRegionId().empty() 
-                      ? config->getStsRegionId()
-                      : (Darabonba::Env::getEnv(Constant::ENV_STS_REGION).empty()
-                             ? config->getRegionId()
-                             : Darabonba::Env::getEnv(Constant::ENV_STS_REGION))),
-        stsEndpoint_(config->getStsEndpoint()),
-        enableVpc_(config->hasEnableVpc()
-                       ? config->getEnableVpc()
-                       : (Darabonba::Env::getEnv(Constant::ENV_VPC_ENDPOINT_ENABLED) == "true")),
-        connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
-        readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
-    credential_.setAccessKeyId(config->getAccessKeyId())
-        .setAccessKeySecret(config->getAccessKeySecret())
-        .setType(Constant::RAM_ROLE_ARN);
-  }
+  RamRoleArnProvider(std::shared_ptr<Models::Config> config,
+                     StaleValueBehavior behavior = StaleValueBehavior::STRICT_,
+                     std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
   RamRoleArnProvider(const std::string &accessKeyId,
                      const std::string &accessKeySecret,
                      const std::string &roleArn,
-                     const std::string roleSessionName,
+                     const std::string &roleSessionName = "credentials-cpp-session",
                      std::shared_ptr<std::string> policy = nullptr,
-                     int64_t durationSeconds_ = 3600,
+                     int64_t durationSeconds = 3600,
                      const std::string &regionId = "cn-hangzhou",
-                     const std::string &stsEndpoint = "sts.aliyuncs.com")
-      : roleArn_(roleArn), roleSessionName_(roleSessionName), policy_(policy),
-        durationSeconds_(durationSeconds_), regionId_(regionId),
-        stsEndpoint_(stsEndpoint) {
-    credential_.setAccessKeyId(accessKeyId)
-        .setAccessKeySecret(accessKeySecret)
-        .setType(Constant::RAM_ROLE_ARN);
-  }
+                     const std::string &stsEndpoint = "sts.aliyuncs.com",
+                     StaleValueBehavior behavior = StaleValueBehavior::STRICT_,
+                     std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
-  virtual ~RamRoleArnProvider() {}
-  
+  virtual ~RamRoleArnProvider() = default;
+
   /**
    * @brief Get provider name
    */
   std::string getProviderName() const override { return Constant::RAM_ROLE_ARN; }
 
-private:
-  virtual bool refreshCredential() const override;
+protected:
+  /**
+   * @brief Implement credential refresh logic
+   */
+  virtual RefreshResult doRefresh() const override;
 
-  mutable Models::CredentialModel credential_;
+  /**
+   * @brief Calculate stale time (expiration - 15 minutes)
+   */
+  int64_t getStaleTime(int64_t expiration) const;
+
+private:
+  std::string accessKeyId_;
+  std::string accessKeySecret_;
   std::string roleArn_;
   std::string roleSessionName_;
   std::shared_ptr<std::string> policy_ = nullptr;
@@ -79,7 +64,6 @@ private:
 };
 
 } // namespace Credentials
-
 } // namespace AlibabaCloud
 
 ALIBABACLOUD_CREDENTIALS_SUPPRESS_STL_WARNING_POP

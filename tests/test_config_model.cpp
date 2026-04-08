@@ -241,7 +241,7 @@ TEST(ConfigTest, AllFieldsChainedSetter) {
         .setPrivateKeyFile("/path/to/key")
         .setOidcProviderArn("acs:ram::123:oidc")
         .setOidcTokenFilePath("/path/to/token")
-        .setCredentialsURL("http://example.com")
+        .setCredentialsUri("http://example.com")
         .setExternalId("ext_id")
         .setHost("host.example.com")
         .setProxy("http://proxy:8080")
@@ -266,7 +266,7 @@ TEST(ConfigTest, AllFieldsChainedSetter) {
   EXPECT_EQ("/path/to/key", config.getPrivateKeyFile());
   EXPECT_EQ("acs:ram::123:oidc", config.getOidcProviderArn());
   EXPECT_EQ("/path/to/token", config.getOidcTokenFilePath());
-  EXPECT_EQ("http://example.com", config.getCredentialsURL());
+  EXPECT_EQ("http://example.com", config.getCredentialsUri());
   EXPECT_EQ("ext_id", config.getExternalId());
   EXPECT_EQ("host.example.com", config.getHost());
   EXPECT_EQ("http://proxy:8080", config.getProxy());

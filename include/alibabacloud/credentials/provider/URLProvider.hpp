@@ -6,43 +6,39 @@
 #include <alibabacloud/credentials/Exception.hpp>
 #include <alibabacloud/credentials/Constant.hpp>
 #include <alibabacloud/credentials/Model.hpp>
-#include <alibabacloud/credentials/provider/NeedFreshProvider.hpp>
+#include <alibabacloud/credentials/provider/RefreshableProvider.hpp>
 
 ALIBABACLOUD_CREDENTIALS_SUPPRESS_STL_WARNING_PUSH
 
 namespace AlibabaCloud {
 namespace Credentials {
 
-class ALIBABACLOUD_CREDENTIALS_EXPORT URLProvider : public NeedFreshProvider,
-                    std::enable_shared_from_this<URLProvider> {
+class ALIBABACLOUD_CREDENTIALS_EXPORT URLProvider : public RefreshableProvider {
 public:
+  URLProvider(std::shared_ptr<Models::Config> config,
+              StaleValueBehavior behavior = StaleValueBehavior::STRICT_,
+              std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
-  URLProvider(std::shared_ptr<Models::Config> config) : url_(config->getCredentialsURL()),
-      connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
-      readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
-    credential_.setType(Constant::URL_STS);
-  }
+  URLProvider(const std::string &url,
+              StaleValueBehavior behavior = StaleValueBehavior::STRICT_,
+              std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
-  URLProvider(const std::string &url) : url_(url) {
-    if (url.empty()) {
-      throw CredentialException(std::string("URL cannot be empty"));
-    }
-    credential_.setType(Constant::URL_STS);
-  }
+  virtual ~URLProvider() = default;
 
-
-  virtual ~URLProvider() {}
-  
   /**
    * @brief Get provider name
    */
   std::string getProviderName() const override { return Constant::URL_STS; }
 
 protected:
-  virtual bool refreshCredential() const override;
 
+  virtual RefreshResult doRefresh() const override;
+
+
+  int64_t getStaleTime(int64_t expiration) const;
+
+private:
   std::string url_;
-  mutable Models::CredentialModel credential_;
   int64_t connectTimeout_ = 10000;  // Connection timeout in milliseconds
   int64_t readTimeout_ = 5000;      // Read timeout in milliseconds
 };

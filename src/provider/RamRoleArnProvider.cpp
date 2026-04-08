@@ -16,7 +16,71 @@
 namespace AlibabaCloud {
 namespace Credentials {
 
-bool RamRoleArnProvider::refreshCredential() const {
+RamRoleArnProvider::RamRoleArnProvider(std::shared_ptr<Models::Config> config,
+                                       StaleValueBehavior behavior,
+                                       std::shared_ptr<PrefetchStrategy> strategy)
+    : RefreshableProvider(behavior, strategy),
+      accessKeyId_(config->getAccessKeyId()),
+      accessKeySecret_(config->getAccessKeySecret()),
+      roleArn_(config->getRoleArn()),
+      roleSessionName_(config->hasRoleSessionName() && !config->getRoleSessionName().empty()
+                           ? config->getRoleSessionName()
+                           : "credentials-cpp-session"),
+      policy_(config->hasPolicy() && !config->getPolicy().empty()
+                  ? std::make_shared<std::string>(config->getPolicy())
+                  : nullptr),
+      durationSeconds_(config->hasRoleSessionExpiration() && config->getRoleSessionExpiration() > 0
+                           ? config->getRoleSessionExpiration()
+                           : 3600),
+      regionId_(config->hasRegionId() && !config->getRegionId().empty()
+                    ? config->getRegionId()
+                    : "cn-hangzhou"),
+      stsEndpoint_(config->hasStsEndpoint() && !config->getStsEndpoint().empty()
+                       ? config->getStsEndpoint()
+                       : "sts.aliyuncs.com"),
+      enableVpc_(config->hasEnableVpc() ? config->getEnableVpc() : false),
+      connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout() : 10000),
+      readTimeout_(config->hasTimeout() ? config->getTimeout() : 5000) {
+  if (roleArn_.empty()) {
+    throw CredentialException(std::string("RoleArn cannot be empty."));
+  }
+}
+
+RamRoleArnProvider::RamRoleArnProvider(const std::string &accessKeyId,
+                                       const std::string &accessKeySecret,
+                                       const std::string &roleArn,
+                                       const std::string &roleSessionName,
+                                       std::shared_ptr<std::string> policy,
+                                       int64_t durationSeconds,
+                                       const std::string &regionId,
+                                       const std::string &stsEndpoint,
+                                       StaleValueBehavior behavior,
+                                       std::shared_ptr<PrefetchStrategy> strategy)
+    : RefreshableProvider(behavior, strategy),
+      accessKeyId_(accessKeyId),
+      accessKeySecret_(accessKeySecret),
+      roleArn_(roleArn),
+      roleSessionName_(roleSessionName.empty() ? "credentials-cpp-session" : roleSessionName),
+      policy_(policy),
+      durationSeconds_(durationSeconds > 0 ? durationSeconds : 3600),
+      regionId_(regionId.empty() ? "cn-hangzhou" : regionId),
+      stsEndpoint_(stsEndpoint.empty() ? "sts.aliyuncs.com" : stsEndpoint),
+      enableVpc_(false),
+      connectTimeout_(10000),
+      readTimeout_(5000) {
+  if (roleArn_.empty()) {
+    throw CredentialException(std::string("RoleArn cannot be empty."));
+  }
+}
+
+int64_t RamRoleArnProvider::getStaleTime(int64_t expiration) const {
+  if (expiration <= 0) {
+    return getCurrentTime() + 60 * 60;  // Default 1 hour if no expiration
+  }
+  return expiration - STALE_TIME_WINDOW;  // expiration - 15 minutes
+}
+
+RefreshResult RamRoleArnProvider::doRefresh() const {
   Darabonba::Http::Query query = {
       {"DurationSeconds", std::to_string(durationSeconds_)},
       {"RoleArn", roleArn_},
@@ -75,11 +139,11 @@ bool RamRoleArnProvider::refreshCredential() const {
   // Calculate signature
   std::string signature = Darabonba::Encode::Encoder::hexEncode(
       Darabonba::Signature::Signer::HmacSHA256Sign(
-          stringToSign, credential_.getAccessKeySecret()));
+          stringToSign, accessKeySecret_));
 
   // Build Authorization Header
   std::string authorization =
-      "ACS3-HMAC-SHA256 Credential=" + credential_.getAccessKeyId() +
+      "ACS3-HMAC-SHA256 Credential=" + accessKeyId_ +
       ",SignedHeaders=" + signedHeaders + ",Signature=" + signature;
   req.getHeaders()["Authorization"] = authorization;
 
@@ -97,11 +161,22 @@ bool RamRoleArnProvider::refreshCredential() const {
     throw CredentialException(result.dump());
   }
   auto &credential = result["Credentials"];
-  this->expiration_ = strtotime(credential["Expiration"].get<std::string>());
-  credential_.setAccessKeyId(credential["AccessKeyId"].get<std::string>())
+  int64_t expiration = strtotime(credential["Expiration"].get<std::string>());
+
+  // Build credential model
+  Models::CredentialModel cred;
+  cred.setAccessKeyId(credential["AccessKeyId"].get<std::string>())
       .setAccessKeySecret(credential["AccessKeySecret"].get<std::string>())
-      .setSecurityToken(credential["SecurityToken"].get<std::string>());
-  return true;
+      .setSecurityToken(credential["SecurityToken"].get<std::string>())
+      .setType(Constant::RAM_ROLE_ARN)
+      .setProviderName(getProviderName());
+
+  // Calculate stale time (expiration - 15 minutes)
+  int64_t staleTime = getStaleTime(expiration);
+  // Calculate prefetch time (stale time - 180 seconds)
+  int64_t prefetchTime = staleTime - PREFETCH_THRESHOLD;
+
+  return RefreshResult(cred, staleTime, prefetchTime);
 }
 
 } // namespace Credentials

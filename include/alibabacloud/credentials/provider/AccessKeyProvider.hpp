@@ -26,8 +26,7 @@ public:
   }
   virtual ~AccessKeyProvider() {}
 
-  virtual Models::CredentialModel &getCredential() override { return credential_; }
-  virtual const Models::CredentialModel &getCredential() const override {
+  virtual Models::CredentialModel getCredential() const override {
     return credential_;
   }
   

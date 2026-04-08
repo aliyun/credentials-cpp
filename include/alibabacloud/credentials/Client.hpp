@@ -22,18 +22,15 @@ class ALIBABACLOUD_CREDENTIALS_EXPORT Client : public Darabonba::Model {
   }
 
 public:
-  // Constructor 1: Default constructor
-  // Equivalent to Java: public Client()
+  // Default constructor
   Client();
-  
-  // Constructor 2: Config-based constructors (3 overloads for different config types)
-  // Equivalent to Java: public Client(Config config)
+
+  // Config-based constructors (3 overloads for different config types)
   Client(const Models::Config &obj);
   Client(Models::Config &&obj);
   Client(std::shared_ptr<Models::Config> config);
-  
-  // Constructor 3: Provider-based constructor
-  // Equivalent to Java: public Client(AlibabaCloudCredentialsProvider provider)
+
+  // Provider-based constructor
   Client(std::shared_ptr<Provider> provider);
   
   Client(const Client &) = default;
@@ -133,14 +130,19 @@ private:
 namespace nlohmann {
   template <>
   struct adl_serializer<std::shared_ptr<AlibabaCloud::Credentials::Client>> {
-    static void to_json(json &j, const std::shared_ptr<AlibabaCloud::Credentials::Client> client) {
-      j = reinterpret_cast<uintptr_t>(client.get());
+    static void to_json(json &j, const std::shared_ptr<AlibabaCloud::Credentials::Client> &client) {
+      if (client) {
+        j = client->toMap();
+      } else {
+        j = nullptr;
+      }
     }
 
     static std::shared_ptr<AlibabaCloud::Credentials::Client> from_json(const json &j) {
-      if (!j.is_null()) {
-        AlibabaCloud::Credentials::Client *ptr = reinterpret_cast<AlibabaCloud::Credentials::Client *>(j.get<uintptr_t>());
-        return std::make_shared<AlibabaCloud::Credentials::Client>(*ptr);
+      if (!j.is_null() && j.is_object()) {
+        auto client = std::make_shared<AlibabaCloud::Credentials::Client>();
+        client->fromMap(j);
+        return client;
       }
       return nullptr;
     }

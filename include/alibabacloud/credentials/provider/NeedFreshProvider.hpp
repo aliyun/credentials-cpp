@@ -2,6 +2,7 @@
 #define ALIBABACLOUD_CREDENTIALS_NEEDFRESHPROVIDER_HPP_
 
 #include <ctime>
+#include <mutex>
 #include <sstream>
 #include <iomanip>
 
@@ -14,14 +15,15 @@ public:
   NeedFreshProvider(long long expiration) : expiration_(expiration) {}
   virtual ~NeedFreshProvider() {}
 
-  virtual Models::CredentialModel &getCredential() override {
+  /**
+   * @brief Get credential (thread safe)
+   * @note Returns a copy to ensure consistency between AK and SK.
+   */
+  virtual Models::CredentialModel getCredential() const override {
+    std::lock_guard<std::mutex> lock(refreshMutex_);
     refresh();
     return credential_;
   }
-   virtual const Models::CredentialModel &getCredential() const override {
-     refresh();
-     return credential_;
-   }
 
 protected:
   virtual bool needFresh() const {
@@ -29,6 +31,13 @@ protected:
     return expiration_ - now <= 180;
   }
 
+  /**
+   * @brief Refresh credential
+   * @return true if a new credential was fetched, false otherwise
+   * @note Subclasses should create a complete CredentialModel with matching
+   *       AK/SK pair before assigning to credential_. Do not modify credential_
+   *       field by field as this can cause inconsistency during copy.
+   */
   virtual bool refreshCredential() const = 0;
 
   virtual void refresh() const {
@@ -79,6 +88,7 @@ protected:
 #endif
   }
 
+  mutable std::mutex refreshMutex_;
   mutable Models::CredentialModel credential_;
   mutable int64_t expiration_ = 0;
 };

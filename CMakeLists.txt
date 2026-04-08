@@ -19,7 +19,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(MSVC)
   # Standardize MSVC runtime (MD/MDd for shared, MT/MTd for static)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
-  add_compile_options(/W4 /WX /Zc:__cplusplus /utf-8)
+  # C4251: STL types in exported classes (safe when using same compiler/runtime)
+  # C4275: Non dll-interface base class (safe for STL base classes)
+  add_compile_options(/W4 /WX /Zc:__cplusplus /utf-8 /wd4251 /wd4275)
   
   # Runtime library selection
   if(BUILD_SHARED_LIBS)

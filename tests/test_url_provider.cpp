@@ -11,7 +11,7 @@ using namespace AlibabaCloud::Credentials;
 
 TEST(URLProviderTest, ConstructorWithConfig) {
   auto config = std::make_shared<Models::Config>();
-  config->setCredentialsURL("http://localhost:8080/credentials");
+  config->setCredentialsUri("http://localhost:8080/credentials");
   
   EXPECT_NO_THROW({
     URLProvider provider(config);
@@ -32,7 +32,7 @@ TEST(URLProviderTest, ConstructorWithEmptyURL) {
 
 TEST(URLProviderTest, ProviderType) {
   auto config = std::make_shared<Models::Config>();
-  config->setCredentialsURL("http://localhost:8080/credentials");
+  config->setCredentialsUri("http://localhost:8080/credentials");
   
   URLProvider provider(config);
   

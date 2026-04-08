@@ -18,8 +18,13 @@ public:
   Provider &operator=(Provider &&) = default;
   virtual ~Provider() = default;
 
-  virtual Models::CredentialModel &getCredential() = 0;
-  virtual const Models::CredentialModel &getCredential() const = 0;
+  /**
+   * @brief Get credential model
+   * @note Returns a copy to ensure thread safety and data consistency.
+   *       The copy overhead is minimal (6 shared_ptr copies).
+   * @return CredentialModel containing all credential information
+   */
+  virtual Models::CredentialModel getCredential() const = 0;
   
   /**
    * @brief Get provider name

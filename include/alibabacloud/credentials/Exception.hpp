@@ -14,7 +14,6 @@ namespace Credentials {
 
 /**
  * @brief Custom exception class for credential operations
- * Aligned with tea-java TeaException design pattern
  * Supports multiple construction methods and comprehensive error information
  */
 class ALIBABACLOUD_CREDENTIALS_EXPORT CredentialException : public std::exception {
@@ -32,7 +31,7 @@ public:
         : message_(message) {}
 
     /**
-     * @brief Construct with message, code and request_id (Python-style)
+     * @brief Construct with message, code and request_id
      * @param message Error message
      * @param code Error code (optional)
      * @param request_id Request ID (optional)
@@ -43,7 +42,7 @@ public:
         : code_(code), message_(message), request_id_(request_id) {}
 
     /**
-     * @brief Construct from JSON (tea-java style)
+     * @brief Construct from JSON
      * @param json JSON object containing error information
      */
     explicit CredentialException(const Darabonba::Json& json) {
@@ -122,7 +121,7 @@ public:
         return message_.c_str();
     }
 
-    // Getters (aligned with tea-java TeaException)
+    // Getters
     const std::string& getCode() const { return code_; }
     const std::string& getMessage() const { return message_; }
     const std::string& getRequestId() const { return request_id_; }
@@ -131,7 +130,7 @@ public:
     const Darabonba::Json& getData() const { return data_; }
     const Darabonba::Json& getAccessDeniedDetail() const { return accessDeniedDetail_; }
 
-    // Setters (aligned with tea-java TeaException)
+    // Setters
     void setCode(const std::string& code) { code_ = code; }
     void setMessage(const std::string& message) { message_ = message; }
     void setRequestId(const std::string& request_id) { request_id_ = request_id; }

@@ -152,7 +152,7 @@ TEST(EdgeCasesTest, ConfigWithAllFieldsSet) {
         .setStsEndpoint("sts.endpoint.com")
         .setOidcProviderArn("oidc_arn")
         .setOidcTokenFilePath("/path/to/token")
-        .setCredentialsURL("http://creds.url")
+        .setCredentialsUri("http://creds.url")
         .setExternalId("ext_id")
         .setRoleSessionExpiration(3600)
         .setTimeout(10000)

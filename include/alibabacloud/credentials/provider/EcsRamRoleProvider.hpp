@@ -16,31 +16,21 @@ namespace Credentials {
 
 /**
  * @brief ECS RAM role credential provider (async refresh version)
- * 
- * Fully corresponds to Python SDK's EcsRamRoleCredentialsProvider implementation:
- * https://github.com/aliyun/credentials-python/blob/master/alibabacloud_credentialss/provider/ecs_ram_role.py
- * 
- * Key features:
- * - Background async refresh (NonBlocking strategy)
- * - Scheduled refresh check (should_refresh flag)
+ *
+ * Features:
+ * - Background scheduled refresh (shared global thread, checks every 1 minute)
  * - IMDSv2/IMDSv1 auto-switch
- * - Custom stale_time and prefetch_time calculation
  * - ALLOW mode tolerates refresh failures
  */
 class ALIBABACLOUD_CREDENTIALS_EXPORT EcsRamRoleProvider : public RefreshableProvider {
 public:
-  // Default configuration constants (from Python SDK)
+  // Default configuration constants
   static constexpr int DEFAULT_METADATA_TOKEN_DURATION = 21600;  // 6 hours
   static constexpr int DEFAULT_CONNECT_TIMEOUT = 1000;            // 1 second
   static constexpr int DEFAULT_READ_TIMEOUT = 1000;               // 1 second
 
   /**
    * @brief Construct with config
-   * 
-   * @param config Configuration object
-   * @param asyncUpdateEnabled Enable async update (default true, corresponds to Python async_update_enabled)
-   * @param behavior Stale value policy (default ALLOW, corresponds to Python)
-   * @param strategy Refresh strategy (default NonBlocking, corresponds to Python)
    */
   EcsRamRoleProvider(
       std::shared_ptr<Models::Config> config,
@@ -50,12 +40,6 @@ public:
 
   /**
    * @brief Construct with role name
-   * 
-   * @param roleName Role name
-   * @param disableIMDSv1 Disable IMDSv1
-   * @param asyncUpdateEnabled Enable async update
-   * @param behavior Stale value policy
-   * @param strategy Refresh strategy
    */
   EcsRamRoleProvider(
       const std::string& roleName = "",
@@ -64,56 +48,62 @@ public:
       StaleValueBehavior behavior = StaleValueBehavior::ALLOW_,
       std::shared_ptr<PrefetchStrategy> strategy = std::make_shared<NonBlockingPrefetch>());
 
-  virtual ~EcsRamRoleProvider() = default;
+  virtual ~EcsRamRoleProvider();
 
   /**
-   * @brief Get provider name (corresponds to Python get_provider_name)
+   * @brief Get provider name
    */
   std::string getProviderName() const override { return Constant::ECS_RAM_ROLE; }
 
   /**
-   * @brief Check if async credential update is enabled (corresponds to Java isAsyncCredentialUpdateEnabled)
+   * @brief Check if async credential update is enabled
    */
   bool isAsyncCredentialUpdateEnabled() const { return asyncUpdateEnabled_; }
 
 protected:
   /**
-   * @brief Override RefreshableProvider's isAsyncUpdateEnabled to use our setting
+   * @brief Override RefreshableProvider's isAsyncUpdateEnabled
    */
   bool isAsyncUpdateEnabled() const override { return asyncUpdateEnabled_; }
 
-protected:
   /**
-   * @brief Implement credential refresh logic (corresponds to Python _refresh_credentials)
+   * @brief Implement credential refresh logic
    */
   virtual RefreshResult doRefresh() const override;
 
   /**
-   * @brief Calculate stale_time (corresponds to Python _get_stale_time)
-   * 
-   * Python logic:
-   * - If expiration < 0: return now + 60 minutes
-   * - Otherwise: return expiration - 15 minutes
+   * @brief Calculate stale_time (expiration - 15 minutes)
    */
   int64_t getStaleTime(int64_t expiration) const;
 
   /**
-   * @brief Calculate prefetch_time (corresponds to Python _get_prefetch_time)
-   *
-   * Python logic:
-   * - If expiration < 0: return now + 5 minutes
-   * - Otherwise: return now + 60 minutes
+   * @brief Calculate prefetch_time
    */
   static int64_t getPrefetchTime(int64_t expiration);
 
 private:
   /**
-   * @brief Get role name (corresponds to Python _get_role_name)
+   * @brief Register with global scheduler
+   */
+  void registerWithScheduler();
+
+  /**
+   * @brief Unregister from global scheduler
+   */
+  void unregisterFromScheduler();
+
+  /**
+   * @brief Scheduled refresh callback (called by global scheduler)
+   */
+  void scheduledRefresh();
+
+  /**
+   * @brief Get role name from metadata service
    */
   std::string getRoleName() const;
 
   /**
-   * @brief Get IMDSv2 Token (corresponds to Python _get_metadata_token)
+   * @brief Get IMDSv2 Token
    */
   std::string getMetadataToken() const;
 
@@ -127,12 +117,15 @@ private:
   static const std::string ECS_METADATA_TOKEN_FETCH_ERROR_MSG;
 
   // Member variables
-  mutable std::string roleName_;           // Role name
-  mutable bool disableIMDSv1_;             // Disable IMDSv1
-  mutable std::atomic<bool> shouldRefresh_; // Refresh flag (corresponds to Python _should_refresh)
-  bool asyncUpdateEnabled_;                 // Enable async update (corresponds to Java asyncCredentialUpdateEnabled)
-  int64_t connectTimeout_;                  // Connection timeout
-  int64_t readTimeout_;                     // Read timeout
+  mutable std::string roleName_;
+  mutable bool disableIMDSv1_;
+  mutable std::atomic<bool> shouldRefresh_;
+  bool asyncUpdateEnabled_;
+  int64_t connectTimeout_;
+  int64_t readTimeout_;
+
+  // Scheduler entry ID (for unregistration)
+  size_t schedulerEntryId_{0};
 };
 
 } // namespace Credentials

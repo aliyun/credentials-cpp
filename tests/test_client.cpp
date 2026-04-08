@@ -12,9 +12,27 @@
 #include <alibabacloud/credentials/provider/URLProvider.hpp>
 #include <alibabacloud/credentials/provider/CloudSSOCredentialsProvider.hpp>
 #include <alibabacloud/credentials/provider/OAuthCredentialsProvider.hpp>
+#include <cstdlib>
+#include <fstream>
 #include <memory>
 
 using namespace AlibabaCloud::Credentials;
+
+// Cross-platform temporary directory helper
+static std::string getTempDir() {
+#ifdef _WIN32
+  const char* tempDir = std::getenv("TEMP");
+  if (!tempDir) {
+    tempDir = std::getenv("TMP");
+  }
+  if (!tempDir) {
+    return "C:\\Windows\\Temp";
+  }
+  return std::string(tempDir);
+#else
+  return "/tmp";
+#endif
+}
 
 // ==================== Client Constructor Tests ====================
 
@@ -149,32 +167,48 @@ TEST_F(ClientTest, RamRoleArnClient) {
 }
 
 TEST_F(ClientTest, RsaKeyPairClient) {
+    // Create a temporary private key file
+    std::string keyPath = getTempDir() + "/test_rsa_client_key.pem";
+    std::ofstream keyFile(keyPath);
+    keyFile << "-----BEGIN RSA PRIVATE KEY-----\ntest_private_key_content\n-----END RSA PRIVATE KEY-----";
+    keyFile.close();
+
     Models::Config config;
     config.setPublicKeyId("test_public_key_id")
-          .setPrivateKeyFile("/path/to/private_key.pem")
+          .setPrivateKeyFile(keyPath)
           .setType(Constant::RSA_KEY_PAIR);
-    
+
     EXPECT_NO_THROW({
         Client client(config);
     });
+
+    std::remove(keyPath.c_str());
 }
 
 TEST_F(ClientTest, OIDCRoleArnClient) {
+    // Create a temporary OIDC token file
+    std::string tokenPath = getTempDir() + "/test_oidc_client_token.txt";
+    std::ofstream tokenFile(tokenPath);
+    tokenFile << "test_oidc_token_content";
+    tokenFile.close();
+
     Models::Config config;
     config.setRoleArn("acs:ram::123456789:role/test-role")
           .setOidcProviderArn("acs:ram::123456789:oidc-provider/test")
-          .setOidcTokenFilePath("/path/to/oidc/token")
+          .setOidcTokenFilePath(tokenPath)
           .setRoleSessionName("test-session")
           .setType(Constant::OIDC_ROLE_ARN);
-    
+
     EXPECT_NO_THROW({
         Client client(config);
     });
+
+    std::remove(tokenPath.c_str());
 }
 
 TEST_F(ClientTest, URLProviderClient) {
     Models::Config config;
-    config.setCredentialsURL("http://credentials.example.com")
+    config.setCredentialsUri("http://credentials.example.com")
           .setType(Constant::URL_STS);
     
     EXPECT_NO_THROW({

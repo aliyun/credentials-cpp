@@ -26,7 +26,7 @@ DefaultProvider::DefaultProvider() {
         roleArn, oidcProviderArn, oidcTokenFile, roleSessionName));
   }
 
-  // Add CLIProfileProvider to match Java implementation
+  // Add CLIProfileProvider
   providers_.emplace_back(new CLIProfileProvider());
 
   providers_.emplace_back(new ProfileProvider());
@@ -64,7 +64,7 @@ DefaultProvider::DefaultProvider(std::shared_ptr<Models::Config> config)
         roleArn, oidcProviderArn, oidcTokenFile, roleSessionName));
   }
 
-  // Add CLIProfileProvider to match Java implementation
+  // Add CLIProfileProvider
   providers_.emplace_back(new CLIProfileProvider());
 
   providers_.emplace_back(new ProfileProvider());

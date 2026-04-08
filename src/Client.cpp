@@ -16,12 +16,10 @@
 namespace AlibabaCloud {
 namespace Credentials {
 
-// Constructor 1: Default constructor
-// Equivalent to Java: public Client()
+// Default constructor
 Client::Client() : provider_(std::make_shared<DefaultProvider>()) {}
 
-// Constructor 2: Config-based constructors
-// Equivalent to Java: public Client(Config config)
+// Config-based constructors
 Client::Client(const Models::Config &obj)
     : config_(std::make_shared<Models::Config>(obj)),
       provider_(makeProvider(config_)) {}
@@ -33,8 +31,7 @@ Client::Client(Models::Config &&obj)
 Client::Client(std::shared_ptr<Models::Config> config)
     : config_(std::move(config)), provider_(makeProvider(config_)) {}
 
-// Constructor 3: Provider-based constructor
-// Equivalent to Java: public Client(AlibabaCloudCredentialsProvider provider)
+// Provider-based constructor
 Client::Client(std::shared_ptr<Provider> provider)
     : provider_(std::move(provider)) {}
 

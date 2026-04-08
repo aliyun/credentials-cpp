@@ -417,14 +417,137 @@ TEST(IntegrationTest, ConfigChainedSetters) {
 
 TEST(IntegrationTest, CredentialModelChainedSetters) {
   Models::CredentialModel model;
-  
+
   auto& result = model.setAccessKeyId("model_ak")
                       .setAccessKeySecret("model_secret")
                       .setType("model_type")
                       .setProviderName("model_provider")
                       .setBearerToken("model_token")
                       .setSecurityToken("model_sec_token");
-  
+
   EXPECT_EQ("model_ak", result.getAccessKeyId());
   EXPECT_EQ("model_provider", result.getProviderName());
+}
+
+// ==================== OIDC Integration Test ====================
+// This test requires OIDC environment variables to be set in CI environment:
+// - ALIBABA_CLOUD_ROLE_ARN
+// - ALIBABA_CLOUD_OIDC_PROVIDER_ARN
+// - ALIBABA_CLOUD_OIDC_TOKEN_FILE
+
+#include <darabonba/Env.hpp>
+#include <cstdlib>
+
+class OIDCIntegrationTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    roleArn_ = Darabonba::Env::getEnv("ALIBABA_CLOUD_ROLE_ARN");
+    oidcProviderArn_ = Darabonba::Env::getEnv("ALIBABA_CLOUD_OIDC_PROVIDER_ARN");
+    oidcTokenFile_ = Darabonba::Env::getEnv("ALIBABA_CLOUD_OIDC_TOKEN_FILE");
+  }
+
+  bool hasOidcEnvVars() const {
+    return !roleArn_.empty() && !oidcProviderArn_.empty() && !oidcTokenFile_.empty();
+  }
+
+  std::string roleArn_;
+  std::string oidcProviderArn_;
+  std::string oidcTokenFile_;
+};
+
+TEST_F(OIDCIntegrationTest, OIDCShouldOk) {
+  // Skip test if environment variables are not set
+  if (!hasOidcEnvVars()) {
+    GTEST_SKIP() << "OIDC environment variables not set, skipping integration test";
+  }
+
+  // Create config from environment variables
+  Models::Config config;
+  config.setType("oidc_role_arn")
+        .setRoleArn(roleArn_)
+        .setOidcProviderArn(oidcProviderArn_)
+        .setOidcTokenFilePath(oidcTokenFile_)
+        .setRoleSessionName("credentials-cpp-test");
+
+  // Create client
+  Client client(config);
+
+  // Verify client type
+  EXPECT_EQ("oidc_role_arn", client.getType());
+
+  // Get credential
+  auto credential = client.getCredential();
+
+  // Verify credential
+  EXPECT_FALSE(credential.empty());
+  EXPECT_EQ("oidc_role_arn", credential.getType());
+  EXPECT_FALSE(credential.getAccessKeyId().empty());
+  EXPECT_FALSE(credential.getAccessKeySecret().empty());
+  EXPECT_FALSE(credential.getSecurityToken().empty());
+}
+
+TEST_F(OIDCIntegrationTest, OIDCWithDefaultSessionName) {
+  if (!hasOidcEnvVars()) {
+    GTEST_SKIP() << "OIDC environment variables not set, skipping integration test";
+  }
+
+  Models::Config config;
+  config.setType("oidc_role_arn")
+        .setRoleArn(roleArn_)
+        .setOidcProviderArn(oidcProviderArn_)
+        .setOidcTokenFilePath(oidcTokenFile_);
+  // Not setting roleSessionName, should use default
+
+  Client client(config);
+  EXPECT_EQ("oidc_role_arn", client.getType());
+
+  auto credential = client.getCredential();
+  EXPECT_FALSE(credential.empty());
+  EXPECT_EQ("oidc_role_arn", credential.getType());
+  EXPECT_FALSE(credential.getSecurityToken().empty());
+}
+
+TEST_F(OIDCIntegrationTest, OIDCCredentialRefresh) {
+  if (!hasOidcEnvVars()) {
+    GTEST_SKIP() << "OIDC environment variables not set, skipping integration test";
+  }
+
+  Models::Config config;
+  config.setType("oidc_role_arn")
+        .setRoleArn(roleArn_)
+        .setOidcProviderArn(oidcProviderArn_)
+        .setOidcTokenFilePath(oidcTokenFile_)
+        .setRoleSessionName("refresh-test");
+
+  Client client(config);
+
+  // Get credential twice, should work without issues
+  auto credential1 = client.getCredential();
+  auto credential2 = client.getCredential();
+
+  EXPECT_FALSE(credential1.empty());
+  EXPECT_FALSE(credential2.empty());
+  EXPECT_EQ("oidc_role_arn", credential1.getType());
+  EXPECT_EQ("oidc_role_arn", credential2.getType());
+}
+
+TEST_F(OIDCIntegrationTest, OIDCWithCustomDuration) {
+  if (!hasOidcEnvVars()) {
+    GTEST_SKIP() << "OIDC environment variables not set, skipping integration test";
+  }
+
+  Models::Config config;
+  config.setType("oidc_role_arn")
+        .setRoleArn(roleArn_)
+        .setOidcProviderArn(oidcProviderArn_)
+        .setOidcTokenFilePath(oidcTokenFile_)
+        .setRoleSessionName("duration-test")
+        .setDurationSeconds(3600);
+
+  Client client(config);
+  EXPECT_EQ("oidc_role_arn", client.getType());
+
+  auto credential = client.getCredential();
+  EXPECT_FALSE(credential.empty());
+  EXPECT_FALSE(credential.getSecurityToken().empty());
 }

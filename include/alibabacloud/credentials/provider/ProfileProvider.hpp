@@ -25,15 +25,7 @@ public:
   
   virtual ~ProfileProvider() = default;
 
-  virtual Models::CredentialModel &getCredential() override {
-    provider_ = createProvider();
-    if (provider_ == nullptr) {
-      throw CredentialException(std::string("Can't create the ProfileProvider."));
-    }
-    return provider_->getCredential();
-  }
-
-  virtual const Models::CredentialModel &getCredential() const override {
+  virtual Models::CredentialModel getCredential() const override {
     provider_ = createProvider();
     if (provider_ == nullptr) {
       throw CredentialException(std::string("Can't create the ProfileProvider."));

@@ -10,10 +10,9 @@ using namespace AlibabaCloud::Credentials;
 
 /**
  * @brief Mock provider for testing RefreshableProvider thread safety
- * 
+ *
  * This test verifies that the RefreshableProvider implementation follows
- * the same thread-safety pattern as Java SDK's RefreshCachedSupplier:
- * - volatile cachedValue (in C++: atomic operations on shared_ptr)
+ * thread-safety best practices:
  * - Atomic replacement of entire RefreshResult object
  * - Lock-free reads, locked refreshes
  */

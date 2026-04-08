@@ -68,7 +68,7 @@ else()
   
   message(STATUS "Configuring darabonba_core with args: ${_darabonba_core_CMAKE_ARGS}")
 
-  set(ENABLE_UNIT_TESTS OFF)
+  option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
   FetchContent_MakeAvailable(_darabonba_core)
   
   # Configure runtime library on darabonba_core target

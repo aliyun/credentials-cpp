@@ -150,7 +150,6 @@ public:
     DARABONBA_PTR_TO_JSON(privateKeyFile, privateKeyFile_);
     DARABONBA_PTR_TO_JSON(roleName, roleName_);
     DARABONBA_PTR_TO_JSON(credentialsUri, credentialsUri_);
-    DARABONBA_PTR_TO_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_TO_JSON(type, type_);
     DARABONBA_PTR_TO_JSON(stsEndpoint, stsEndpoint_);
     DARABONBA_PTR_TO_JSON(stsRegionId, stsRegionId_);
@@ -182,7 +181,6 @@ public:
     DARABONBA_PTR_FROM_JSON(privateKeyFile, privateKeyFile_);
     DARABONBA_PTR_FROM_JSON(roleName, roleName_);
     DARABONBA_PTR_FROM_JSON(credentialsUri, credentialsUri_);
-    DARABONBA_PTR_FROM_JSON(credentialsURL, credentialsURL_);
     DARABONBA_PTR_FROM_JSON(type, type_);
     DARABONBA_PTR_FROM_JSON(stsEndpoint, stsEndpoint_);
     DARABONBA_PTR_FROM_JSON(stsRegionId, stsRegionId_);
@@ -226,8 +224,7 @@ public:
            this->roleSessionExpiration_ == nullptr &&
            this->roleSessionName_ == nullptr && this->publicKeyId_ == nullptr &&
            this->privateKeyFile_ == nullptr && this->roleName_ == nullptr &&
-           this->credentialsUri_ == nullptr &&
-           this->credentialsURL_ == nullptr && this->type_ == nullptr &&
+           this->credentialsUri_ == nullptr && this->type_ == nullptr &&
            this->stsEndpoint_ == nullptr &&
            this->stsRegionId_ == nullptr && this->externalId_ == nullptr &&
            this->regionId_ == nullptr && this->host_ == nullptr &&
@@ -366,16 +363,6 @@ public:
   };
   inline Config &setCredentialsUri(string credentialsUri) {
     DARABONBA_PTR_SET_VALUE(credentialsUri_, credentialsUri)
-  };
-
-  // credentialsURL Field Functions
-  bool hasCredentialsURL() const { return this->credentialsURL_ != nullptr; };
-  void deleteCredentialsURL() { this->credentialsURL_ = nullptr; };
-  inline string getCredentialsURL() const {
-    DARABONBA_PTR_GET_DEFAULT(credentialsURL_, "")
-  };
-  inline Config &setCredentialsURL(string credentialsURL) {
-    DARABONBA_PTR_SET_VALUE(credentialsURL_, credentialsURL)
   };
 
   // type Field Functions
@@ -559,8 +546,6 @@ protected:
   shared_ptr<string> roleName_{};
   // credentials uri
   shared_ptr<string> credentialsUri_{};
-  // credentials url
-  shared_ptr<string> credentialsURL_{};
   // credential type
   shared_ptr<string> type_{};
   // sts endpoint

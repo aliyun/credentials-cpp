@@ -27,7 +27,7 @@ static std::string getProfilePath() {
   if (home.back() != sep) {
     home.push_back(sep);
   }
-  // Use Java-compatible path: ~/.alibabacloud/credentials
+  // Use standard path: ~/.alibabacloud/credentials
   return home + ".alibabacloud" + sep + "credentials";
 }
 

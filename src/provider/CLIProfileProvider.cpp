@@ -297,15 +297,7 @@ CLIProfileProvider::CLIProfileProvider(const std::string &profileName)
 }
 
 // getCredential 实现
-Models::CredentialModel &CLIProfileProvider::getCredential() {
-  provider_ = createProvider();
-  if (provider_ == nullptr) {
-    throw CredentialException(std::string("Can't create provider from CLI profile."));
-  }
-  return provider_->getCredential();
-}
-
-const Models::CredentialModel &CLIProfileProvider::getCredential() const {
+Models::CredentialModel CLIProfileProvider::getCredential() const {
   provider_ = createProvider();
   if (provider_ == nullptr) {
     throw CredentialException(std::string("Can't create provider from CLI profile."));

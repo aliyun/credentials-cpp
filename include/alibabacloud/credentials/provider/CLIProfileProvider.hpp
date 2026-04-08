@@ -52,14 +52,9 @@ public:
   virtual ~CLIProfileProvider() = default;
 
   /**
-   * @brief Get credential (non-const version)
+   * @brief Get credential
    */
-  virtual Models::CredentialModel& getCredential() override;
-
-  /**
-   * @brief Get credential (const version)
-   */
-  virtual const Models::CredentialModel& getCredential() const override;
+  virtual Models::CredentialModel getCredential() const override;
   
   /**
    * @brief Get provider name
