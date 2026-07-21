@@ -2,10 +2,13 @@
 #include <alibabacloud/credentials/Model.hpp>
 #include <alibabacloud/credentials/provider/AccessKeyProvider.hpp>
 #include <alibabacloud/credentials/provider/CLIProfileProvider.hpp>
+#include <alibabacloud/credentials/provider/CloudSSOCredentialsProvider.hpp>
 #include <alibabacloud/credentials/provider/EcsRamRoleProvider.hpp>
+#include <alibabacloud/credentials/provider/OAuthCredentialsProvider.hpp>
 #include <alibabacloud/credentials/provider/OIDCRoleArnProvider.hpp>
 #include <alibabacloud/credentials/provider/RamRoleArnProvider.hpp>
 #include <alibabacloud/credentials/provider/RsaKeyPairProvider.hpp>
+#include <alibabacloud/credentials/provider/StsProvider.hpp>
 #include <darabonba/Env.hpp>
 #include <alibabacloud/credentials/Exception.hpp>
 #include <darabonba/Ini.hpp>
@@ -17,6 +20,45 @@ using json = nlohmann::json;
 
 namespace AlibabaCloud {
 namespace Credentials {
+
+/**
+ * @brief Map Alibaba Cloud CLI profile mode to internal credential type.
+ *
+ * CLI config.json uses modes such as "AK" / "RamRoleArn" / "EcsRamRole" / "OIDC",
+ * while createProvider() compares Constant::* values ("access_key", "ram_role_arn", …).
+ * Aligns with Java CLIProfileCredentialsProvider mode handling.
+ */
+static std::string mapCliModeToType(const std::string &mode) {
+  if (mode.empty()) {
+    return mode;
+  }
+  if (mode == "AK" || mode == Constant::ACCESS_KEY) {
+    return Constant::ACCESS_KEY;
+  }
+  if (mode == "StsToken" || mode == Constant::STS) {
+    return Constant::STS;
+  }
+  if (mode == "RamRoleArn" || mode == Constant::RAM_ROLE_ARN) {
+    return Constant::RAM_ROLE_ARN;
+  }
+  if (mode == "EcsRamRole" || mode == Constant::ECS_RAM_ROLE) {
+    return Constant::ECS_RAM_ROLE;
+  }
+  if (mode == "OIDC" || mode == Constant::OIDC_ROLE_ARN) {
+    return Constant::OIDC_ROLE_ARN;
+  }
+  if (mode == "RsaKeyPair" || mode == Constant::RSA_KEY_PAIR) {
+    return Constant::RSA_KEY_PAIR;
+  }
+  if (mode == "CloudSSO" || mode == Constant::CLOUD_SSO) {
+    return Constant::CLOUD_SSO;
+  }
+  if (mode == "OAuth" || mode == Constant::OAUTH) {
+    return Constant::OAUTH;
+  }
+  throw CredentialException("Unsupported profile mode '" + mode +
+                            "' form CLI credentials file.");
+}
 
 /**
  * @brief 获取 CLI 配置文件路径（跨平台支持）
@@ -149,7 +191,9 @@ CLIProfileProvider::parseJsonProfile(const std::string &filePath,
   auto config = std::make_shared<Models::Config>();
 
   if (targetProfile.contains("mode")) {
-    config->setType(targetProfile["mode"]);
+    // CLI mode (e.g. RamRoleArn) must be mapped to internal type (ram_role_arn)
+    std::string mode = targetProfile["mode"].get<std::string>();
+    config->setType(mapCliModeToType(mode));
   }
 
   if (targetProfile.contains("access_key_id")) {
@@ -172,8 +216,30 @@ CLIProfileProvider::parseJsonProfile(const std::string &filePath,
     config->setRoleArn(targetProfile["ram_role_arn"]);
   }
 
-  if (targetProfile.contains("role_session_name")) {
+  // CLI uses ram_session_name; also accept role_session_name
+  if (targetProfile.contains("ram_session_name")) {
+    config->setRoleSessionName(targetProfile["ram_session_name"]);
+  } else if (targetProfile.contains("role_session_name")) {
     config->setRoleSessionName(targetProfile["role_session_name"]);
+  }
+
+  if (targetProfile.contains("expired_seconds")) {
+    config->setDurationSeconds(targetProfile["expired_seconds"].get<int64_t>());
+    config->setRoleSessionExpiration(
+        targetProfile["expired_seconds"].get<int64_t>());
+  }
+
+  if (targetProfile.contains("sts_region")) {
+    config->setStsRegionId(targetProfile["sts_region"]);
+    config->setRegionId(targetProfile["sts_region"]);
+  }
+
+  if (targetProfile.contains("policy")) {
+    config->setPolicy(targetProfile["policy"]);
+  }
+
+  if (targetProfile.contains("external_id")) {
+    config->setExternalId(targetProfile["external_id"]);
   }
 
   if (targetProfile.contains("public_key_id")) {
@@ -339,24 +405,39 @@ std::unique_ptr<Provider> CLIProfileProvider::createProvider() const {
   if (configType.empty()) {
     throw CredentialException(std::string("The configured client type is empty"));
   }
+  if (configType == Constant::ACCESS_KEY) {
+    const auto &accessKeyId = config->getAccessKeyId();
+    const auto &accessKeySecret = config->getAccessKeySecret();
+    if (accessKeyId.empty() || accessKeySecret.empty()) {
+      throw CredentialException(
+          std::string("AccessKeyId and AccessKeySecret are required"));
+    }
+    return std::unique_ptr<Provider>(new AccessKeyProvider(config));
+  }
+  if (configType == Constant::STS) {
+    return std::unique_ptr<Provider>(new StsProvider(config));
+  }
   if (configType == Constant::ECS_RAM_ROLE) {
     return std::unique_ptr<Provider>(new EcsRamRoleProvider(config));
-  } else if (configType == Constant::RSA_KEY_PAIR) {
+  }
+  if (configType == Constant::RSA_KEY_PAIR) {
     return std::unique_ptr<Provider>(new RsaKeyPairProvider(config));
-  }else if (configType == Constant::RAM_ROLE_ARN) {
+  }
+  if (configType == Constant::RAM_ROLE_ARN) {
     return std::unique_ptr<Provider>(new RamRoleArnProvider(config));
-  } else if (configType == Constant::OIDC_ROLE_ARN) {
+  }
+  if (configType == Constant::OIDC_ROLE_ARN) {
     return std::unique_ptr<Provider>(new OIDCRoleArnProvider(config));
   }
-
-  // 默认使用 AccessKey
-  const auto &accessKeyId = config->getAccessKeyId();
-  const auto &accessKeySecret = config->getAccessKeySecret();
-  if (accessKeyId.empty() || accessKeySecret.empty()) {
-    throw CredentialException(std::string("AccessKeyId and AccessKeySecret are required"));
+  if (configType == Constant::CLOUD_SSO) {
+    return std::unique_ptr<Provider>(new CloudSSOCredentialsProvider(config));
+  }
+  if (configType == Constant::OAUTH) {
+    return std::unique_ptr<Provider>(new OAuthCredentialsProvider(config));
   }
 
-  return std::unique_ptr<Provider>(new AccessKeyProvider(config));
+  throw CredentialException("Unsupported profile type '" + configType +
+                            "' form CLI credentials file.");
 }
 
 } // namespace Credentials
