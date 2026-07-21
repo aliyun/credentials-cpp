@@ -164,6 +164,30 @@ static std::string getTempDir() {
 #endif
 }
 
+// Escape a string for embedding inside a JSON string value (Windows paths
+// contain backslashes that must be written as \\ in JSON).
+static std::string escapeJsonString(const std::string& s) {
+  std::string out;
+  out.reserve(s.size() + 8);
+  for (char c : s) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '"':  out += "\\\""; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default:   out += c; break;
+    }
+  }
+  return out;
+}
+
+TEST(CLIProfileProviderHelpers, EscapeJsonStringEscapesWindowsPath) {
+  EXPECT_EQ(escapeJsonString("C:\\Users\\runner\\Temp\\token.txt"),
+            "C:\\\\Users\\\\runner\\\\Temp\\\\token.txt");
+  EXPECT_EQ(escapeJsonString("path\"with\"quotes"), "path\\\"with\\\"quotes");
+}
+
 // mode 字段缺失 -> type 为空 -> createProvider() 抛出 "The configured client type is empty"
 TEST_F(CLIProfileProviderTest, EmptyModeThrowsCredentialException) {
   std::string tmpPath = getTempDir() + "/test_cli_empty_mode.json";
@@ -265,7 +289,7 @@ TEST_F(CLIProfileProviderTest, OidcModeCreatesOidcRoleArnProvider) {
       << "{\"name\":\"OIDC\",\"mode\":\"OIDC\","
       << "\"ram_role_arn\":\"acs:ram::123:role/oidc-role\","
       << "\"oidc_provider_arn\":\"acs:ram::123:oidc-provider/test\","
-      << "\"oidc_token_file\":\"" << tokenPath << "\","
+      << "\"oidc_token_file\":\"" << escapeJsonString(tokenPath) << "\","
       << "\"ram_session_name\":\"oidc-session\",\"expired_seconds\":3600}"
       << "]}";
   }
@@ -388,7 +412,8 @@ TEST_F(CLIProfileProviderTest, RsaKeyPairModeCreatesRsaKeyPairProvider) {
     std::ofstream f(tmpPath);
     f << "{\"current\":\"default\",\"profiles\":["
       << "{\"name\":\"default\",\"mode\":\"RsaKeyPair\","
-      << "\"public_key_id\":\"pk-id\",\"private_key_file\":\"" << keyPath << "\"}"
+      << "\"public_key_id\":\"pk-id\",\"private_key_file\":\""
+      << escapeJsonString(keyPath) << "\"}"
       << "]}";
   }
 
