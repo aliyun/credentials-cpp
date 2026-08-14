@@ -60,6 +60,16 @@ public:
    */
   bool isAsyncCredentialUpdateEnabled() const { return asyncUpdateEnabled_; }
 
+  /**
+   * @brief Whether IMDSv2 token probe is enabled (default true)
+   */
+  bool getEnableIMDSv2() const { return enableIMDSv2_; }
+
+  /**
+   * @brief Whether IMDSv1 fallback is disabled
+   */
+  bool getDisableIMDSv1() const { return disableIMDSv1_; }
+
 protected:
   /**
    * @brief Override RefreshableProvider's isAsyncUpdateEnabled
@@ -83,6 +93,12 @@ protected:
 
 private:
   /**
+   * @brief Resolve enableIMDSv2 from explicit value or env
+   * Default true; only false when explicitly set or ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false
+   */
+  static bool resolveEnableIMDSv2(bool hasExplicit, bool explicitValue);
+
+  /**
    * @brief Register with global scheduler
    */
   void registerWithScheduler();
@@ -103,7 +119,23 @@ private:
   std::string getRoleName() const;
 
   /**
-   * @brief Get IMDSv2 Token
+   * @brief Get metadata with IMDSv2 token and optional IMDSv1 fallback
+   */
+  std::string getMetadata(const std::string& url) const;
+
+  /**
+   * @brief Perform a single metadata GET (optional IMDSv2 token header)
+   */
+  std::string doGetMetadata(const std::string& url,
+                            const std::string& metadataToken) const;
+
+  /**
+   * @brief Whether to retry without token after IMDSv2 GET failure
+   */
+  bool shouldFallbackToIMDSv1(const std::string& metadataToken) const;
+
+  /**
+   * @brief Get IMDSv2 Token (empty if disabled or unavailable and fallback allowed)
    */
   std::string getMetadataToken() const;
 
@@ -119,6 +151,7 @@ private:
   // Member variables
   mutable std::string roleName_;
   mutable bool disableIMDSv1_;
+  mutable bool enableIMDSv2_;
   mutable std::atomic<bool> shouldRefresh_;
   bool asyncUpdateEnabled_;
   int64_t connectTimeout_;

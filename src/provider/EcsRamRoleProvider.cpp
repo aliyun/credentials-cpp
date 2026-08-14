@@ -5,6 +5,7 @@
 #include <darabonba/Core.hpp>
 #include <darabonba/Env.hpp>
 #include <darabonba/encode/Encoder.hpp>
+#include <cctype>
 #include <memory>
 
 namespace AlibabaCloud {
@@ -30,6 +31,34 @@ const std::string EcsRamRoleProvider::ECS_METADATA_FETCH_ERROR_MSG =
     "Failed to get RAM session credentials from ECS metadata service.";
 const std::string EcsRamRoleProvider::ECS_METADATA_TOKEN_FETCH_ERROR_MSG =
     "Failed to get token from ECS Metadata Service.";
+
+namespace {
+bool envEqualsIgnoreCaseFalse(const std::string &value) {
+  if (value.size() != 5) {
+    return false;
+  }
+  const char *falseLiteral = "false";
+  for (size_t i = 0; i < 5; ++i) {
+    if (std::tolower(static_cast<unsigned char>(value[i])) !=
+        falseLiteral[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+} // namespace
+
+bool EcsRamRoleProvider::resolveEnableIMDSv2(bool hasExplicit,
+                                             bool explicitValue) {
+  if (hasExplicit) {
+    return explicitValue;
+  }
+  std::string env = Darabonba::Env::getEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
+  if (!env.empty() && envEqualsIgnoreCaseFalse(env)) {
+    return false;
+  }
+  return true;
+}
 
 // 析构函数
 EcsRamRoleProvider::~EcsRamRoleProvider() {
@@ -75,6 +104,8 @@ EcsRamRoleProvider::EcsRamRoleProvider(
       roleName_(config->hasRoleName() ? config->getRoleName() : ""),
       disableIMDSv1_(config->hasDisableIMDSv1() ? config->getDisableIMDSv1()
                                                 : false),
+      enableIMDSv2_(resolveEnableIMDSv2(config->hasEnableIMDSv2(),
+                                        config->getEnableIMDSv2())),
       shouldRefresh_(false),
       asyncUpdateEnabled_(asyncUpdateEnabled),
       connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout()
@@ -111,7 +142,8 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     const std::string &roleName, bool disableIMDSv1, bool asyncUpdateEnabled,
     StaleValueBehavior behavior, std::shared_ptr<PrefetchStrategy> strategy)
     : RefreshableProvider(behavior, strategy), roleName_(roleName),
-      disableIMDSv1_(disableIMDSv1), shouldRefresh_(false),
+      disableIMDSv1_(disableIMDSv1), enableIMDSv2_(resolveEnableIMDSv2(false, true)),
+      shouldRefresh_(false),
       asyncUpdateEnabled_(asyncUpdateEnabled),
       connectTimeout_(DEFAULT_CONNECT_TIMEOUT),
       readTimeout_(DEFAULT_READ_TIMEOUT) {
@@ -141,6 +173,10 @@ EcsRamRoleProvider::EcsRamRoleProvider(
 
 // 获取 IMDSv2 Token
 std::string EcsRamRoleProvider::getMetadataToken() const {
+  if (!enableIMDSv2_) {
+    return "";
+  }
+
   std::string url =
       "http://" + META_DATA_SERVICE_HOST + URL_IN_ECS_METADATA_TOKEN;
 
@@ -163,11 +199,84 @@ std::string EcsRamRoleProvider::getMetadataToken() const {
     }
 
     return Darabonba::IFStream::readAsString(resp->getBody());
-  } catch (const std::exception&) {
+  } catch (const std::exception &e) {
     if (disableIMDSv1_) {
-      throw;
+      throw CredentialException(
+          std::string("Failed to get token from ECS Metadata Service, and "
+                      "fallback to IMDS v1 is disabled via the disableIMDSv1 "
+                      "configuration is turned on. Original error: ") +
+          e.what());
     }
     return "";
+  }
+}
+
+bool EcsRamRoleProvider::shouldFallbackToIMDSv1(
+    const std::string &metadataToken) const {
+  return !metadataToken.empty() && !disableIMDSv1_;
+}
+
+std::string EcsRamRoleProvider::doGetMetadata(
+    const std::string &url, const std::string &metadataToken) const {
+  auto req = AuthUtil::getNewRequest(url);
+  if (!metadataToken.empty()) {
+    req.getHeaders()["X-aliyun-ecs-metadata-token"] = metadataToken;
+  }
+
+  Darabonba::RuntimeOptions runtime;
+  runtime.setConnectTimeout(connectTimeout_);
+  runtime.setReadTimeout(readTimeout_);
+
+  std::shared_ptr<Darabonba::Http::MCurlResponse> resp;
+  try {
+    auto future = Darabonba::Core::doAction(req, runtime);
+    resp = future.get();
+  } catch (const std::exception &e) {
+    throw CredentialException(
+        ECS_METADATA_FETCH_ERROR_MSG +
+        " This may indicate you are not running in an ECS/ECI environment. "
+        "Error: " +
+        std::string(e.what()));
+  }
+
+  if (!resp) {
+    throw CredentialException(
+        ECS_METADATA_FETCH_ERROR_MSG +
+        " No response received. Please ensure you are running in an ECS/ECI "
+        "environment.");
+  }
+
+  if (resp->getStatusCode() == 0) {
+    throw CredentialException(
+        ECS_METADATA_FETCH_ERROR_MSG +
+        " Connection failed (HttpCode=0). This usually means you are not "
+        "running in an ECS/ECI environment. "
+        "The ECS metadata service (100.100.100.200) is only accessible from "
+        "within Alibaba Cloud ECS instances.");
+  }
+
+  if (resp->getStatusCode() == 404) {
+    throw CredentialException(
+        std::string("The role name was not found in the instance."));
+  }
+
+  if (resp->getStatusCode() != 200) {
+    throw CredentialException(ECS_METADATA_FETCH_ERROR_MSG + " HttpCode=" +
+                              std::to_string(resp->getStatusCode()));
+  }
+
+  return Darabonba::IFStream::readAsString(resp->getBody());
+}
+
+std::string EcsRamRoleProvider::getMetadata(const std::string &url) const {
+  std::string metadataToken = getMetadataToken();
+  try {
+    return doGetMetadata(url, metadataToken);
+  } catch (const CredentialException &) {
+    if (shouldFallbackToIMDSv1(metadataToken)) {
+      return doGetMetadata(url, "");
+    }
+    throw;
   }
 }
 
@@ -181,47 +290,8 @@ RefreshResult EcsRamRoleProvider::doRefresh() const {
 
   std::string url =
       "http://" + META_DATA_SERVICE_HOST + URL_IN_ECS_META_DATA + roleNameToUse;
-  auto req = AuthUtil::getNewRequest(url);
-
-  std::string metadataToken = getMetadataToken();
-  if (!metadataToken.empty()) {
-    req.getHeaders()["X-aliyun-ecs-metadata-token"] = metadataToken;
-  }
-
-  Darabonba::RuntimeOptions runtime;
-  runtime.setConnectTimeout(connectTimeout_);
-  runtime.setReadTimeout(readTimeout_);
-
-  std::shared_ptr<Darabonba::Http::MCurlResponse> resp;
-  try {
-    auto future = Darabonba::Core::doAction(req, runtime);
-    resp = future.get();
-  } catch (const std::exception& e) {
-    throw CredentialException(
-        ECS_METADATA_FETCH_ERROR_MSG +
-        " This may indicate you are not running in an ECS/ECI environment. "
-        "Error: " + std::string(e.what()));
-  }
-
-  if (!resp) {
-    throw CredentialException(
-        ECS_METADATA_FETCH_ERROR_MSG +
-        " No response received. Please ensure you are running in an ECS/ECI environment.");
-  }
-
-  if (resp->getStatusCode() == 0) {
-    throw CredentialException(
-        ECS_METADATA_FETCH_ERROR_MSG +
-        " Connection failed (HttpCode=0). This usually means you are not running in an ECS/ECI environment. "
-        "The ECS metadata service (100.100.100.200) is only accessible from within Alibaba Cloud ECS instances.");
-  }
-
-  if (resp->getStatusCode() != 200) {
-    throw CredentialException(ECS_METADATA_FETCH_ERROR_MSG + " HttpCode=" +
-                               std::to_string(resp->getStatusCode()));
-  }
-
-  auto result = Darabonba::IFStream::readAsJSON(resp->getBody());
+  std::string body = getMetadata(url);
+  auto result = Darabonba::Json::parse(body);
 
   std::string contentCode = result["Code"].get<std::string>();
   if (contentCode != "Success") {
@@ -253,41 +323,7 @@ RefreshResult EcsRamRoleProvider::doRefresh() const {
 // 获取角色名
 std::string EcsRamRoleProvider::getRoleName() const {
   std::string url = "http://" + META_DATA_SERVICE_HOST + URL_IN_ECS_META_DATA;
-
-  auto req = AuthUtil::getNewRequest(url);
-
-  std::string metadataToken = getMetadataToken();
-  if (!metadataToken.empty()) {
-    req.getHeaders()["X-aliyun-ecs-metadata-token"] = metadataToken;
-  }
-
-  Darabonba::RuntimeOptions runtime;
-  runtime.setConnectTimeout(connectTimeout_);
-  runtime.setReadTimeout(readTimeout_);
-
-  std::shared_ptr<Darabonba::Http::MCurlResponse> resp;
-  try {
-    auto future = Darabonba::Core::doAction(req, runtime);
-    resp = future.get();
-  } catch (const std::exception& e) {
-    throw CredentialException(
-        ECS_METADATA_FETCH_ERROR_MSG +
-        " Failed to get role name. This may indicate you are not running in an ECS/ECI environment. "
-        "Error: " + std::string(e.what()));
-  }
-
-  if (!resp || resp->getStatusCode() == 0) {
-    throw CredentialException(
-        ECS_METADATA_FETCH_ERROR_MSG +
-        " Connection failed. Please ensure you are running in an ECS/ECI environment.");
-  }
-
-  if (resp->getStatusCode() != 200) {
-    throw CredentialException(ECS_METADATA_FETCH_ERROR_MSG + " HttpCode=" +
-                               std::to_string(resp->getStatusCode()));
-  }
-
-  return Darabonba::IFStream::readAsString(resp->getBody());
+  return getMetadata(url);
 }
 
 // 计算 stale_time

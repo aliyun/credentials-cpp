@@ -572,8 +572,9 @@ protected:
   shared_ptr<int64_t> connectTimeout_ = make_shared<int64_t>(10000);
   // disable IMDSv1
   shared_ptr<bool> disableIMDSv1_ = make_shared<bool>(false);
-  // enable IMDSv2 (aligned with Python version)
-  shared_ptr<bool> enableIMDSv2_ = make_shared<bool>(false);
+  // enable IMDSv2 — unset by default so provider resolves to true
+  // (or false when ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false / setEnableIMDSv2(false))
+  shared_ptr<bool> enableIMDSv2_{};
   // metadata token duration (aligned with Python version)
   shared_ptr<int64_t> metadataTokenDuration_ = make_shared<int64_t>(21600);
   // reuse last provider enabled
