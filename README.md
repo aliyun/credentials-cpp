@@ -354,7 +354,7 @@ export ALIBABA_CLOUD_ROLE_SESSION_NAME="<your-role-session-name>"
 
 By specifying the role name, the credential will be able to automatically request maintenance of STS Token.
 
-By default, the Credentials tool accesses the metadata server of ECS in security hardening mode (IMDSv2). If an exception is thrown (token fetch or a later metadata GET failure), the Credentials tool switches to the normal mode (IMDSv1). You can set `enableIMDSv2=false` or `ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false` to skip the IMDSv2 probe and use normal mode directly. You can also configure the `disableIMDSv1` parameter or the `ALIBABA_CLOUD_IMDSV1_DISABLED` environment variable to specify the exception handling logic:
+By default, the Credentials tool accesses the metadata server of ECS in security hardening mode (IMDSv2). If an exception is thrown (token fetch or a later metadata GET failure), the Credentials tool switches to the normal mode (IMDSv1). You can configure the `disableIMDSv1` parameter or the `ALIBABA_CLOUD_IMDSV1_DISABLED` environment variable to specify the exception handling logic:
 
 - `false` (default): The Credentials tool continues to obtain the access credential in normal mode (IMDSv1).
 - `true`: The exception is thrown and the Credentials tool continues to obtain the access credential in security hardening mode.
@@ -370,8 +370,6 @@ int main() {
     Models::Config config;
     config.setType("ecs_ram_role")
           .setRoleName("<your-ecs-role-name>")
-          // Optional: skip IMDSv2 probe and use normal mode directly
-          // .setEnableIMDSv2(false)
           // Optional: disable IMDSv1 fallback for enhanced security
           .setDisableIMDSv1(false);
     

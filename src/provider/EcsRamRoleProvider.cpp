@@ -5,7 +5,6 @@
 #include <darabonba/Core.hpp>
 #include <darabonba/Env.hpp>
 #include <darabonba/encode/Encoder.hpp>
-#include <cctype>
 #include <memory>
 
 namespace AlibabaCloud {
@@ -31,38 +30,6 @@ const std::string EcsRamRoleProvider::ECS_METADATA_FETCH_ERROR_MSG =
     "Failed to get RAM session credentials from ECS metadata service.";
 const std::string EcsRamRoleProvider::ECS_METADATA_TOKEN_FETCH_ERROR_MSG =
     "Failed to get token from ECS Metadata Service.";
-
-namespace {
-bool envEqualsIgnoreCaseFalse(const std::string &value) {
-  if (value.size() != 5) {
-    return false;
-  }
-  const char *falseLiteral = "false";
-  for (size_t i = 0; i < 5; ++i) {
-    if (std::tolower(static_cast<unsigned char>(value[i])) !=
-        falseLiteral[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-} // namespace
-
-bool EcsRamRoleProvider::resolveEnableIMDSv2(bool hasExplicit,
-                                             bool explicitValue) {
-  // Master historically always called getMetadataToken() (Config::enableIMDSv2_
-  // was unused). Keep default true so behavior is not reversed; private clouds
-  // without hardening can set enableIMDSv2=false /
-  // ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false to skip the token PUT.
-  if (hasExplicit) {
-    return explicitValue;
-  }
-  std::string env = Darabonba::Env::getEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
-  if (!env.empty() && envEqualsIgnoreCaseFalse(env)) {
-    return false;
-  }
-  return true;
-}
 
 // 析构函数
 EcsRamRoleProvider::~EcsRamRoleProvider() {
@@ -108,8 +75,6 @@ EcsRamRoleProvider::EcsRamRoleProvider(
       roleName_(config->hasRoleName() ? config->getRoleName() : ""),
       disableIMDSv1_(config->hasDisableIMDSv1() ? config->getDisableIMDSv1()
                                                 : false),
-      enableIMDSv2_(resolveEnableIMDSv2(config->hasEnableIMDSv2(),
-                                        config->getEnableIMDSv2())),
       shouldRefresh_(false),
       asyncUpdateEnabled_(asyncUpdateEnabled),
       connectTimeout_(config->hasConnectTimeout() ? config->getConnectTimeout()
@@ -137,10 +102,6 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     disableIMDSv1_ = (!imdsv1Disabled.empty() &&
                       (imdsv1Disabled == "true" || imdsv1Disabled == "TRUE"));
   }
-  // Forcing hardening mode requires IMDSv2 token probe.
-  if (disableIMDSv1_) {
-    enableIMDSv2_ = true;
-  }
 
   // 注册到全局调度器
   registerWithScheduler();
@@ -150,8 +111,7 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     const std::string &roleName, bool disableIMDSv1, bool asyncUpdateEnabled,
     StaleValueBehavior behavior, std::shared_ptr<PrefetchStrategy> strategy)
     : RefreshableProvider(behavior, strategy), roleName_(roleName),
-      disableIMDSv1_(disableIMDSv1), enableIMDSv2_(resolveEnableIMDSv2(false, false)),
-      shouldRefresh_(false),
+      disableIMDSv1_(disableIMDSv1), shouldRefresh_(false),
       asyncUpdateEnabled_(asyncUpdateEnabled),
       connectTimeout_(DEFAULT_CONNECT_TIMEOUT),
       readTimeout_(DEFAULT_READ_TIMEOUT) {
@@ -174,9 +134,6 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     disableIMDSv1_ = (!imdsv1Disabled.empty() &&
                       (imdsv1Disabled == "true" || imdsv1Disabled == "TRUE"));
   }
-  if (disableIMDSv1_) {
-    enableIMDSv2_ = true;
-  }
 
   // 注册到全局调度器
   registerWithScheduler();
@@ -184,10 +141,6 @@ EcsRamRoleProvider::EcsRamRoleProvider(
 
 // 获取 IMDSv2 Token
 std::string EcsRamRoleProvider::getMetadataToken() const {
-  if (!enableIMDSv2_) {
-    return "";
-  }
-
   std::string url =
       "http://" + META_DATA_SERVICE_HOST + URL_IN_ECS_METADATA_TOKEN;
 

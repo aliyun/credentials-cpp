@@ -39,7 +39,6 @@ protected:
     // Save original environment variables
     saveEnv("ALIBABA_CLOUD_ECS_METADATA");
     saveEnv("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
-    saveEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
     saveEnv("ALIBABA_CLOUD_IMDSV1_DISABLED");
   }
   
@@ -47,7 +46,6 @@ protected:
     // Restore environment variables
     restoreEnv("ALIBABA_CLOUD_ECS_METADATA");
     restoreEnv("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
-    restoreEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
     restoreEnv("ALIBABA_CLOUD_IMDSV1_DISABLED");
   }
   
@@ -214,45 +212,16 @@ TEST_F(EcsRamRoleTest, SupportsIMDSv2Mode) {
   
   EXPECT_NO_THROW({
     EcsRamRoleProvider provider(config);
-    EXPECT_TRUE(provider.getEnableIMDSv2());
+    EXPECT_TRUE(provider.getDisableIMDSv1());
   });
 }
 
-TEST_F(EcsRamRoleTest, EnableIMDSv2FalseFromConfig) {
-  auto config = std::make_shared<Models::Config>();
-  config->setRoleName("test_role")
-        .setEnableIMDSv2(false);
-
-  EcsRamRoleProvider provider(config);
-  EXPECT_FALSE(provider.getEnableIMDSv2());
-}
-
-TEST_F(EcsRamRoleTest, EnableIMDSv2DefaultTrue) {
-  // Matches master: getMetadataToken was always called (enableIMDSv2 was dead)
+TEST_F(EcsRamRoleTest, DisableIMDSv1DefaultFalse) {
   auto config = std::make_shared<Models::Config>();
   config->setRoleName("test_role");
 
   EcsRamRoleProvider provider(config);
-  EXPECT_TRUE(provider.getEnableIMDSv2());
   EXPECT_FALSE(provider.getDisableIMDSv1());
-}
-
-TEST_F(EcsRamRoleTest, EnableIMDSv2FalseFromEnv) {
-  unsetenv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
-  env_set_kv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE", "false");
-
-  EcsRamRoleProvider provider("test_role");
-  EXPECT_FALSE(provider.getEnableIMDSv2());
-}
-
-TEST_F(EcsRamRoleTest, EnableIMDSv2ConfigOverridesEnv) {
-  env_set_kv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE", "false");
-  auto config = std::make_shared<Models::Config>();
-  config->setRoleName("test_role")
-        .setEnableIMDSv2(true);
-
-  EcsRamRoleProvider provider(config);
-  EXPECT_TRUE(provider.getEnableIMDSv2());
 }
 
 TEST_F(EcsRamRoleTest, IMDSv2TokenRequest) {
