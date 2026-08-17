@@ -33,14 +33,14 @@ const std::string EcsRamRoleProvider::ECS_METADATA_TOKEN_FETCH_ERROR_MSG =
     "Failed to get token from ECS Metadata Service.";
 
 namespace {
-bool envEqualsIgnoreCase(const std::string &value, const char *literal) {
-  const size_t len = std::char_traits<char>::length(literal);
-  if (value.size() != len) {
+bool envEqualsIgnoreCaseFalse(const std::string &value) {
+  if (value.size() != 5) {
     return false;
   }
-  for (size_t i = 0; i < len; ++i) {
+  const char *falseLiteral = "false";
+  for (size_t i = 0; i < 5; ++i) {
     if (std::tolower(static_cast<unsigned char>(value[i])) !=
-        static_cast<unsigned char>(literal[i])) {
+        falseLiteral[i]) {
       return false;
     }
   }
@@ -50,18 +50,18 @@ bool envEqualsIgnoreCase(const std::string &value, const char *literal) {
 
 bool EcsRamRoleProvider::resolveEnableIMDSv2(bool hasExplicit,
                                              bool explicitValue) {
-  // C++ historical default: do NOT probe IMDSv2 (no token PUT).
-  // Other language SDKs default to true; C++ stays opt-in to avoid an extra
-  // PUT (and connect-timeout stalls when IMDS is firewalled/dropped) on
-  // private clouds without hardening mode.
+  // Master historically always called getMetadataToken() (Config::enableIMDSv2_
+  // was unused). Keep default true so behavior is not reversed; private clouds
+  // without hardening can set enableIMDSv2=false /
+  // ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false to skip the token PUT.
   if (hasExplicit) {
     return explicitValue;
   }
   std::string env = Darabonba::Env::getEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
-  if (!env.empty() && envEqualsIgnoreCase(env, "true")) {
-    return true;
+  if (!env.empty() && envEqualsIgnoreCaseFalse(env)) {
+    return false;
   }
-  return false;
+  return true;
 }
 
 // 析构函数

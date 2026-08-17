@@ -354,10 +354,10 @@ export ALIBABA_CLOUD_ROLE_SESSION_NAME="<your-role-session-name>"
 
 通过指定角色名称，让凭证自动申请维护 STS Token。
 
-默认情况下，C++ 凭证工具走普通模式（IMDSv1），**不会**发送 IMDSv2 token PUT。设置 `enableIMDSv2=true` 或环境变量 `ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=true` 可先尝试安全强化模式（IMDSv2）；若 token 获取或后续元数据 GET 失败且 `disableIMDSv1` 为 false，则回退到 IMDSv1。也可配置 `disableIMDSv1` 或 `ALIBABA_CLOUD_IMDSV1_DISABLED` 控制降级：
+默认情况下，凭证工具会以安全强化模式（IMDSv2）访问 ECS 的元数据服务。如果抛出异常（token 获取失败或后续元数据 GET 失败），凭证工具会切换到普通模式（IMDSv1）。设置 `enableIMDSv2=false` 或环境变量 `ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false` 可跳过加固模式探测、直接走普通模式。也可配置 `disableIMDSv1` 参数或 `ALIBABA_CLOUD_IMDSV1_DISABLED` 环境变量来指定异常处理逻辑：
 
-- `false`（默认值）：IMDSv2 失败时继续以普通模式（IMDSv1）获取访问凭证。
-- `true`：不降级，强制走 IMDSv2（会开启 token 探测）。
+- `false`（默认值）：凭证工具继续以普通模式（IMDSv1）获取访问凭证。
+- `true`：抛出异常，凭证工具继续以安全强化模式获取访问凭证。
 
 您可以指定 `ALIBABA_CLOUD_ECS_METADATA_DISABLED=true` 来禁止凭证工具访问 ECS 的元数据服务。
 
@@ -370,8 +370,8 @@ int main() {
     Models::Config config;
     config.setType("ecs_ram_role")
           .setRoleName("<your-ecs-role-name>")
-          // 可选：显式开启 IMDSv2 探测（C++ 默认 false）
-          // .setEnableIMDSv2(true)
+          // 可选：跳过 IMDSv2 探测，直接走普通模式
+          // .setEnableIMDSv2(false)
           // 可选：禁用 IMDSv1 降级以增强安全性
           .setDisableIMDSv1(false);
     

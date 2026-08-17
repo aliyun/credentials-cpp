@@ -61,9 +61,10 @@ public:
   bool isAsyncCredentialUpdateEnabled() const { return asyncUpdateEnabled_; }
 
   /**
-   * @brief Whether IMDSv2 token probe is enabled.
-   * C++ default is false (no PUT); set true or ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=true to opt in.
-   * When disableIMDSv1 is true, probe is forced on.
+   * @brief Whether IMDSv2 token probe is enabled (default true; matches master
+   * always calling getMetadataToken). Set false or
+   * ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false to skip the PUT. When disableIMDSv1
+   * is true, probe is forced on.
    */
   bool getEnableIMDSv2() const { return enableIMDSv2_; }
 
@@ -96,7 +97,8 @@ protected:
 private:
   /**
    * @brief Resolve enableIMDSv2 from explicit value or env.
-   * C++ default false; true only when explicitly set or ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=true
+   * Default true; only false when explicitly set or
+   * ALIBABA_CLOUD_ECS_IMDSV2_ENABLE=false
    */
   static bool resolveEnableIMDSv2(bool hasExplicit, bool explicitValue);
 
