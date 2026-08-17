@@ -227,13 +227,22 @@ TEST_F(EcsRamRoleTest, EnableIMDSv2FalseFromConfig) {
   EXPECT_FALSE(provider.getEnableIMDSv2());
 }
 
-TEST_F(EcsRamRoleTest, EnableIMDSv2DefaultTrue) {
+TEST_F(EcsRamRoleTest, EnableIMDSv2DefaultFalse) {
+  // C++ keeps historical default: no IMDSv2 token PUT unless opted in
   auto config = std::make_shared<Models::Config>();
   config->setRoleName("test_role");
 
   EcsRamRoleProvider provider(config);
-  EXPECT_TRUE(provider.getEnableIMDSv2());
+  EXPECT_FALSE(provider.getEnableIMDSv2());
   EXPECT_FALSE(provider.getDisableIMDSv1());
+}
+
+TEST_F(EcsRamRoleTest, EnableIMDSv2TrueFromEnv) {
+  unsetenv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
+  env_set_kv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE", "true");
+
+  EcsRamRoleProvider provider("test_role");
+  EXPECT_TRUE(provider.getEnableIMDSv2());
 }
 
 TEST_F(EcsRamRoleTest, EnableIMDSv2FalseFromEnv) {

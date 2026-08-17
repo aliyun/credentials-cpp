@@ -33,14 +33,14 @@ const std::string EcsRamRoleProvider::ECS_METADATA_TOKEN_FETCH_ERROR_MSG =
     "Failed to get token from ECS Metadata Service.";
 
 namespace {
-bool envEqualsIgnoreCaseFalse(const std::string &value) {
-  if (value.size() != 5) {
+bool envEqualsIgnoreCase(const std::string &value, const char *literal) {
+  const size_t len = std::char_traits<char>::length(literal);
+  if (value.size() != len) {
     return false;
   }
-  const char *falseLiteral = "false";
-  for (size_t i = 0; i < 5; ++i) {
+  for (size_t i = 0; i < len; ++i) {
     if (std::tolower(static_cast<unsigned char>(value[i])) !=
-        falseLiteral[i]) {
+        static_cast<unsigned char>(literal[i])) {
       return false;
     }
   }
@@ -50,14 +50,18 @@ bool envEqualsIgnoreCaseFalse(const std::string &value) {
 
 bool EcsRamRoleProvider::resolveEnableIMDSv2(bool hasExplicit,
                                              bool explicitValue) {
+  // C++ historical default: do NOT probe IMDSv2 (no token PUT).
+  // Other language SDKs default to true; C++ stays opt-in to avoid an extra
+  // PUT (and connect-timeout stalls when IMDS is firewalled/dropped) on
+  // private clouds without hardening mode.
   if (hasExplicit) {
     return explicitValue;
   }
   std::string env = Darabonba::Env::getEnv("ALIBABA_CLOUD_ECS_IMDSV2_ENABLE");
-  if (!env.empty() && envEqualsIgnoreCaseFalse(env)) {
-    return false;
+  if (!env.empty() && envEqualsIgnoreCase(env, "true")) {
+    return true;
   }
-  return true;
+  return false;
 }
 
 // 析构函数
@@ -133,6 +137,10 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     disableIMDSv1_ = (!imdsv1Disabled.empty() &&
                       (imdsv1Disabled == "true" || imdsv1Disabled == "TRUE"));
   }
+  // Forcing hardening mode requires IMDSv2 token probe.
+  if (disableIMDSv1_) {
+    enableIMDSv2_ = true;
+  }
 
   // 注册到全局调度器
   registerWithScheduler();
@@ -142,7 +150,7 @@ EcsRamRoleProvider::EcsRamRoleProvider(
     const std::string &roleName, bool disableIMDSv1, bool asyncUpdateEnabled,
     StaleValueBehavior behavior, std::shared_ptr<PrefetchStrategy> strategy)
     : RefreshableProvider(behavior, strategy), roleName_(roleName),
-      disableIMDSv1_(disableIMDSv1), enableIMDSv2_(resolveEnableIMDSv2(false, true)),
+      disableIMDSv1_(disableIMDSv1), enableIMDSv2_(resolveEnableIMDSv2(false, false)),
       shouldRefresh_(false),
       asyncUpdateEnabled_(asyncUpdateEnabled),
       connectTimeout_(DEFAULT_CONNECT_TIMEOUT),
@@ -165,6 +173,9 @@ EcsRamRoleProvider::EcsRamRoleProvider(
         Darabonba::Env::getEnv("ALIBABA_CLOUD_IMDSV1_DISABLED");
     disableIMDSv1_ = (!imdsv1Disabled.empty() &&
                       (imdsv1Disabled == "true" || imdsv1Disabled == "TRUE"));
+  }
+  if (disableIMDSv1_) {
+    enableIMDSv2_ = true;
   }
 
   // 注册到全局调度器
