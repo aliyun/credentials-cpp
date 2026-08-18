@@ -189,7 +189,7 @@ TEST_F(AuthUtilTest, ClientTypeReadsEnvironmentEachTime) {
 
 TEST_F(AuthUtilTest, GetSDKVersion) {
   std::string version = AuthUtil::getSDKVersion();
-  EXPECT_EQ("0.1.0", version);
+  EXPECT_EQ("0.1.1", version);
   EXPECT_FALSE(version.empty());
 }
 
@@ -235,14 +235,14 @@ TEST_F(AuthUtilTest, GetUserAgentBasic) {
   EXPECT_NE(std::string::npos, ua.find(AuthUtil::getOSName()));
   EXPECT_NE(std::string::npos, ua.find(AuthUtil::getMachineName()));
   EXPECT_NE(std::string::npos, ua.find("C++/" + AuthUtil::getCppVersion()));
-  EXPECT_NE(std::string::npos, ua.find("Credentials/0.1.0"));
+  EXPECT_NE(std::string::npos, ua.find("Credentials/" + AuthUtil::getSDKVersion()));
   EXPECT_NE(std::string::npos, ua.find("TeaDSL/2"));
 }
 
 TEST_F(AuthUtilTest, GetUserAgentFormat) {
   std::string ua = AuthUtil::getUserAgent();
   
-  // Expected: "AlibabaCloud (macOS; arm64) C++/11 Credentials/0.1.0 TeaDSL/2"
+  // Expected: "AlibabaCloud (macOS; arm64) C++/11 Credentials/{version} TeaDSL/2"
   EXPECT_TRUE(ua.find("AlibabaCloud (") == 0);
   EXPECT_TRUE(ua.find("; ") != std::string::npos);
   EXPECT_TRUE(ua.find(") ") != std::string::npos);
