@@ -26,12 +26,12 @@ std::string AuthUtil::generateSessionName() {
 /**
  * @brief Get SDK version from CMake project version
  *
- * Returns version string, default "0.1.0" (from CMakeLists.txt)
+ * Returns version string, default "0.1.1" (from CMakeLists.txt)
  */
 std::string AuthUtil::getSDKVersion() {
-  // Version is defined in CMakeLists.txt: VERSION "0.1.0"
+  // Version is defined in CMakeLists.txt: VERSION "0.1.1"
   // In production, this could be generated during build time
-  return "0.1.0";
+  return "0.1.1";
 }
 
 /**
