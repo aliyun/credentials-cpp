@@ -60,6 +60,11 @@ public:
    */
   bool isAsyncCredentialUpdateEnabled() const { return asyncUpdateEnabled_; }
 
+  /**
+   * @brief Whether IMDSv1 fallback is disabled
+   */
+  bool getDisableIMDSv1() const { return disableIMDSv1_; }
+
 protected:
   /**
    * @brief Override RefreshableProvider's isAsyncUpdateEnabled
@@ -103,7 +108,23 @@ private:
   std::string getRoleName() const;
 
   /**
-   * @brief Get IMDSv2 Token
+   * @brief Get metadata with IMDSv2 token and optional IMDSv1 fallback
+   */
+  std::string getMetadata(const std::string& url) const;
+
+  /**
+   * @brief Perform a single metadata GET (optional IMDSv2 token header)
+   */
+  std::string doGetMetadata(const std::string& url,
+                            const std::string& metadataToken) const;
+
+  /**
+   * @brief Whether to retry without token after IMDSv2 GET failure
+   */
+  bool shouldFallbackToIMDSv1(const std::string& metadataToken) const;
+
+  /**
+   * @brief Get IMDSv2 Token (empty if unavailable and fallback allowed)
    */
   std::string getMetadataToken() const;
 

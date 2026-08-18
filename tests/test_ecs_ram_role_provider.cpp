@@ -39,12 +39,14 @@ protected:
     // Save original environment variables
     saveEnv("ALIBABA_CLOUD_ECS_METADATA");
     saveEnv("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
+    saveEnv("ALIBABA_CLOUD_IMDSV1_DISABLED");
   }
   
   void TearDown() override {
     // Restore environment variables
     restoreEnv("ALIBABA_CLOUD_ECS_METADATA");
     restoreEnv("ALIBABA_CLOUD_ECS_METADATA_DISABLED");
+    restoreEnv("ALIBABA_CLOUD_IMDSV1_DISABLED");
   }
   
   void saveEnv(const std::string& name) {
@@ -210,7 +212,16 @@ TEST_F(EcsRamRoleTest, SupportsIMDSv2Mode) {
   
   EXPECT_NO_THROW({
     EcsRamRoleProvider provider(config);
+    EXPECT_TRUE(provider.getDisableIMDSv1());
   });
+}
+
+TEST_F(EcsRamRoleTest, DisableIMDSv1DefaultFalse) {
+  auto config = std::make_shared<Models::Config>();
+  config->setRoleName("test_role");
+
+  EcsRamRoleProvider provider(config);
+  EXPECT_FALSE(provider.getDisableIMDSv1());
 }
 
 TEST_F(EcsRamRoleTest, IMDSv2TokenRequest) {

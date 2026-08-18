@@ -354,7 +354,7 @@ export ALIBABA_CLOUD_ROLE_SESSION_NAME="<your-role-session-name>"
 
 通过指定角色名称，让凭证自动申请维护 STS Token。
 
-默认情况下，凭证工具会以安全强化模式（IMDSv2）访问 ECS 的元数据服务。如果抛出异常，凭证工具会切换到普通模式（IMDSv1）。您可以配置 `disableIMDSv1` 参数或 `ALIBABA_CLOUD_IMDSV1_DISABLE` 环境变量来指定异常处理逻辑：
+默认情况下，凭证工具会以安全强化模式（IMDSv2）访问 ECS 的元数据服务。如果抛出异常（token 获取失败或后续元数据 GET 失败），凭证工具会切换到普通模式（IMDSv1）。您可以配置 `disableIMDSv1` 参数或 `ALIBABA_CLOUD_IMDSV1_DISABLED` 环境变量来指定异常处理逻辑：
 
 - `false`（默认值）：凭证工具继续以普通模式（IMDSv1）获取访问凭证。
 - `true`：抛出异常，凭证工具继续以安全强化模式获取访问凭证。
@@ -370,7 +370,7 @@ int main() {
     Models::Config config;
     config.setType("ecs_ram_role")
           .setRoleName("<your-ecs-role-name>")
-          // 可选：禁用 IMDSv1 以增强安全性
+          // 可选：禁用 IMDSv1 降级以增强安全性
           .setDisableIMDSv1(false);
     
     Client client(config);
