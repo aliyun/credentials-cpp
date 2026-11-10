@@ -70,6 +70,11 @@ else()
 
   option(ENABLE_UNIT_TESTS "Enable unit tests" OFF)
   FetchContent_MakeAvailable(_darabonba_core)
+
+  # Tea uses the shared_ptr atomic free functions, which GCC deprecates in C++20.
+  if(TARGET darabonba_core AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 20)
+    target_compile_options(darabonba_core PRIVATE -Wno-error=deprecated-declarations)
+  endif()
   
   # Configure runtime library on darabonba_core target
   if(MSVC AND TARGET darabonba_core)
