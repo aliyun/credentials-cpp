@@ -2,6 +2,7 @@
 #define ALIBABACLOUD_CREDENTIALS_CLIPROFILEPROVIDER_HPP_
 
 #include <memory>
+#include <mutex>
 
 #include <alibabacloud/credentials/Exception.hpp>
 
@@ -106,8 +107,13 @@ protected:
       const std::string& profileName);
 
 private:
+  static std::shared_ptr<Models::Config> parseJsonProfile(
+      const std::string &filePath, const std::string &profileName,
+      std::unique_ptr<Provider> *sharedProvider);
+
   std::string profileName_;                        // Profile name
-  mutable std::unique_ptr<Provider> provider_;     // Actual credential provider
+  mutable std::unique_ptr<Provider> provider_;     // Cached shared CloudSSO provider
+  mutable std::mutex sharedProviderMutex_;
 };
 
 } // namespace Credentials

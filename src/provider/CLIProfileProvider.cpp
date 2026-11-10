@@ -1,3 +1,4 @@
+#include <alibabacloud/credentials/AuthUtil.hpp>
 #include <alibabacloud/credentials/Constant.hpp>
 #include <alibabacloud/credentials/Model.hpp>
 #include <alibabacloud/credentials/provider/AccessKeyProvider.hpp>
@@ -12,6 +13,11 @@
 #include <darabonba/Env.hpp>
 #include <alibabacloud/credentials/Exception.hpp>
 #include <darabonba/Ini.hpp>
+#include <darabonba/Core.hpp>
+#include <darabonba/Exception.hpp>
+#include <darabonba/encode/SHA256.hpp>
+#include <cstdlib>
+#include <regex>
 #include <fstream>
 
 // JSON support is optional
@@ -68,14 +74,7 @@ static std::string mapCliModeToType(const std::string &mode) {
  * 2. ~/.aliyun/config.json (新路径)
  * 3. ~/.alibabaclouds.ini (旧路径，回退)
  */
-std::string CLIProfileProvider::getCliProfilePath() {
-  // 优先使用环境变量指定的路径
-  std::string envPath =
-      Darabonba::Env::getEnv("ALIBABA_CLOUD_CLI_PROFILE_PATH");
-  if (!envPath.empty()) {
-    return envPath;
-  }
-
+static std::string cliHomeDirectory() {
 #ifdef _WIN32
   // Windows: 使用 USERPROFILE
   auto home = Darabonba::Env::getEnv("USERPROFILE");
@@ -88,12 +87,10 @@ std::string CLIProfileProvider::getCliProfilePath() {
     }
   }
   const char sep = '\\';
-  const std::string sepStr = "\\";
 #else
   // Linux/macOS: 使用 HOME
   auto home = Darabonba::Env::getEnv("HOME");
   const char sep = '/';
-  const std::string sepStr = "/";
 #endif
 
   if (home.empty()) {
@@ -105,8 +102,20 @@ std::string CLIProfileProvider::getCliProfilePath() {
     home.push_back(sep);
   }
 
-  // 优先使用新路径：~/.aliyun/config.json
-  std::string newPath = home + ".aliyun" + sepStr + "config.json";
+  return home;
+}
+
+std::string CLIProfileProvider::getCliProfilePath() {
+  auto envPath = Darabonba::Env::getEnv("ALIBABA_CLOUD_CLI_PROFILE_PATH");
+  if (!envPath.empty()) {
+    return envPath;
+  }
+
+  auto home = cliHomeDirectory();
+  if (home.empty()) {
+    return "";
+  }
+  auto newPath = home + ".aliyun/config.json";
   std::ifstream testFile(newPath);
   bool newPathExists = testFile.good();
   testFile.close();
@@ -141,12 +150,155 @@ static bool isJsonFile(const std::string &filePath) {
   return firstChar == '{' || firstChar == '[';
 }
 
+namespace {
+
+std::string canonicalConfigPath(const std::string &path) {
+  if (path.empty()) {
+    return "";
+  }
+#ifdef _WIN32
+  HANDLE file = CreateFileA(path.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (file == INVALID_HANDLE_VALUE) {
+    return "";
+  }
+  std::string resolved(32768, '\0');
+  DWORD size = GetFinalPathNameByHandleA(file, &resolved[0], static_cast<DWORD>(resolved.size()), 0);
+  CloseHandle(file);
+  if (size == 0 || size >= resolved.size()) {
+    return "";
+  }
+  resolved.resize(size);
+  if (resolved.compare(0, 8, R"(\\?\UNC\)") == 0) {
+    return R"(\\)" + resolved.substr(8);
+  }
+  return resolved.compare(0, 4, R"(\\?\)") == 0 ? resolved.substr(4) : resolved;
+#else
+  std::unique_ptr<char, decltype(&std::free)> resolved(realpath(path.c_str(), nullptr), &std::free);
+  return resolved ? resolved.get() : "";
+#endif
+}
+
+std::string sharedSessionPath(const std::string &filePath, const std::string &name) {
+  static const std::regex validName("[a-z0-9_-]{1,64}");
+  if (!std::regex_match(name, validName)) {
+    throw CredentialException(std::string("Invalid CloudSSO session name."));
+  }
+  auto config = canonicalConfigPath(filePath);
+  if (config.empty()) {
+    throw CredentialException(std::string("Unable to resolve CloudSSO profile file."));
+  }
+  auto home = cliHomeDirectory();
+  auto defaults = home.empty() ? "" : canonicalConfigPath(home + ".aliyun/config.json");
+#ifdef _WIN32
+  const auto separator = config.find_last_of("/\\");
+#else
+  const auto separator = config.find_last_of('/');
+#endif
+  std::string directory = config.substr(0, separator) + "/sso";
+  if (config != defaults) {
+    const auto hash = Darabonba::Encode::SHA256::hash(config.data(), config.size());
+    const char digits[] = "0123456789abcdef";
+    directory += '/';
+    for (auto byte : hash) {
+      directory += digits[byte >> 4];
+      directory += digits[byte & 15];
+    }
+  }
+  return directory + '/' + name + ".json";
+}
+
+class SharedCloudSSOProvider final : public NeedFreshProvider {
+public:
+  SharedCloudSSOProvider(const std::string &filePath, const std::string &name,
+                         const std::string &account, const std::string &accessConfig)
+      : path_(sharedSessionPath(filePath, name)), name_(name), account_(account),
+        accessConfig_(accessConfig) {
+    if (account_.empty() || accessConfig_.empty()) {
+      throw CredentialException(std::string("CloudSSO account ID and access configuration are required."));
+    }
+  }
+
+  std::string getProviderName() const override { return Constant::CLOUD_SSO; }
+
+  bool matches(const SharedCloudSSOProvider &other) const {
+    return path_ == other.path_ && account_ == other.account_ && accessConfig_ == other.accessConfig_;
+  }
+
+private:
+  bool refreshCredential() const override {
+    std::ifstream file(path_);
+    if (!file) {
+      throw CredentialException("Unable to read CloudSSO session " + name_);
+    }
+    auto session = json::parse(file, nullptr, false);
+    try {
+      if (!session.is_object() || session.value("name", "") != name_ ||
+          session.value("sign_in_url", "").empty()) {
+        throw CredentialException("Invalid CloudSSO session " + name_);
+      }
+      auto token = session.value("access_token", "");
+      auto expiresAt = session.value("expires_at", int64_t{0});
+      if (token.empty() || expiresAt <= time(nullptr)) {
+        throw CredentialException(std::string("CloudSSO access token is empty or expired, please re-login with CLI."));
+      }
+
+      auto request = AuthUtil::getNewRequest(session.at("sign_in_url").get<std::string>());
+      request.setPathname("/cloud-credentials");
+      request.getQuery().clear();
+      request.setMethod("POST");
+      request.addHeader("Accept", "application/json");
+      request.addHeader("Content-Type", "application/json");
+      request.addHeader("Authorization", "Bearer " + token);
+      json body = {{"AccountId", account_}, {"AccessConfigurationId", accessConfig_}};
+      request.setBody(body.dump());
+      Darabonba::RuntimeOptions runtime;
+      runtime.setConnectTimeout(5000).setReadTimeout(10000);
+      auto response = Darabonba::Core::doAction(request, runtime).get();
+      if (response->getStatusCode() != 200) {
+        throw CredentialException(std::string("CloudSSO credential exchange failed."));
+      }
+      const auto result = Darabonba::Stream::readAsJSON(response->getBody()).at("CloudCredential");
+      auto keyId = result.value("AccessKeyId", "");
+      auto secret = result.value("AccessKeySecret", "");
+      auto securityToken = result.value("SecurityToken", "");
+      auto expiration = strtotime(result.value("Expiration", ""));
+      if (keyId.empty() || secret.empty() || securityToken.empty() || expiration <= time(nullptr)) {
+        throw CredentialException(std::string("Invalid CloudSSO credential response."));
+      }
+      Models::CredentialModel credential;
+      credential.setAccessKeyId(keyId).setAccessKeySecret(secret).setSecurityToken(securityToken)
+          .setType(Constant::CLOUD_SSO);
+      credential_ = std::move(credential);
+      expiration_ = expiration;
+      return true;
+    } catch (const json::exception &) {
+      throw CredentialException(std::string("Invalid CloudSSO session or credential response."));
+    } catch (const Darabonba::DaraException &) {
+      throw CredentialException(std::string("CloudSSO credential exchange failed."));
+    }
+  }
+
+  const std::string path_;
+  const std::string name_;
+  const std::string account_;
+  const std::string accessConfig_;
+};
+
+} // namespace
+
 /**
  * @brief 解析 JSON 格式的配置文件
  */
 std::shared_ptr<Models::Config>
 CLIProfileProvider::parseJsonProfile(const std::string &filePath,
                                      const std::string &profileName) {
+  return parseJsonProfile(filePath, profileName, nullptr);
+}
+
+std::shared_ptr<Models::Config> CLIProfileProvider::parseJsonProfile(
+    const std::string &filePath, const std::string &profileName,
+    std::unique_ptr<Provider> *sharedProvider) {
   std::ifstream ifs(filePath);
   if (!ifs.good()) {
     throw CredentialException("Can't open CLI profile file: " + filePath);
@@ -172,10 +324,25 @@ CLIProfileProvider::parseJsonProfile(const std::string &filePath,
   }
 
   // 查找匹配的 profile
+  auto selected = profileName.empty() ? std::string("default") : profileName;
+  if (profileName.empty()) {
+    auto active = Darabonba::Env::getEnv("ALIBABA_CLOUD_PROFILE");
+    if (active.empty() && profilesJson.contains("current") && profilesJson["current"].is_string()) {
+      active = profilesJson["current"].get<std::string>();
+    }
+    for (const auto &profile : profiles) {
+      if (profile.contains("name") && profile["name"] == active &&
+          profile.value("mode", "") == "CloudSSO" && profile.contains("sso_session") &&
+          !profile["sso_session"].is_null() && profile["sso_session"] != "") {
+        selected = profile["name"].get<std::string>();
+        break;
+      }
+    }
+  }
   json targetProfile;
   bool found = false;
   for (const auto &profile : profiles) {
-    if (profile.contains("name") && profile["name"] == profileName) {
+    if (profile.contains("name") && profile["name"] == selected) {
       targetProfile = profile;
       found = true;
       break;
@@ -194,6 +361,19 @@ CLIProfileProvider::parseJsonProfile(const std::string &filePath,
     // CLI mode (e.g. RamRoleArn) must be mapped to internal type (ram_role_arn)
     std::string mode = targetProfile["mode"].get<std::string>();
     config->setType(mapCliModeToType(mode));
+  }
+
+  if (sharedProvider && config->getType() == Constant::CLOUD_SSO && targetProfile.contains("sso_session")
+      && !targetProfile["sso_session"].is_null()) {
+    if (!targetProfile["sso_session"].is_string()) {
+      throw CredentialException(std::string("Invalid CloudSSO session name."));
+    }
+    auto name = targetProfile["sso_session"].get<std::string>();
+    if (!name.empty()) {
+      sharedProvider->reset(new SharedCloudSSOProvider(filePath, name,
+          targetProfile.value("cloud_sso_account_id", ""), targetProfile.value("cloud_sso_access_config", "")));
+      return config;
+    }
   }
 
   if (targetProfile.contains("access_key_id")) {
@@ -341,7 +521,7 @@ CLIProfileProvider::parseIniProfile(const std::string &filePath,
 
 // 构造函数实现
 CLIProfileProvider::CLIProfileProvider()
-    : profileName_("default"), provider_(nullptr) {
+    : profileName_(), provider_(nullptr) {
   // 检查是否禁用 CLI Profile
   std::string disabled =
       Darabonba::Env::getEnv(Constant::ENV_CLI_PROFILE_DISABLED);
@@ -364,22 +544,31 @@ CLIProfileProvider::CLIProfileProvider(const std::string &profileName)
 
 // getCredential 实现
 Models::CredentialModel CLIProfileProvider::getCredential() const {
-  provider_ = createProvider();
-  if (provider_ == nullptr) {
+  auto provider = createProvider();
+  if (provider == nullptr) {
     throw CredentialException(std::string("Can't create provider from CLI profile."));
   }
-  return provider_->getCredential();
+  auto shared = dynamic_cast<SharedCloudSSOProvider *>(provider.get());
+  if (shared) {
+    std::lock_guard<std::mutex> lock(sharedProviderMutex_);
+    auto cached = dynamic_cast<SharedCloudSSOProvider *>(provider_.get());
+    if (!cached || !cached->matches(*shared)) {
+      provider_ = std::move(provider);
+    }
+    return provider_->getCredential();
+  }
+  return provider->getCredential();
 }
 
 /**
  * @brief Get provider name
  */
 std::string CLIProfileProvider::getProviderName() const {
-  provider_ = createProvider();
-  if (provider_ == nullptr) {
+  auto provider = createProvider();
+  if (provider == nullptr) {
     throw CredentialException(std::string("Can't create provider from CLI profile."));
   }
-  return provider_->getProviderName();
+  return provider->getProviderName();
 }
 
 /**
@@ -395,9 +584,13 @@ std::unique_ptr<Provider> CLIProfileProvider::createProvider() const {
   // 解析配置文件
   std::shared_ptr<Models::Config> config;
   if (isJsonFile(filePath)) {
-    config = parseJsonProfile(filePath, profileName_);
+    std::unique_ptr<Provider> sharedProvider;
+    config = parseJsonProfile(filePath, profileName_, &sharedProvider);
+    if (sharedProvider) {
+      return sharedProvider;
+    }
   } else {
-    config = parseIniProfile(filePath, profileName_);
+    config = parseIniProfile(filePath, profileName_.empty() ? "default" : profileName_);
   }
 
   // 根据类型创建对应的 Provider
