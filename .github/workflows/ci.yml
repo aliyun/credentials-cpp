@@ -141,7 +141,9 @@ jobs:
           
           # Run test and capture detailed error
           echo "Running test..."
-          if ! ./tests/Release/alibabacloud_credentialsTest.exe; then
+          if ./tests/Release/alibabacloud_credentialsTest.exe; then
+            echo "Tests passed"
+          else
             EXIT_CODE=$?
             echo "Test failed with exit code: $EXIT_CODE"
             
@@ -156,7 +158,7 @@ jobs:
             exit $EXIT_CODE
           fi
         else
-          ctest --output-on-failure -C Release
+          ctest --output-on-failure --no-tests=error -C Release
         fi
 
     - name: Install Shared Library
@@ -232,7 +234,7 @@ jobs:
           # Run test
           ./tests/Release/alibabacloud_credentialsTest.exe
         else
-          ctest --output-on-failure -C Release
+          ctest --output-on-failure --no-tests=error -C Release
         fi
 
     - name: Install Static Library
@@ -278,3 +280,45 @@ jobs:
           C:/vcpkg/downloads
           ~/AppData/Local/vcpkg/archives
         key: ${{ runner.os }}-vcpkg-curl-openssl-v1-${{ matrix.cxx_standard }}
+
+  coverage:
+    name: C++ coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Install coverage tools and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang llvm libssl-dev libcurl4-openssl-dev uuid-dev zlib1g-dev
+    - name: Run tests with coverage
+      env:
+        CXX: /usr/bin/clang++
+        BUILD_JOBS: 4
+      run: PATH="/usr/bin:$PATH" bash scripts/codecov.sh
+    - name: Save coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpp-coverage
+        path: build/coverage/coverage.lcov
+        if-no-files-found: error
+    - name: Upload to Codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: env.CODECOV_TOKEN != ''
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ env.CODECOV_TOKEN }}
+        files: build/coverage/coverage.lcov
+        disable_search: true
+    - name: Check changed line coverage
+      env:
+        PR_BASE: ${{ github.event.pull_request.base.sha }}
+      run: |
+        if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+          python3 scripts/check_diff_coverage.py build/coverage/coverage.lcov --base "$PR_BASE"
+        else
+          python3 scripts/check_diff_coverage.py build/coverage/coverage.lcov
+        fi
