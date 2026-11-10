@@ -164,6 +164,25 @@ static std::string getTempDir() {
 #endif
 }
 
+TEST_F(CLIProfileProviderTest, SharedCloudSSOSessionDoesNotFallBackToInlineCredentials) {
+  auto path = getTempDir() + "/credentials-shared-cloud-sso-test.json";
+  {
+    std::ofstream file(path);
+    file << R"({"current":"company-dev","profiles":[{"name":"company-dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role","cloud_sso_sign_in_url":"https://example.test","access_token":"inline","cloud_sso_access_token_expire":4102444800}]})";
+  }
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", path.c_str(), 1);
+  unsetenv("ALIBABA_CLOUD_PROFILE");
+  CLIProfileProvider provider;
+  EXPECT_EQ(provider.getProviderName(), Constant::CLOUD_SSO);
+  try {
+    provider.getCredential();
+    ADD_FAILURE() << "Expected a missing shared session to fail";
+  } catch (const CredentialException &error) {
+    EXPECT_NE(std::string(error.what()).find("Unable to read CloudSSO session company"), std::string::npos);
+  }
+  std::remove(path.c_str());
+}
+
 // Escape a string for embedding inside a JSON string value (Windows paths
 // contain backslashes that must be written as \\ in JSON).
 static std::string escapeJsonString(const std::string& s) {
