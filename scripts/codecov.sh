@@ -10,6 +10,7 @@ trap 'rm -rf "$profiles"' EXIT
 
 cmake -S . -B "$build_dir" \
   -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_C_COMPILER="${CC:-clang}" \
   -DCMAKE_CXX_COMPILER="${CXX:-clang++}" \
   -DBUILD_SHARED_LIBS=ON \
   -DENABLE_UNIT_TESTS=ON \
