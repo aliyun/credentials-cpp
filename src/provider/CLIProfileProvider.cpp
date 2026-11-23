@@ -19,6 +19,9 @@
 #include <cstdlib>
 #include <regex>
 #include <fstream>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 // JSON support is optional
 #include <nlohmann/json.hpp>
@@ -26,6 +29,69 @@ using json = nlohmann::json;
 
 namespace AlibabaCloud {
 namespace Credentials {
+
+namespace {
+
+#ifdef _WIN32
+std::wstring widePath(const std::string &path) {
+  if (path.empty()) {
+    return {};
+  }
+  int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(),
+                                  static_cast<int>(path.size()), nullptr, 0);
+  if (!count) {
+    throw CredentialException(std::string("Invalid UTF-8 CLI path."));
+  }
+  std::wstring result(count, L'\0');
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.data(),
+                      static_cast<int>(path.size()), &result[0], count);
+  return result;
+}
+
+std::string utf8Path(const std::wstring &path) {
+  if (path.empty()) {
+    return {};
+  }
+  int count = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, path.data(),
+                                  static_cast<int>(path.size()), nullptr, 0, nullptr, nullptr);
+  if (!count) {
+    throw CredentialException(std::string("Invalid Unicode CLI path."));
+  }
+  std::string result(count, '\0');
+  WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, path.data(),
+                      static_cast<int>(path.size()), &result[0], count, nullptr, nullptr);
+  return result;
+}
+#endif
+
+std::string cliPathEnvironment(const std::string &name) {
+#ifdef _WIN32
+  auto key = widePath(name);
+  DWORD count = GetEnvironmentVariableW(key.c_str(), nullptr, 0);
+  if (!count) {
+    return {};
+  }
+  std::wstring value(count, L'\0');
+  DWORD size = GetEnvironmentVariableW(key.c_str(), &value[0], count);
+  if (!size || size >= count) {
+    return {};
+  }
+  value.resize(size);
+  return utf8Path(value);
+#else
+  return Darabonba::Env::getEnv(name);
+#endif
+}
+
+std::ifstream openCliFile(const std::string &path) {
+#ifdef _WIN32
+  return std::ifstream(widePath(path).c_str());
+#else
+  return std::ifstream(path);
+#endif
+}
+
+} // namespace
 
 /**
  * @brief Map Alibaba Cloud CLI profile mode to internal credential type.
@@ -77,11 +143,11 @@ static std::string mapCliModeToType(const std::string &mode) {
 static std::string cliHomeDirectory() {
 #ifdef _WIN32
   // Windows: 使用 USERPROFILE
-  auto home = Darabonba::Env::getEnv("USERPROFILE");
+  auto home = cliPathEnvironment("USERPROFILE");
   if (home.empty()) {
     // 回退到 HOMEDRIVE + HOMEPATH
-    auto homeDrive = Darabonba::Env::getEnv("HOMEDRIVE");
-    auto homePath = Darabonba::Env::getEnv("HOMEPATH");
+    auto homeDrive = cliPathEnvironment("HOMEDRIVE");
+    auto homePath = cliPathEnvironment("HOMEPATH");
     if (!homeDrive.empty() && !homePath.empty()) {
       home = homeDrive + homePath;
     }
@@ -106,7 +172,7 @@ static std::string cliHomeDirectory() {
 }
 
 std::string CLIProfileProvider::getCliProfilePath() {
-  auto envPath = Darabonba::Env::getEnv("ALIBABA_CLOUD_CLI_PROFILE_PATH");
+  auto envPath = cliPathEnvironment("ALIBABA_CLOUD_CLI_PROFILE_PATH");
   if (!envPath.empty()) {
     return envPath;
   }
@@ -116,7 +182,7 @@ std::string CLIProfileProvider::getCliProfilePath() {
     return "";
   }
   auto newPath = home + ".aliyun/config.json";
-  std::ifstream testFile(newPath);
+  auto testFile = openCliFile(newPath);
   bool newPathExists = testFile.good();
   testFile.close();
 
@@ -138,7 +204,7 @@ static bool isJsonFile(const std::string &filePath) {
   }
 
   // 通过文件内容判断
-  std::ifstream ifs(filePath);
+  auto ifs = openCliFile(filePath);
   if (!ifs.good()) {
     return false;
   }
@@ -157,22 +223,23 @@ std::string canonicalConfigPath(const std::string &path) {
     return "";
   }
 #ifdef _WIN32
-  HANDLE file = CreateFileA(path.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+  HANDLE file = CreateFileW(widePath(path).c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                             nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file == INVALID_HANDLE_VALUE) {
     return "";
   }
-  std::string resolved(32768, '\0');
-  DWORD size = GetFinalPathNameByHandleA(file, &resolved[0], static_cast<DWORD>(resolved.size()), 0);
+  std::wstring resolved(32768, L'\0');
+  DWORD size = GetFinalPathNameByHandleW(file, &resolved[0], static_cast<DWORD>(resolved.size()), 0);
   CloseHandle(file);
   if (size == 0 || size >= resolved.size()) {
     return "";
   }
   resolved.resize(size);
-  if (resolved.compare(0, 8, R"(\\?\UNC\)") == 0) {
-    return R"(\\)" + resolved.substr(8);
+  auto normalized = utf8Path(resolved);
+  if (normalized.compare(0, 8, R"(\\?\UNC\)") == 0) {
+    return R"(\\)" + normalized.substr(8);
   }
-  return resolved.compare(0, 4, R"(\\?\)") == 0 ? resolved.substr(4) : resolved;
+  return normalized.compare(0, 4, R"(\\?\)") == 0 ? normalized.substr(4) : normalized;
 #else
   std::unique_ptr<char, decltype(&std::free)> resolved(realpath(path.c_str(), nullptr), &std::free);
   return resolved ? resolved.get() : "";
@@ -227,7 +294,7 @@ public:
 
 private:
   bool refreshCredential() const override {
-    std::ifstream file(path_);
+    auto file = openCliFile(path_);
     if (!file) {
       throw CredentialException("Unable to read CloudSSO session " + name_);
     }
@@ -299,7 +366,7 @@ CLIProfileProvider::parseJsonProfile(const std::string &filePath,
 std::shared_ptr<Models::Config> CLIProfileProvider::parseJsonProfile(
     const std::string &filePath, const std::string &profileName,
     std::unique_ptr<Provider> *sharedProvider) {
-  std::ifstream ifs(filePath);
+  auto ifs = openCliFile(filePath);
   if (!ifs.good()) {
     throw CredentialException("Can't open CLI profile file: " + filePath);
   }
@@ -452,7 +519,7 @@ std::shared_ptr<Models::Config>
 CLIProfileProvider::parseIniProfile(const std::string &filePath,
                                     const std::string &profileName) {
 
-  std::ifstream ifs(filePath);
+  auto ifs = openCliFile(filePath);
   if (!ifs.good()) {
     throw CredentialException("Can't open CLI profile file: " + filePath);
   }

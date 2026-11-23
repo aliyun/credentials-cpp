@@ -1,6 +1,10 @@
 #include <gtest/gtest.h>
 #include <alibabacloud/credentials/provider/CLIProfileProvider.hpp>
 #include <cstdlib>
+#ifdef _WIN32
+#include <windows.h>
+#include <darabonba/encode/SHA256.hpp>
+#endif
 #ifndef _WIN32
 #include <arpa/inet.h>
 #include <poll.h>
@@ -673,3 +677,101 @@ TEST_F(CLIProfileProviderTest, IniUnknownTypeThrows) {
 
   std::remove(tmpPath.c_str());
 }
+
+#ifdef _WIN32
+TEST(CLIProfileProviderWindowsTest, SharedSessionUsesUtf8WindowsPaths) {
+  wchar_t temp[MAX_PATH];
+  ASSERT_NE(GetTempPathW(MAX_PATH, temp), 0u);
+  wchar_t unique[MAX_PATH];
+  ASSERT_NE(GetTempFileNameW(temp, L"sso", 0, unique), 0u);
+  ASSERT_TRUE(DeleteFileW(unique));
+  std::wstring root = std::wstring(unique) + L"-\u4e2d\u6587";
+  ASSERT_TRUE(CreateDirectoryW(root.c_str(), nullptr));
+
+  auto toUtf8 = [](const std::wstring &value) {
+    int count = WideCharToMultiByte(CP_UTF8, 0, value.data(),
+        static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
+    std::string utf8(count, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, value.data(), static_cast<int>(value.size()),
+        &utf8[0], count, nullptr, nullptr);
+    return utf8;
+  };
+
+  // Preserve the wide environment independently of the CRT's ANSI environment.
+  auto readEnvironment = [](const wchar_t *name) {
+    DWORD count = GetEnvironmentVariableW(name, nullptr, 0);
+    if (!count) return std::wstring();
+    std::wstring value(count, L'\0');
+    DWORD size = GetEnvironmentVariableW(name, &value[0], count);
+    value.resize(size);
+    return value;
+  };
+  auto originalHome = readEnvironment(L"USERPROFILE");
+  auto originalPath = readEnvironment(L"ALIBABA_CLOUD_CLI_PROFILE_PATH");
+  auto originalProfile = readEnvironment(L"ALIBABA_CLOUD_PROFILE");
+  struct RestoreEnvironment {
+    std::wstring home, path, profile;
+    ~RestoreEnvironment() {
+      _wputenv_s(L"USERPROFILE", home.c_str());
+      _wputenv_s(L"ALIBABA_CLOUD_CLI_PROFILE_PATH", path.c_str());
+      _wputenv_s(L"ALIBABA_CLOUD_PROFILE", profile.c_str());
+    }
+  } restore{originalHome, originalPath, originalProfile};
+  ASSERT_TRUE(SetEnvironmentVariableW(L"USERPROFILE", root.c_str()));
+  ASSERT_TRUE(CreateDirectoryW((root + L"/.aliyun").c_str(), nullptr));
+  unsetenv("ALIBABA_CLOUD_PROFILE");
+
+  for (bool custom : {false, true}) {
+    auto config = root + (custom ? L"/custom.json" : L"/.aliyun/config.json");
+    {
+      std::ofstream file(config.c_str());
+      ASSERT_TRUE(file.good());
+      file << R"({"current":"dev","profiles":[{"name":"dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role"}]})";
+    }
+    ASSERT_TRUE(SetEnvironmentVariableW(L"ALIBABA_CLOUD_CLI_PROFILE_PATH", config.c_str()));
+    std::wstring dir = root + (custom ? L"/sso" : L"/.aliyun/sso");
+    ASSERT_TRUE(CreateDirectoryW(dir.c_str(), nullptr));
+    auto sessionDir = dir;
+    if (custom) {
+      HANDLE file = CreateFileW(config.c_str(), 0, FILE_SHARE_READ, nullptr,
+                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+      ASSERT_NE(file, INVALID_HANDLE_VALUE);
+      std::wstring canonical(32768, L'\0');
+      DWORD count = GetFinalPathNameByHandleW(file, &canonical[0],
+                                             static_cast<DWORD>(canonical.size()), 0);
+      CloseHandle(file);
+      ASSERT_GT(count, 4u);
+      ASSERT_LT(count, canonical.size());
+      canonical.resize(count);
+      auto path = toUtf8(canonical.substr(4));
+      auto hash = Darabonba::Encode::SHA256::hash(path.data(), path.size());
+      const wchar_t digits[] = L"0123456789abcdef";
+      sessionDir += L"/";
+      for (auto byte : hash) {
+        sessionDir += digits[byte >> 4];
+        sessionDir += digits[byte & 15];
+      }
+      ASSERT_TRUE(CreateDirectoryW(sessionDir.c_str(), nullptr));
+    }
+    auto session = sessionDir + L"/company.json";
+    {
+      std::ofstream file(session.c_str());
+      ASSERT_TRUE(file.good());
+      file << R"({"name":"company","sign_in_url":"https://example.test","access_token":"expired","expires_at":1})";
+    }
+    CLIProfileProvider provider;
+    try {
+      provider.getCredential();
+      ADD_FAILURE() << "Expected the expired session to be rejected";
+    } catch (const CredentialException &error) {
+      EXPECT_NE(std::string(error.what()).find("expired"), std::string::npos);
+    }
+    DeleteFileW(session.c_str());
+    if (custom) RemoveDirectoryW(sessionDir.c_str());
+    RemoveDirectoryW(dir.c_str());
+    DeleteFileW(config.c_str());
+  }
+  RemoveDirectoryW((root + L"/.aliyun").c_str());
+  RemoveDirectoryW(root.c_str());
+}
+#endif
