@@ -1,6 +1,19 @@
 #include <gtest/gtest.h>
 #include <alibabacloud/credentials/provider/CLIProfileProvider.hpp>
 #include <cstdlib>
+#ifdef _WIN32
+#include <windows.h>
+#include <darabonba/encode/SHA256.hpp>
+#endif
+#ifndef _WIN32
+#include <arpa/inet.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <thread>
+#endif
+
 
 #if defined(_WIN32) || defined(_WIN64)
 static inline int setenv(const char* name, const char* value, int /*overwrite*/) {
@@ -163,6 +176,155 @@ static std::string getTempDir() {
   return "/tmp";
 #endif
 }
+
+TEST_F(CLIProfileProviderTest, SharedCloudSSOSessionDoesNotFallBackToInlineCredentials) {
+  auto path = getTempDir() + "/credentials-shared-cloud-sso-test.json";
+  {
+    std::ofstream file(path);
+    file << R"({"current":"company-dev","profiles":[{"name":"company-dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role","cloud_sso_sign_in_url":"https://example.test","access_token":"inline","cloud_sso_access_token_expire":4102444800}]})";
+  }
+  setenv("ALIBABA_CLOUD_CLI_PROFILE_PATH", path.c_str(), 1);
+  unsetenv("ALIBABA_CLOUD_PROFILE");
+  CLIProfileProvider provider;
+  EXPECT_EQ(provider.getProviderName(), Constant::CLOUD_SSO);
+  try {
+    provider.getCredential();
+    ADD_FAILURE() << "Expected a missing shared session to fail";
+  } catch (const CredentialException &error) {
+    EXPECT_NE(std::string(error.what()).find("Unable to read CloudSSO session company"), std::string::npos);
+  }
+  std::remove(path.c_str());
+}
+
+#ifndef _WIN32
+namespace {
+
+class CloudSSOTestFiles {
+public:
+  CloudSSOTestFiles() {
+    char path[] = "/tmp/credentials-cloud-sso-XXXXXX";
+    if (const char *directory = mkdtemp(path)) {
+      home = directory;
+      mkdir((home + "/.aliyun").c_str(), 0700);
+      mkdir((home + "/.aliyun/sso").c_str(), 0700);
+    }
+  }
+
+  ~CloudSSOTestFiles() {
+    std::remove(session().c_str());
+    std::remove(config().c_str());
+    rmdir((home + "/.aliyun/sso").c_str());
+    rmdir((home + "/.aliyun").c_str());
+    rmdir(home.c_str());
+  }
+
+  std::string config() const { return home + "/.aliyun/config.json"; }
+  std::string session() const { return home + "/.aliyun/sso/company.json"; }
+  std::string home;
+};
+
+class CloudSSOExchangeServer {
+public:
+  ~CloudSSOExchangeServer() {
+    if (worker.joinable()) worker.join();
+    if (listener >= 0) close(listener);
+  }
+
+  bool start(int status, const std::string &body) {
+    listener = socket(AF_INET, SOCK_STREAM, 0);
+    if (listener < 0) return false;
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (::bind(listener, reinterpret_cast<sockaddr *>(&address), sizeof(address)) != 0 ||
+        listen(listener, 1) != 0) return false;
+    socklen_t size = sizeof(address);
+    if (getsockname(listener, reinterpret_cast<sockaddr *>(&address), &size) != 0) return false;
+    port = ntohs(address.sin_port);
+    worker = std::thread([this, status, body] {
+      pollfd ready{listener, POLLIN, 0};
+      if (poll(&ready, 1, 5000) <= 0) return;
+      int client = accept(listener, nullptr, nullptr);
+      if (client < 0) return;
+      timeval timeout{5, 0};
+      setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+      char buffer[1024];
+      while (request.find("\r\n\r\n") == std::string::npos) {
+        auto length = recv(client, buffer, sizeof(buffer), 0);
+        if (length <= 0) break;
+        request.append(buffer, static_cast<size_t>(length));
+      }
+      std::string response = "HTTP/1.1 " + std::to_string(status)
+          + " Test\r\nConnection: close\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+      send(client, response.data(), response.size(), 0);
+      close(client);
+    });
+    return true;
+  }
+
+  std::string received() {
+    worker.join();
+    return request;
+  }
+
+  unsigned port = 0;
+
+private:
+  int listener = -1;
+  std::thread worker;
+  std::string request;
+};
+
+} // namespace
+
+TEST_F(CLIProfileProviderTest, SharedCloudSSOExchangesAndCachesCredentials) {
+  CloudSSOTestFiles files;
+  ASSERT_FALSE(files.home.empty());
+  setenv("HOME", files.home.c_str(), 1);
+  unsetenv("ALIBABA_CLOUD_CLI_PROFILE_PATH");
+  unsetenv("ALIBABA_CLOUD_PROFILE");
+  std::ofstream(files.config()) << R"({"current":"dev","profiles":[{"name":"dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role"}]})";
+  CLIProfileProvider provider;
+  std::ofstream(files.session()) << "{";
+  EXPECT_THROW(provider.getCredential(), CredentialException);
+  std::ofstream(files.session()) << R"({"name":"company","sign_in_url":"http://127.0.0.1","access_token":"old","expires_at":1})";
+  EXPECT_THROW(provider.getCredential(), CredentialException);
+
+  const char *invalidProfiles[] = {
+    R"({"name":"dev","mode":"CloudSSO","sso_session":123,"cloud_sso_account_id":"account","cloud_sso_access_config":"role"})",
+    R"({"name":"dev","mode":"CloudSSO","sso_session":"../outside","cloud_sso_account_id":"account","cloud_sso_access_config":"role"})",
+    R"({"name":"dev","mode":"CloudSSO","sso_session":"company","cloud_sso_access_config":"role"})"
+  };
+  for (const auto *profile : invalidProfiles) {
+    std::ofstream(files.config()) << R"({"current":"dev","profiles":[)" << profile << "]}";
+    EXPECT_THROW(provider.getCredential(), CredentialException);
+  }
+  std::ofstream(files.config()) << R"({"current":"dev","profiles":[{"name":"dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role"}]})";
+
+  const std::pair<int, std::string> responses[] = {
+    {403, "{}"},
+    {200, "{}"},
+    {200, R"({"CloudCredential":{}})"},
+    {200, R"({"CloudCredential":{"AccessKeyId":"ak","AccessKeySecret":"sk","SecurityToken":"sts","Expiration":"2099-01-01T00:00:00Z"}})"}
+  };
+  for (const auto &response : responses) {
+    CloudSSOExchangeServer server;
+    ASSERT_TRUE(server.start(response.first, response.second));
+    std::ofstream(files.session()) << R"({"name":"company","sign_in_url":"http://127.0.0.1:)"
+        << server.port << R"(/signin","access_token":"shared","expires_at":4102444800})";
+    if (response.second.find("AccessKeyId") == std::string::npos) {
+      EXPECT_THROW(provider.getCredential(), CredentialException);
+    } else {
+      EXPECT_EQ(provider.getCredential().getAccessKeyId(), "ak");
+      std::remove(files.session().c_str());
+      EXPECT_EQ(provider.getCredential().getSecurityToken(), "sts");
+    }
+    auto request = server.received();
+    EXPECT_NE(request.find("POST /cloud-credentials "), std::string::npos);
+    EXPECT_NE(request.find("Authorization: Bearer shared"), std::string::npos);
+  }
+}
+#endif
 
 // Escape a string for embedding inside a JSON string value (Windows paths
 // contain backslashes that must be written as \\ in JSON).
@@ -515,3 +677,101 @@ TEST_F(CLIProfileProviderTest, IniUnknownTypeThrows) {
 
   std::remove(tmpPath.c_str());
 }
+
+#ifdef _WIN32
+TEST(CLIProfileProviderWindowsTest, SharedSessionUsesUtf8WindowsPaths) {
+  wchar_t temp[MAX_PATH];
+  ASSERT_NE(GetTempPathW(MAX_PATH, temp), 0u);
+  wchar_t unique[MAX_PATH];
+  ASSERT_NE(GetTempFileNameW(temp, L"sso", 0, unique), 0u);
+  ASSERT_TRUE(DeleteFileW(unique));
+  std::wstring root = std::wstring(unique) + L"-\u4e2d\u6587";
+  ASSERT_TRUE(CreateDirectoryW(root.c_str(), nullptr));
+
+  auto toUtf8 = [](const std::wstring &value) {
+    int count = WideCharToMultiByte(CP_UTF8, 0, value.data(),
+        static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
+    std::string utf8(count, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, value.data(), static_cast<int>(value.size()),
+        &utf8[0], count, nullptr, nullptr);
+    return utf8;
+  };
+
+  // Preserve the wide environment independently of the CRT's ANSI environment.
+  auto readEnvironment = [](const wchar_t *name) {
+    DWORD count = GetEnvironmentVariableW(name, nullptr, 0);
+    if (!count) return std::wstring();
+    std::wstring value(count, L'\0');
+    DWORD size = GetEnvironmentVariableW(name, &value[0], count);
+    value.resize(size);
+    return value;
+  };
+  auto originalHome = readEnvironment(L"USERPROFILE");
+  auto originalPath = readEnvironment(L"ALIBABA_CLOUD_CLI_PROFILE_PATH");
+  auto originalProfile = readEnvironment(L"ALIBABA_CLOUD_PROFILE");
+  struct RestoreEnvironment {
+    std::wstring home, path, profile;
+    ~RestoreEnvironment() {
+      _wputenv_s(L"USERPROFILE", home.c_str());
+      _wputenv_s(L"ALIBABA_CLOUD_CLI_PROFILE_PATH", path.c_str());
+      _wputenv_s(L"ALIBABA_CLOUD_PROFILE", profile.c_str());
+    }
+  } restore{originalHome, originalPath, originalProfile};
+  ASSERT_TRUE(SetEnvironmentVariableW(L"USERPROFILE", root.c_str()));
+  ASSERT_TRUE(CreateDirectoryW((root + L"/.aliyun").c_str(), nullptr));
+  unsetenv("ALIBABA_CLOUD_PROFILE");
+
+  for (bool custom : {false, true}) {
+    auto config = root + (custom ? L"/custom.json" : L"/.aliyun/config.json");
+    {
+      std::ofstream file(config.c_str());
+      ASSERT_TRUE(file.good());
+      file << R"({"current":"dev","profiles":[{"name":"dev","mode":"CloudSSO","sso_session":"company","cloud_sso_account_id":"account","cloud_sso_access_config":"role"}]})";
+    }
+    ASSERT_TRUE(SetEnvironmentVariableW(L"ALIBABA_CLOUD_CLI_PROFILE_PATH", config.c_str()));
+    std::wstring dir = root + (custom ? L"/sso" : L"/.aliyun/sso");
+    ASSERT_TRUE(CreateDirectoryW(dir.c_str(), nullptr));
+    auto sessionDir = dir;
+    if (custom) {
+      HANDLE file = CreateFileW(config.c_str(), 0, FILE_SHARE_READ, nullptr,
+                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+      ASSERT_NE(file, INVALID_HANDLE_VALUE);
+      std::wstring canonical(32768, L'\0');
+      DWORD count = GetFinalPathNameByHandleW(file, &canonical[0],
+                                             static_cast<DWORD>(canonical.size()), 0);
+      CloseHandle(file);
+      ASSERT_GT(count, 4u);
+      ASSERT_LT(count, canonical.size());
+      canonical.resize(count);
+      auto path = toUtf8(canonical.substr(4));
+      auto hash = Darabonba::Encode::SHA256::hash(path.data(), path.size());
+      const wchar_t digits[] = L"0123456789abcdef";
+      sessionDir += L"/";
+      for (auto byte : hash) {
+        sessionDir += digits[byte >> 4];
+        sessionDir += digits[byte & 15];
+      }
+      ASSERT_TRUE(CreateDirectoryW(sessionDir.c_str(), nullptr));
+    }
+    auto session = sessionDir + L"/company.json";
+    {
+      std::ofstream file(session.c_str());
+      ASSERT_TRUE(file.good());
+      file << R"({"name":"company","sign_in_url":"https://example.test","access_token":"expired","expires_at":1})";
+    }
+    CLIProfileProvider provider;
+    try {
+      provider.getCredential();
+      ADD_FAILURE() << "Expected the expired session to be rejected";
+    } catch (const CredentialException &error) {
+      EXPECT_NE(std::string(error.what()).find("expired"), std::string::npos);
+    }
+    DeleteFileW(session.c_str());
+    if (custom) RemoveDirectoryW(sessionDir.c_str());
+    RemoveDirectoryW(dir.c_str());
+    DeleteFileW(config.c_str());
+  }
+  RemoveDirectoryW((root + L"/.aliyun").c_str());
+  RemoveDirectoryW(root.c_str());
+}
+#endif
